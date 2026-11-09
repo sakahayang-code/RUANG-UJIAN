@@ -1,0 +1,28 @@
+# Berkas Temporary & Jurnal SQLite
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite-journal
+
+# Salinan Pengaman / Backup Otomatis
+/storage/backups/*.sqlite
+!/storage/backups/.gitkeep
+
+# Berkas Unggahan Pengguna
+/storage/uploads/documentation/*
+!/storage/uploads/documentation/.gitkeep
+/storage/uploads/documents/*
+!/storage/uploads/documents/.gitkeep
+/storage/uploads/logos/*
+!/storage/uploads/logos/.gitkeep
+/storage/uploads/sk_panitia/*
+!/storage/uploads/sk_panitia/.gitkeep
+/storage/uploads/students/*
+!/storage/uploads/students/.gitkeep
+
+# Environment & Konfigurasi Server Lokal
+.env
+*.log
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

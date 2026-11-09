@@ -1,0 +1,313 @@
+<?php
+
+namespace App\Controllers;
+
+use App\Core\Auth;
+use App\Core\Database;
+use App\Core\Request;
+use App\Core\Response;
+use App\Core\View;
+use App\Services\ExcelExport;
+
+class MasterStudentController
+{
+    public function index(Request $request): void
+    {
+        $classId = (string)$request->input('class_id', '');
+        $grade = (string)$request->input('grade', '');
+        $search = trim((string)$request->input('q', ''));
+
+        $sql = "SELECT s.*, c.name as class_name
+                FROM students s
+                LEFT JOIN classes c ON s.class_id = c.id
+                WHERE s.deleted_at IS NULL";
+        $params = [];
+
+        if (!empty($classId)) {
+            $sql .= " AND s.class_id = ?";
+            $params[] = $classId;
+        }
+
+        if (!empty($grade)) {
+            $sql .= " AND s.grade = ?";
+            $params[] = $grade;
+        }
+
+        if (!empty($search)) {
+            $sql .= " AND (s.name LIKE ? OR s.nis LIKE ? OR s.nisn LIKE ?)";
+            $params[] = "%{$search}%";
+            $params[] = "%{$search}%";
+            $params[] = "%{$search}%";
+        }
+
+        $sql .= " ORDER BY s.grade ASC, c.name ASC, s.name ASC";
+
+        $students = Database::fetchAll($sql, $params);
+        $classes = Database::fetchAll("SELECT * FROM classes ORDER BY grade ASC, name ASC");
+
+        View::render('master/students', [
+            'title' => 'Master Data Siswa',
+            'students' => $students,
+            'classes' => $classes,
+            'selectedClass' => $classId,
+            'selectedGrade' => $grade,
+            'search' => $search
+        ]);
+    }
+
+    public function store(Request $request): void
+    {
+        $name = trim((string)$request->input('name'));
+        $nis = trim((string)$request->input('nis'));
+        $nisn = trim((string)$request->input('nisn'));
+        $gender = (string)$request->input('gender', 'L');
+        $grade = (string)$request->input('grade', 'VII');
+        $classId = (int)$request->input('class_id');
+        $status = (string)$request->input('status', 'Aktif');
+
+        if (empty($name) || empty($classId)) {
+            flash('error', 'Nama siswa dan kelas wajib diisi.');
+            Response::back();
+        }
+
+        // Validate duplicates
+        if (!empty($nis)) {
+            $exists = Database::fetch("SELECT id FROM students WHERE nis = ? AND deleted_at IS NULL", [$nis]);
+            if ($exists) {
+                flash('error', "NIS {$nis} sudah terdaftar pada siswa lain.");
+                Response::back();
+            }
+        }
+
+        if (!empty($nisn)) {
+            $exists = Database::fetch("SELECT id FROM students WHERE nisn = ? AND deleted_at IS NULL", [$nisn]);
+            if ($exists) {
+                flash('error', "NISN {$nisn} sudah terdaftar pada siswa lain.");
+                Response::back();
+            }
+        }
+
+        $photoPath = null;
+        if ($request->hasFile('photo')) {
+            $file = $request->file('photo');
+            $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
+            $newFileName = 'std_' . time() . '_' . rand(100, 999) . '.' . $ext;
+            $targetDir = dirname(__DIR__, 2) . '/storage/uploads/students';
+            if (!is_dir($targetDir)) mkdir($targetDir, 0755, true);
+            if (move_uploaded_file($file['tmp_name'], $targetDir . '/' . $newFileName)) {
+                $photoPath = 'students/' . $newFileName;
+            }
+        }
+
+        $id = Database::insert('students', [
+            'nis' => $nis,
+            'nisn' => $nisn,
+            'name' => $name,
+            'gender' => $gender,
+            'grade' => $grade,
+            'class_id' => $classId,
+            'status' => $status,
+            'photo_path' => $photoPath,
+            'created_at' => date('Y-m-d H:i:s')
+        ]);
+
+        self::syncClassStudentCount($classId);
+        Auth::logAudit('CREATE', 'students', $id, null, ['name' => $name, 'nis' => $nis]);
+
+        flash('success', 'Data siswa berhasil ditambahkan.');
+        Response::redirect(url('/master/students'));
+    }
+
+    public function update(Request $request): void
+    {
+        $id = (int)$request->input('id');
+        $student = Database::fetch("SELECT * FROM students WHERE id = ? AND deleted_at IS NULL", [$id]);
+        if (!$student) {
+            flash('error', 'Data siswa tidak ditemukan.');
+            Response::back();
+        }
+
+        $name = trim((string)$request->input('name'));
+        $nis = trim((string)$request->input('nis'));
+        $nisn = trim((string)$request->input('nisn'));
+        $gender = (string)$request->input('gender', 'L');
+        $grade = (string)$request->input('grade', 'VII');
+        $classId = (int)$request->input('class_id');
+        $status = (string)$request->input('status', 'Aktif');
+
+        if (empty($name) || empty($classId)) {
+            flash('error', 'Nama siswa dan kelas wajib diisi.');
+            Response::back();
+        }
+
+        // Validate duplicates
+        if (!empty($nis)) {
+            $exists = Database::fetch("SELECT id FROM students WHERE nis = ? AND id != ? AND deleted_at IS NULL", [$nis, $id]);
+            if ($exists) {
+                flash('error', "NIS {$nis} sudah digunakan oleh siswa lain.");
+                Response::back();
+            }
+        }
+
+        $photoPath = $student['photo_path'];
+        if ($request->hasFile('photo')) {
+            $file = $request->file('photo');
+            $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
+            $newFileName = 'std_' . time() . '_' . rand(100, 999) . '.' . $ext;
+            $targetDir = dirname(__DIR__, 2) . '/storage/uploads/students';
+            if (!is_dir($targetDir)) mkdir($targetDir, 0755, true);
+            if (move_uploaded_file($file['tmp_name'], $targetDir . '/' . $newFileName)) {
+                $photoPath = 'students/' . $newFileName;
+            }
+        }
+
+        $updateData = [
+            'nis' => $nis,
+            'nisn' => $nisn,
+            'name' => $name,
+            'gender' => $gender,
+            'grade' => $grade,
+            'class_id' => $classId,
+            'status' => $status,
+            'photo_path' => $photoPath,
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+
+        Database::update('students', $updateData, 'id = :where_id', ['where_id' => $id]);
+        self::syncClassStudentCount($student['class_id']);
+        if ($student['class_id'] !== $classId) {
+            self::syncClassStudentCount($classId);
+        }
+
+        Auth::logAudit('UPDATE', 'students', $id, $student, $updateData);
+        flash('success', 'Data siswa berhasil diperbarui.');
+        Response::redirect(url('/master/students'));
+    }
+
+    public function delete(Request $request): void
+    {
+        $id = (int)$request->input('id');
+        $student = Database::fetch("SELECT * FROM students WHERE id = ? AND deleted_at IS NULL", [$id]);
+        if (!$student) {
+            flash('error', 'Data siswa tidak ditemukan.');
+            Response::back();
+        }
+
+        Database::update('students', ['deleted_at' => date('Y-m-d H:i:s')], 'id = :where_id', ['where_id' => $id]);
+        self::syncClassStudentCount($student['class_id']);
+        Auth::logAudit('DELETE', 'students', $id, $student, null);
+
+        flash('success', 'Data siswa berhasil dihapus.');
+        Response::redirect(url('/master/students'));
+    }
+
+    public function export(Request $request): void
+    {
+        $students = Database::fetchAll("
+            SELECT s.nis, s.nisn, s.name, s.gender, s.grade, c.name as class_name, s.status
+            FROM students s
+            LEFT JOIN classes c ON s.class_id = c.id
+            WHERE s.deleted_at IS NULL
+            ORDER BY s.grade ASC, c.name ASC, s.name ASC
+        ");
+
+        $headers = ['NIS', 'NISN', 'Nama Siswa', 'L/P', 'Tingkat', 'Kelas', 'Status'];
+        $rows = [];
+        foreach ($students as $s) {
+            $rows[] = [
+                $s['nis'],
+                $s['nisn'],
+                $s['name'],
+                $s['gender'],
+                $s['grade'],
+                $s['class_name'],
+                $s['status']
+            ];
+        }
+
+        ExcelExport::export('master_data_siswa_' . date('Ymd'), 'DATA MASTER SISWA', $headers, $rows);
+    }
+
+    public function import(Request $request): void
+    {
+        if (!$request->hasFile('file')) {
+            flash('error', 'Silakan pilih berkas CSV untuk diimpor.');
+            Response::back();
+        }
+
+        $file = $request->file('file');
+        $rows = ExcelExport::parseCsv($file['tmp_name']);
+
+        if (empty($rows)) {
+            flash('error', 'Berkas CSV kosong atau format header tidak sesuai.');
+            Response::back();
+        }
+
+        $success = 0;
+        $skipped = 0;
+
+        foreach ($rows as $row) {
+            $name = $row['nama'] ?? $row['nama_siswa'] ?? null;
+            if (!$name) {
+                $skipped++;
+                continue;
+            }
+
+            $nis = $row['nis'] ?? null;
+            $nisn = $row['nisn'] ?? null;
+            $gender = strtoupper($row['jk'] ?? $row['l_p'] ?? $row['gender'] ?? 'L');
+            $gender = ($gender === 'P' || $gender === 'PEREMPUAN') ? 'P' : 'L';
+            $grade = $row['tingkat'] ?? 'VII';
+            $className = $row['kelas'] ?? $row['nama_kelas'] ?? 'VII A';
+
+            // Find or create class
+            $class = Database::fetch("SELECT id FROM classes WHERE name = ?", [$className]);
+            if (!$class) {
+                $classId = Database::insert('classes', [
+                    'name' => $className,
+                    'grade' => $grade,
+                    'student_count' => 0,
+                    'created_at' => date('Y-m-d H:i:s')
+                ]);
+            } else {
+                $classId = (int)$class['id'];
+            }
+
+            // Check duplicate by NIS or NISN
+            if (!empty($nis)) {
+                $exists = Database::fetch("SELECT id FROM students WHERE nis = ? AND deleted_at IS NULL", [$nis]);
+                if ($exists) {
+                    $skipped++;
+                    continue;
+                }
+            }
+
+            Database::insert('students', [
+                'nis' => $nis,
+                'nisn' => $nisn,
+                'name' => $name,
+                'gender' => $gender,
+                'grade' => $grade,
+                'class_id' => $classId,
+                'status' => 'Aktif',
+                'created_at' => date('Y-m-d H:i:s')
+            ]);
+            $success++;
+        }
+
+        // Resync all class counts
+        $allClasses = Database::fetchAll("SELECT id FROM classes");
+        foreach ($allClasses as $c) {
+            self::syncClassStudentCount($c['id']);
+        }
+
+        flash('success', "Impor selesai: {$success} siswa berhasil ditambahkan, {$skipped} dilewati (duplikat/tidak lengkap).");
+        Response::redirect(url('/master/students'));
+    }
+
+    public static function syncClassStudentCount(int $classId): void
+    {
+        $count = (int)Database::fetchColumn("SELECT COUNT(*) FROM students WHERE class_id = ? AND deleted_at IS NULL", [$classId]);
+        Database::update('classes', ['student_count' => $count], 'id = :where_id', ['where_id' => $classId]);
+    }
+}
