@@ -16,54 +16,58 @@
         </div>
     <?php else: ?>
         <h3 style="font-size: 14px; font-weight: 700; color: #334155; margin-bottom: 10px;">1. Persyaratan Server & Ekstensi PHP</h3>
-        <table class="table mb-4" style="font-size: 13px;">
-            <thead>
-                <tr>
-                    <th>Komponen</th>
-                    <th>Status Server</th>
-                    <th class="text-center" style="width: 100px;">Kondisi</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($requirements as $req): ?>
+        <div class="table-responsive mb-4">
+            <table class="table" style="font-size: 13px;">
+                <thead>
                     <tr>
-                        <td><strong><?= e($req['name']) ?></strong></td>
-                        <td><?= e($req['current']) ?></td>
-                        <td class="text-center">
-                            <?php if ($req['status']): ?>
-                                <span class="badge badge-success">✓ Sesuai</span>
-                            <?php else: ?>
-                                <span class="badge badge-danger">✗ Kurang</span>
-                            <?php endif; ?>
-                        </td>
+                        <th>Komponen</th>
+                        <th>Status Server</th>
+                        <th class="text-center" style="width: 100px;">Kondisi</th>
                     </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    <?php foreach ($requirements as $req): ?>
+                        <tr>
+                            <td><strong><?= e($req['name']) ?></strong></td>
+                            <td><?= e($req['current']) ?></td>
+                            <td class="text-center">
+                                <?php if ($req['status']): ?>
+                                    <span class="badge badge-success">✓ Sesuai</span>
+                                <?php else: ?>
+                                    <span class="badge badge-danger">✗ Kurang</span>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
 
         <h3 style="font-size: 14px; font-weight: 700; color: #334155; margin-bottom: 10px;">2. Izin Tulis Direktori Penyimpanan</h3>
-        <table class="table mb-4" style="font-size: 13px;">
-            <thead>
-                <tr>
-                    <th>Direktori</th>
-                    <th class="text-center" style="width: 100px;">Izin Tulis</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($directories as $name => $dir): ?>
+        <div class="table-responsive mb-4">
+            <table class="table" style="font-size: 13px;">
+                <thead>
                     <tr>
-                        <td><code><?= e($dir['path']) ?></code></td>
-                        <td class="text-center">
-                            <?php if ($dir['writable']): ?>
-                                <span class="badge badge-success">✓ Writable</span>
-                            <?php else: ?>
-                                <span class="badge badge-danger">✗ Read Only</span>
-                            <?php endif; ?>
-                        </td>
+                        <th>Direktori</th>
+                        <th class="text-center" style="width: 100px;">Izin Tulis</th>
                     </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    <?php foreach ($directories as $name => $dir): ?>
+                        <tr>
+                            <td><code style="word-break: break-all; font-size: 11px;"><?= e($dir['path']) ?></code></td>
+                            <td class="text-center">
+                                <?php if ($dir['writable']): ?>
+                                    <span class="badge badge-success">✓ Writable</span>
+                                <?php else: ?>
+                                    <span class="badge badge-danger">✗ Read Only</span>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
 
         <?php if ($allOk): ?>
             <div class="alert alert-info" style="font-size: 12px; margin-bottom: 20px;">

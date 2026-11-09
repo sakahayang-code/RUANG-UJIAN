@@ -49,36 +49,38 @@
                 [ DEPAN : PAPAN TULIS / MEJA PENGAWAS ]
             </div>
 
-            <!-- Seat Grid -->
-            <div style="display: flex; flex-direction: column; gap: 16px;">
-                <?php foreach ($seatsGrid as $rowNum => $cols): ?>
-                    <div style="display: grid; grid-template-columns: repeat(<?= count($cols) ?>, 1fr); gap: 16px;">
-                        <?php foreach ($cols as $colNum => $seat): ?>
-                            <?php $p = $seat['participant']; ?>
-                            <div style="border: 2px solid <?= $p ? '#2563eb' : '#cbd5e1' ?>; background: <?= $p ? '#eff6ff' : '#f8fafc' ?>; border-radius: var(--radius-md); padding: 12px; text-align: center; min-height: 100px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: var(--shadow-sm);">
-                                <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; color: #475569; border-bottom: 1px dashed #cbd5e1; padding-bottom: 4px; margin-bottom: 6px;">
-                                    <span>Meja #<?= $seat['seat_number'] ?></span>
-                                    <span>R<?= $rowNum ?>-C<?= $colNum ?></span>
+            <!-- Seat Grid with Horizontal Scroll Container on Mobile -->
+            <div style="overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 12px;">
+                <div style="min-width: <?= max(320, ($selectedRoom['cols_count'] ?? 4) * 135) ?>px; display: flex; flex-direction: column; gap: 16px;">
+                    <?php foreach ($seatsGrid as $rowNum => $cols): ?>
+                        <div style="display: grid; grid-template-columns: repeat(<?= count($cols) ?>, 1fr); gap: 16px;">
+                            <?php foreach ($cols as $colNum => $seat): ?>
+                                <?php $p = $seat['participant']; ?>
+                                <div style="border: 2px solid <?= $p ? '#2563eb' : '#cbd5e1' ?>; background: <?= $p ? '#eff6ff' : '#f8fafc' ?>; border-radius: var(--radius-md); padding: 12px; text-align: center; min-height: 100px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: var(--shadow-sm);">
+                                    <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; color: #475569; border-bottom: 1px dashed #cbd5e1; padding-bottom: 4px; margin-bottom: 6px;">
+                                        <span>Meja #<?= $seat['seat_number'] ?></span>
+                                        <span>R<?= $rowNum ?>-C<?= $colNum ?></span>
+                                    </div>
+                                    <?php if ($p): ?>
+                                        <div style="font-weight: 700; font-size: 12.5px; color: #1e3a8a; line-height: 1.2;">
+                                            <?= e($p['student_name_snapshot']) ?>
+                                        </div>
+                                        <div style="font-size: 11px; color: #334155; margin-top: 4px;">
+                                            <code><?= e($p['participant_number']) ?></code>
+                                        </div>
+                                        <div style="margin-top: 4px;">
+                                            <span class="badge badge-info" style="font-size: 10px;"><?= e($p['class_name_snapshot']) ?></span>
+                                        </div>
+                                    <?php else: ?>
+                                        <div style="color: #94a3b8; font-size: 12px; margin: auto;">
+                                            (Kursi Kosong)
+                                        </div>
+                                    <?php endif; ?>
                                 </div>
-                                <?php if ($p): ?>
-                                    <div style="font-weight: 700; font-size: 12.5px; color: #1e3a8a; line-height: 1.2;">
-                                        <?= e($p['student_name_snapshot']) ?>
-                                    </div>
-                                    <div style="font-size: 11px; color: #334155; margin-top: 4px;">
-                                        <code><?= e($p['participant_number']) ?></code>
-                                    </div>
-                                    <div style="margin-top: 4px;">
-                                        <span class="badge badge-info" style="font-size: 10px;"><?= e($p['class_name_snapshot']) ?></span>
-                                    </div>
-                                <?php else: ?>
-                                    <div style="color: #94a3b8; font-size: 12px; margin: auto;">
-                                        (Kursi Kosong)
-                                    </div>
-                                <?php endif; ?>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-                <?php endforeach; ?>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
             </div>
 
             <!-- Door Indicator -->
