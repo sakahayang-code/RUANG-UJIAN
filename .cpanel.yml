@@ -1,9 +1,8 @@
 ---
-# Konfigurasi Auto Deploy melalui fitur "cPanel Git™ Version Control"
-# Jika Anda mengkloning repositori ini langsung dari cPanel Rumahweb:
 deployment:
   tasks:
-    # Ubah 'username' sesuai username cPanel Anda dan sesuaikan target direktori tujuan
     - export DEPLOYPATH=/home/mulw1713/public_html/ruangujian
-    # Sinkronisasi berkas aplikasi dengan mengecualikan berkas git, tests, database produksi, dan direktori uploads
-    - /bin/rsync -av --delete --exclude='.git*' --exclude='.github' --exclude='tests' --exclude='database/storage/*.sqlite*' --exclude='storage/uploads/*' --exclude='storage/backups/*' ./ $DEPLOYPATH
+    - /bin/mkdir -p $DEPLOYPATH
+    - /bin/cp -R * $DEPLOYPATH/
+    - /bin/cp .htaccess $DEPLOYPATH/
+    - /bin/chmod -R 775 $DEPLOYPATH/storage $DEPLOYPATH/database
