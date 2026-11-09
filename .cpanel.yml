@@ -4,6 +4,6 @@
 deployment:
   tasks:
     # Ubah 'username' sesuai username cPanel Anda dan sesuaikan target direktori tujuan
-    - export DEPLOYPATH=/home/$(whoami)/public_html/
+    - export DEPLOYPATH=/home/mulw1713/public_html/ruangujian
     # Sinkronisasi berkas aplikasi dengan mengecualikan berkas git, tests, database produksi, dan direktori uploads
     - /bin/rsync -av --delete --exclude='.git*' --exclude='.github' --exclude='tests' --exclude='database/storage/*.sqlite*' --exclude='storage/uploads/*' --exclude='storage/backups/*' ./ $DEPLOYPATH
