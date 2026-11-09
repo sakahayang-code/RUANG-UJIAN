@@ -2,8 +2,20 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title><?= e($title ?? 'Masuk') ?> - RUANG UJIAN</title>
+    
+    <!-- PWA Android Configuration -->
+    <link rel="manifest" href="<?= url('/manifest.json') ?>">
+    <meta name="theme-color" content="#1e3a8a">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="RUANG UJIAN">
+    <link rel="icon" type="image/svg+xml" href="<?= asset('images/icons/icon.svg') ?>">
+    <link rel="alternate icon" type="image/png" href="<?= asset('images/icons/icon-192.png') ?>">
+    <link rel="apple-touch-icon" href="<?= asset('images/icons/icon-192.png') ?>">
+
     <link rel="stylesheet" href="<?= asset('css/app.css') ?>">
     <style>
         body {

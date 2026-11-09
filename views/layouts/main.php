@@ -9,8 +9,24 @@ $allEvents = \App\Core\Database::fetchAll("SELECT * FROM exam_events ORDER BY id
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title><?= e($title ?? 'Aplikasi Administrasi Ujian Sekolah') ?> - RUANG UJIAN</title>
+    
+    <!-- PWA Android Configuration -->
+    <link rel="manifest" href="<?= url('/manifest.json') ?>">
+    <meta name="theme-color" content="#1e3a8a">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="RUANG UJIAN">
+    <meta name="application-name" content="RUANG UJIAN">
+    <meta name="format-detection" content="telephone=no">
+    
+    <!-- App Icons -->
+    <link rel="icon" type="image/svg+xml" href="<?= asset('images/icons/icon.svg') ?>">
+    <link rel="alternate icon" type="image/png" href="<?= asset('images/icons/icon-192.png') ?>">
+    <link rel="apple-touch-icon" href="<?= asset('images/icons/icon-192.png') ?>">
+    
     <link rel="stylesheet" href="<?= asset('css/app.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/print.css') ?>" media="print">
     <script>
@@ -215,6 +231,21 @@ $allEvents = \App\Core\Database::fetchAll("SELECT * FROM exam_events ORDER BY id
 
         <!-- Page Body -->
         <main class="page-container">
+            <!-- Android PWA Install Banner -->
+            <div class="android-install-banner" id="androidInstallBanner" style="display: none;">
+                <div class="install-banner-left">
+                    <img src="<?= asset('images/icons/icon-192.png') ?>" alt="Icon RUANG UJIAN" class="install-banner-icon">
+                    <div class="install-banner-text">
+                        <div class="install-banner-title">Pasang Aplikasi RUANG UJIAN</div>
+                        <div class="install-banner-desc">Akses cepat & tampilan native APK di layar HP</div>
+                    </div>
+                </div>
+                <div class="install-banner-right">
+                    <button type="button" class="btn-pwa-install" id="btnInstallPwa">Pasang</button>
+                    <button type="button" class="btn-pwa-dismiss" id="btnDismissPwa" title="Tutup">✕</button>
+                </div>
+            </div>
+
             <!-- Flash Messages -->
             <?php if ($msg = get_flash('success')): ?>
                 <div class="alert alert-success">
@@ -247,6 +278,228 @@ $allEvents = \App\Core\Database::fetchAll("SELECT * FROM exam_events ORDER BY id
             <!-- View Content Injection -->
             <?= $content ?? '' ?>
         </main>
+    </div>
+</div>
+
+<!-- Android Native Bottom Navigation Bar (Material 3 Style) -->
+<nav class="android-bottom-nav" id="androidBottomNav" aria-label="Navigasi Bawah Android">
+    <a href="<?= url('/dashboard') ?>" class="android-nav-item <?= (str_contains($currentUrl, '/dashboard') || $currentUrl === '/') ? 'active' : '' ?>">
+        <div class="nav-indicator">
+            <span class="nav-icon">📊</span>
+        </div>
+        <span class="nav-label">Beranda</span>
+    </a>
+
+    <a href="<?= url('/written-exam/schedules') ?>" class="android-nav-item <?= (str_contains($currentUrl, '/written-exam/schedules') || str_contains($currentUrl, '/written-exam/rooms') || str_contains($currentUrl, '/written-exam/seating')) ? 'active' : '' ?>">
+        <div class="nav-indicator">
+            <span class="nav-icon">🗓️</span>
+        </div>
+        <span class="nav-label">Jadwal</span>
+    </a>
+
+    <a href="<?= url('/written-exam/execution') ?>" class="android-nav-item <?= (str_contains($currentUrl, '/written-exam/execution') || str_contains($currentUrl, '/attendance')) ? 'active' : '' ?>">
+        <div class="nav-indicator">
+            <span class="nav-icon">✍️</span>
+        </div>
+        <span class="nav-label">Presensi</span>
+    </a>
+
+    <a href="<?= url('/distribution/handover') ?>" class="android-nav-item <?= (str_contains($currentUrl, '/distribution') || str_contains($currentUrl, '/answer-sheets')) ? 'active' : '' ?>">
+        <div class="nav-indicator">
+            <span class="nav-icon">📦</span>
+        </div>
+        <span class="nav-label">Naskah</span>
+    </a>
+
+    <button type="button" class="android-nav-item nav-btn-more" id="androidMenuToggle" aria-label="Buka Semua Menu">
+        <div class="nav-indicator">
+            <span class="nav-icon">☰</span>
+        </div>
+        <span class="nav-label">Menu</span>
+    </button>
+</nav>
+
+<!-- Android Native Modal Bottom Sheet Drawer for All Modules -->
+<div class="android-sheet-backdrop" id="androidSheetBackdrop">
+    <div class="android-bottom-sheet" id="androidBottomSheet">
+        <div class="sheet-drag-handle"></div>
+        
+        <div class="sheet-header">
+            <div class="sheet-user-card">
+                <div class="user-avatar-sheet"><?= strtoupper(substr($currentUser['full_name'] ?? 'U', 0, 1)) ?></div>
+                <div class="sheet-user-meta">
+                    <div class="sheet-user-name"><?= e($currentUser['full_name'] ?? 'Pengguna') ?></div>
+                    <div class="sheet-user-role"><?= e($currentUser['role_display'] ?? $currentUser['role'] ?? 'User') ?></div>
+                </div>
+            </div>
+            <button type="button" class="sheet-close-btn" id="androidSheetClose">✕</button>
+        </div>
+
+        <div class="sheet-active-event-pill">
+            <span class="event-pill-icon">📌</span>
+            <span class="event-pill-text"><?= e($activeEvent['name'] ?? 'Tidak ada kegiatan aktif') ?> (TP <?= e($activeEvent['academic_year'] ?? '-') ?>)</span>
+        </div>
+
+        <div class="sheet-body">
+            <div class="sheet-category-title">Semua Menu Administrasi</div>
+            <div class="sheet-grid">
+                <a href="<?= url('/dashboard') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-blue">📊</div>
+                    <span class="tile-text">Dashboard</span>
+                </a>
+                
+                <?php if (has_role(['super_admin', 'admin'])): ?>
+                <a href="<?= url('/school') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-indigo">🏫</div>
+                    <span class="tile-text">Sekolah</span>
+                </a>
+                <?php endif; ?>
+
+                <?php if (has_role(['super_admin', 'admin', 'operator'])): ?>
+                <a href="<?= url('/master/students') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-teal">👨‍🎓</div>
+                    <span class="tile-text">Siswa</span>
+                </a>
+                <a href="<?= url('/master/classes') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-cyan">🏛️</div>
+                    <span class="tile-text">Kelas</span>
+                </a>
+                <a href="<?= url('/master/teachers') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-sky">👨‍🏫</div>
+                    <span class="tile-text">Guru</span>
+                </a>
+                <a href="<?= url('/master/subjects') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-amber">📚</div>
+                    <span class="tile-text">Mapel</span>
+                </a>
+                <?php endif; ?>
+
+                <?php if (has_role(['super_admin', 'admin', 'ketua_panitia', 'sekretaris', 'operator'])): ?>
+                <a href="<?= url('/events') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-purple">📅</div>
+                    <span class="tile-text">Kegiatan</span>
+                </a>
+                <a href="<?= url('/committee') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-indigo">👥</div>
+                    <span class="tile-text">Panitia</span>
+                </a>
+                <a href="<?= url('/committee/letters') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-emerald">✉️</div>
+                    <span class="tile-text">Surat</span>
+                </a>
+                <a href="<?= url('/work-program') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-rose">📋</div>
+                    <span class="tile-text">Program & RAB</span>
+                </a>
+                <a href="<?= url('/preparation/rules') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-amber">📜</div>
+                    <span class="tile-text">Tata Tertib</span>
+                </a>
+                <a href="<?= url('/preparation/submissions') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-lime">📝</div>
+                    <span class="tile-text">Checklist Soal</span>
+                </a>
+                <a href="<?= url('/preparation/printing') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-slate">🖨️</div>
+                    <span class="tile-text">Penggandaan</span>
+                </a>
+                <?php endif; ?>
+
+                <a href="<?= url('/written-exam/schedules') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-blue">🗓️</div>
+                    <span class="tile-text">Jadwal Tertulis</span>
+                </a>
+                <?php if (!has_role('pengawas')): ?>
+                <a href="<?= url('/written-exam/rooms') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-teal">🚪</div>
+                    <span class="tile-text">Ruang Ujian</span>
+                </a>
+                <a href="<?= url('/written-exam/seating') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-cyan">🪑</div>
+                    <span class="tile-text">Denah Kursi</span>
+                </a>
+                <a href="<?= url('/written-exam/supervisors') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-amber">👀</div>
+                    <span class="tile-text">Pengawas</span>
+                </a>
+                <?php endif; ?>
+                <a href="<?= url('/written-exam/execution') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-emerald">✍️</div>
+                    <span class="tile-text">Presensi Ruang</span>
+                </a>
+
+                <?php if (has_role(['super_admin', 'admin', 'ketua_panitia', 'sekretaris', 'operator', 'penguji'])): ?>
+                <a href="<?= url('/practical-exam') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-purple">🧪</div>
+                    <span class="tile-text">Ujian Praktik</span>
+                </a>
+                <a href="<?= url('/practical-exam/execution') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-indigo">🔬</div>
+                    <span class="tile-text">Presensi Praktik</span>
+                </a>
+                <?php endif; ?>
+
+                <?php if (has_role(['super_admin', 'admin', 'ketua_panitia', 'sekretaris', 'operator'])): ?>
+                <a href="<?= url('/attendance/committee') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-teal">✅</div>
+                    <span class="tile-text">Hadir Panitia</span>
+                </a>
+                <a href="<?= url('/attendance/supervisors') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-sky">📋</div>
+                    <span class="tile-text">Hadir Pengawas</span>
+                </a>
+                <a href="<?= url('/attendance/examiners') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-lime">🩺</div>
+                    <span class="tile-text">Hadir Penguji</span>
+                </a>
+                <a href="<?= url('/distribution/handover') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-amber">📦</div>
+                    <span class="tile-text">Distribusi Soal</span>
+                </a>
+                <a href="<?= url('/answer-sheets/receipts') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-blue">📥</div>
+                    <span class="tile-text">Penerimaan LJ</span>
+                </a>
+                <a href="<?= url('/answer-sheets/packing') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-rose">✉️</div>
+                    <span class="tile-text">Packing 3 Mode</span>
+                </a>
+                <a href="<?= url('/answer-sheets/handover') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-indigo">📑</div>
+                    <span class="tile-text">Rekap LJ</span>
+                </a>
+                <?php endif; ?>
+
+                <a href="<?= url('/print') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-emerald">🖨️</div>
+                    <span class="tile-text">Pusat Cetak</span>
+                </a>
+                <a href="<?= url('/reports/minutes') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-cyan">📜</div>
+                    <span class="tile-text">Berita Acara</span>
+                </a>
+                <a href="<?= url('/reports/final') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-amber">🏆</div>
+                    <span class="tile-text">Laporan 18 Bab</span>
+                </a>
+
+                <?php if (has_role(['super_admin', 'admin'])): ?>
+                <a href="<?= url('/users') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-purple">👤</div>
+                    <span class="tile-text">Pengguna</span>
+                </a>
+                <a href="<?= url('/backup') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-teal">💾</div>
+                    <span class="tile-text">Backup SQLite</span>
+                </a>
+                <?php endif; ?>
+
+                <a href="<?= url('/logout') ?>" class="sheet-tile text-danger">
+                    <div class="tile-icon-bg bg-danger">🚪</div>
+                    <span class="tile-text">Keluar</span>
+                </a>
+            </div>
+        </div>
     </div>
 </div>
 

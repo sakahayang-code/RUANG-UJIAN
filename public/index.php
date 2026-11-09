@@ -102,13 +102,32 @@ $request = new Request();
 $currentPath = '/' . trim($request->getPath(), '/');
 
 // Auto-redirect to installer if database is not initialized yet
-if (!$isDatabaseReady && !str_starts_with($currentPath, '/install') && !str_starts_with($currentPath, '/assets')) {
+$isPwaStatic = in_array($currentPath, ['/manifest.json', '/sw.js', '/offline']) || str_starts_with($currentPath, '/assets');
+if (!$isDatabaseReady && !str_starts_with($currentPath, '/install') && !$isPwaStatic) {
     Response::redirect(url('/install'));
 }
 
 // ==========================================
 // ROUTE DEFINITIONS
 // ==========================================
+
+// PWA Assets Fallback Routing
+Router::get('/manifest.json', function() {
+    header('Content-Type: application/manifest+json; charset=utf-8');
+    readfile(dirname(__DIR__) . '/public/manifest.json');
+    exit;
+});
+Router::get('/sw.js', function() {
+    header('Content-Type: application/javascript; charset=utf-8');
+    header('Service-Worker-Allowed: /');
+    readfile(dirname(__DIR__) . '/public/sw.js');
+    exit;
+});
+Router::get('/offline', function() {
+    header('Content-Type: text/html; charset=utf-8');
+    readfile(dirname(__DIR__) . '/public/offline.html');
+    exit;
+});
 
 // 1. Installer
 Router::get('/install', [InstallController::class, 'index']);

@@ -115,6 +115,11 @@ Sistem dilengkapi matriks 8 peran resmi:
     - Validasi keaslian berkas SQLite (`SQLite format 3\000`).
     - **Pencadangan pengaman otomatis (*auto-safety backup*)** yang dibuat sebelum proses pemulihan (restore) dijalankan.
     - Download dan unggah berkas cadangan.
+17. **Dukungan PWA Android & Antarmuka Mobile Native APK (Material Design 3)**:
+    - **PWA (Progressive Web App)**: Web App Manifest (`manifest.json`) dengan mode `standalone`, ikon adaptif (192, 512, maskable, SVG), dan Service Worker (`sw.js`) dengan halaman fallback offline.
+    - **Navigasi Bawah Android (Bottom Navigation Bar)**: 5 tab navigasi utama (Beranda, Jadwal, Presensi, Naskah, Menu) dengan indikator aktif Material 3 pill dan haptic touch feedback.
+    - **Android Bottom Sheet Drawer**: Menu lengkap yang meluncur mulus dari bawah (*slide-up sheet*) dengan drag handle dan gestur swipe-down.
+    - **Banner Pasang Aplikasi**: Tombol instalasi otomatis langsung ke layar utama HP Android tanpa perlu Play Store.
 
 ---
 
@@ -225,3 +230,6 @@ Hasil verifikasi:
 - ✅ **Skenario J**: Matriks 8 Role Pengguna RBAC.
 - ✅ **Strict Scope**: Bebas 100% dari kolom nilai, ranking, atau peringkat akademik.
 - ✅ **Pure PHP QR**: Generator QR Code SVG mandiri tanpa koneksi internet.
+- ✅ **PWA Android**: Manifest standalone, Service Worker offline fallback, icon set lengkap, dan navigasi bawah Material 3.
+- 🎉 **Total Hasil Pengujian**: **29 Lulus, 0 Gagal (100% Sukses)**.
+

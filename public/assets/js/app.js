@@ -66,6 +66,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // 5. Work Program & RAB Dynamic Calculations
     initWorkProgramBudgetCalc();
+
+    // 6. PWA Android Service Worker Registration
+    initPwaServiceWorker();
+
+    // 7. PWA Android Install Prompt
+    initPwaInstallPrompt();
+
+    // 8. Android Native Bottom Sheet Drawer
+    initAndroidBottomSheet();
 });
 
 // Modal Global Functions
@@ -175,3 +184,150 @@ function confirmAction(message, form) {
     }
     return false;
 }
+
+// ==========================================
+// PWA & ANDROID NATIVE INTERFACE LOGIC
+// ==========================================
+
+let deferredInstallPrompt = null;
+
+function initPwaServiceWorker() {
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function () {
+            const swUrl = (window.APP_BASE_URL || '') + '/sw.js';
+            navigator.serviceWorker.register(swUrl)
+                .then(function (registration) {
+                    // Registration successful
+                })
+                .catch(function (error) {
+                    // Silent fail if offline or unsupported
+                });
+        });
+    }
+}
+
+function initPwaInstallPrompt() {
+    const banner = document.getElementById('androidInstallBanner');
+    const installBtn = document.getElementById('btnInstallPwa');
+    const dismissBtn = document.getElementById('btnDismissPwa');
+
+    // Check if already in standalone / APK mode
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+                         window.navigator.standalone === true;
+
+    if (isStandalone) {
+        if (banner) banner.style.display = 'none';
+        return;
+    }
+
+    // Check if user dismissed banner recently
+    const isDismissed = sessionStorage.getItem('ruang_ujian_pwa_dismissed');
+
+    window.addEventListener('beforeinstallprompt', function (e) {
+        // Prevent default browser mini-infobar
+        e.preventDefault();
+        deferredInstallPrompt = e;
+
+        if (banner && !isDismissed) {
+            banner.style.display = 'flex';
+        }
+    });
+
+    if (installBtn) {
+        installBtn.addEventListener('click', async function () {
+            if (!deferredInstallPrompt) return;
+
+            deferredInstallPrompt.prompt();
+            const { outcome } = await deferredInstallPrompt.userChoice;
+            deferredInstallPrompt = null;
+
+            if (banner) {
+                banner.style.display = 'none';
+            }
+        });
+    }
+
+    if (dismissBtn) {
+        dismissBtn.addEventListener('click', function () {
+            if (banner) {
+                banner.style.display = 'none';
+                sessionStorage.setItem('ruang_ujian_pwa_dismissed', '1');
+            }
+        });
+    }
+
+    window.addEventListener('appinstalled', function () {
+        if (banner) banner.style.display = 'none';
+        deferredInstallPrompt = null;
+    });
+}
+
+function initAndroidBottomSheet() {
+    const backdrop = document.getElementById('androidSheetBackdrop');
+    const sheet = document.getElementById('androidBottomSheet');
+    const toggleBtn = document.getElementById('androidMenuToggle');
+    const closeBtn = document.getElementById('androidSheetClose');
+
+    if (!backdrop || !sheet) return;
+
+    function openSheet() {
+        backdrop.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeSheet() {
+        backdrop.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            openSheet();
+        });
+    }
+
+    if (closeBtn) {
+        closeBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            closeSheet();
+        });
+    }
+
+    // Backdrop click outside sheet
+    backdrop.addEventListener('click', function (e) {
+        if (e.target === backdrop) {
+            closeSheet();
+        }
+    });
+
+    // ESC key closes bottom sheet
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && backdrop.classList.contains('active')) {
+            closeSheet();
+        }
+    });
+
+    // Touch swipe down on handle to close sheet
+    let touchStartY = 0;
+    let touchEndY = 0;
+
+    sheet.addEventListener('touchstart', function (e) {
+        touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+
+    sheet.addEventListener('touchmove', function (e) {
+        touchEndY = e.touches[0].clientY;
+    }, { passive: true });
+
+    sheet.addEventListener('touchend', function () {
+        const deltaY = touchEndY - touchStartY;
+        // If swiped down more than 60px from the top of the sheet
+        if (touchStartY < 120 && deltaY > 60) {
+            closeSheet();
+        }
+        touchStartY = 0;
+        touchEndY = 0;
+    });
+}
+

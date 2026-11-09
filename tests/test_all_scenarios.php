@@ -427,6 +427,16 @@ echo "\n>>> PENGUJIAN PURE PHP QR CODE GENERATOR (OFFLINE STANDALONE)...\n";
 $qrSvg = QrGenerator::svg("TEST-QR-RUANG-UJIAN", 80);
 assertTest('QR', 'Generator QR Code SVG Pure PHP Berjalan Normal', str_contains($qrSvg, '<svg') && str_contains($qrSvg, '</svg>'), strlen($qrSvg) . " bytes SVG");
 
+// 13. PWA Android & Mobile Interface Verification
+echo "\n>>> PENGUJIAN PWA ANDROID & NAVIGASI MOBILE NATIVE...\n";
+$manifestFile = dirname(__DIR__) . '/public/manifest.json';
+$manifest = file_exists($manifestFile) ? json_decode(file_get_contents($manifestFile), true) : null;
+assertTest('PWA', 'Manifest JSON Valid & Standalone', !empty($manifest) && ($manifest['display'] ?? '') === 'standalone', 'Display: ' . ($manifest['display'] ?? 'None'));
+assertTest('PWA', 'Icon Android Lengkap (192, 512, Maskable, SVG)', file_exists(dirname(__DIR__) . '/public/assets/images/icons/icon-192.png') && file_exists(dirname(__DIR__) . '/public/assets/images/icons/icon-512.png') && file_exists(dirname(__DIR__) . '/public/assets/images/icons/icon-maskable.png') && file_exists(dirname(__DIR__) . '/public/assets/images/icons/icon.svg'));
+assertTest('PWA', 'Service Worker & Offline Fallback Tersedia', file_exists(dirname(__DIR__) . '/public/sw.js') && file_exists(dirname(__DIR__) . '/public/offline.html'));
+$mainLayout = file_get_contents(dirname(__DIR__) . '/views/layouts/main.php');
+assertTest('PWA', 'Navigasi Bawah Android (Material 3) Terpasang', str_contains($mainLayout, 'android-bottom-nav') && str_contains($mainLayout, 'android-bottom-sheet'));
+
 // Clean up test room and participant records created during test
 Database::query("DELETE FROM exam_rooms WHERE id = ?", [$testRoomA]);
 

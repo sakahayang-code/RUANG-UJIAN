@@ -760,3 +760,518 @@ textarea.form-control {
         display: block;
     }
 }
+
+/* ========================================================
+   ANDROID PWA & NATIVE MOBILE INTERFACE (MATERIAL DESIGN 3)
+   ======================================================== */
+
+:root {
+    --sab: env(safe-area-inset-bottom, 0px);
+    --sat: env(safe-area-inset-top, 0px);
+    --android-bottom-nav-height: 64px;
+}
+
+/* Touch feedback for mobile devices */
+@media (pointer: coarse) {
+    * {
+        -webkit-tap-highlight-color: transparent;
+    }
+    button, a, input, select, .btn, .sheet-tile, .android-nav-item {
+        touch-action: manipulation;
+    }
+}
+
+/* Android PWA Install Banner */
+.android-install-banner {
+    background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%);
+    border: 1px solid rgba(59, 130, 246, 0.4);
+    border-radius: 16px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(30, 58, 138, 0.35);
+    animation: slideDownBanner 0.3s ease;
+}
+
+@keyframes slideDownBanner {
+    from { transform: translateY(-12px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.install-banner-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-grow: 1;
+}
+
+.install-banner-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    flex-shrink: 0;
+}
+
+.install-banner-title {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1.2;
+}
+
+.install-banner-desc {
+    font-size: 11.5px;
+    color: #94a3b8;
+    margin-top: 2px;
+}
+
+.install-banner-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.btn-pwa-install {
+    background: #3b82f6;
+    color: #ffffff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 9999px;
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.4);
+    transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.btn-pwa-install:active {
+    transform: scale(0.94);
+    background: #2563eb;
+}
+
+.btn-pwa-dismiss {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 50%;
+    line-height: 1;
+}
+
+.btn-pwa-dismiss:hover {
+    color: #ffffff;
+}
+
+/* Android Bottom Navigation Bar (Hidden on desktop) */
+.android-bottom-nav {
+    display: none;
+}
+
+/* Android Bottom Sheet Drawer (Hidden on desktop) */
+.android-sheet-backdrop {
+    display: none;
+}
+
+/* Mobile & Android Native Screen Adaptations */
+@media (max-width: 768px) {
+    /* Page Layout Adjustments */
+    body {
+        overscroll-behavior-y: contain;
+    }
+
+    .app-main {
+        width: 100%;
+        min-height: 100vh;
+    }
+
+    .page-container {
+        padding: 14px 12px calc(var(--android-bottom-nav-height) + var(--sab) + 18px) 12px !important;
+    }
+
+    .app-topbar {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        height: 56px;
+        padding: 0 14px;
+        background: #ffffff;
+        border-bottom: 1px solid var(--border-color);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    }
+
+    .topbar-left {
+        gap: 8px;
+    }
+
+    .sidebar-toggle-btn {
+        display: none !important; /* Replaced by Android Bottom Nav Menu */
+    }
+
+    .event-switcher {
+        font-size: 12px;
+    }
+
+    .event-switcher select {
+        max-width: 170px;
+        font-size: 12px;
+        padding: 5px 8px;
+    }
+
+    .topbar-right .user-info {
+        display: none; /* Only avatar on mobile topbar */
+    }
+
+    .topbar-right .btn-outline {
+        display: none; /* Moved into bottom sheet drawer */
+    }
+
+    /* Cards on Android Mobile */
+    .card {
+        border-radius: 16px;
+        padding: 16px;
+        margin-bottom: 14px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+
+    .card-header {
+        padding: 14px 16px;
+    }
+
+    .card-title {
+        font-size: 15px;
+    }
+
+    /* Form Controls: prevent iOS/Android zoom on focus */
+    .form-control, .form-select, input[type="text"], input[type="password"], input[type="date"], select, textarea {
+        font-size: 16px !important;
+        min-height: 44px;
+        border-radius: 10px;
+    }
+
+    /* Tables: Responsive Horizontal Scroll with Native Smooth Momentum */
+    .table-responsive {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin-bottom: 12px;
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+    }
+
+    .table {
+        min-width: 600px;
+        font-size: 13px;
+    }
+
+    .table th, .table td {
+        padding: 10px 12px;
+    }
+
+    /* Buttons: Comfortable touch targets */
+    .btn {
+        min-height: 42px;
+        padding: 8px 16px;
+        border-radius: 10px;
+        font-size: 13.5px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .btn:active {
+        transform: scale(0.97);
+    }
+
+    /* ===================================================
+       ANDROID BOTTOM NAVIGATION BAR (MATERIAL 3)
+       =================================================== */
+    .android-bottom-nav {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: calc(var(--android-bottom-nav-height) + var(--sab));
+        padding-bottom: var(--sab);
+        background: rgba(255, 255, 255, 0.98);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-top: 1px solid #e2e8f0;
+        box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.06);
+        z-index: 999;
+        align-items: center;
+        justify-content: space-around;
+    }
+
+    .android-nav-item {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        text-decoration: none;
+        color: #64748b;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        padding: 4px 0;
+        transition: color 0.15s ease;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .android-nav-item .nav-indicator {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 48px;
+        height: 30px;
+        border-radius: 16px;
+        margin-bottom: 2px;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .android-nav-item .nav-icon {
+        font-size: 18px;
+        line-height: 1;
+    }
+
+    .android-nav-item .nav-label {
+        font-size: 11px;
+        font-weight: 600;
+        line-height: 1.2;
+        letter-spacing: 0.1px;
+        transition: color 0.15s ease, font-weight 0.15s ease;
+    }
+
+    /* Active Material 3 Pill State */
+    .android-nav-item.active .nav-indicator {
+        background: #dbeafe;
+        color: #1e40af;
+        transform: scale(1.05);
+    }
+
+    .android-nav-item.active .nav-label {
+        color: #1e40af;
+        font-weight: 700;
+    }
+
+    .android-nav-item:active .nav-indicator {
+        transform: scale(0.92);
+    }
+
+    /* ===================================================
+       ANDROID NATIVE BOTTOM SHEET MODAL (DRAWER)
+       =================================================== */
+    .android-sheet-backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        z-index: 1050;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .android-sheet-backdrop.active {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .android-bottom-sheet {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        max-height: 85vh;
+        background: #ffffff;
+        border-top-left-radius: 28px;
+        border-top-right-radius: 28px;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 -12px 30px rgba(0, 0, 0, 0.25);
+        transform: translateY(100%);
+        transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+        padding-bottom: max(16px, var(--sab));
+        overflow: hidden;
+    }
+
+    .android-sheet-backdrop.active .android-bottom-sheet {
+        transform: translateY(0);
+    }
+
+    .sheet-drag-handle {
+        width: 40px;
+        height: 4px;
+        background: #cbd5e1;
+        border-radius: 9999px;
+        margin: 10px auto 4px auto;
+        flex-shrink: 0;
+    }
+
+    .sheet-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 20px 10px 20px;
+        border-bottom: 1px solid #f1f5f9;
+        flex-shrink: 0;
+    }
+
+    .sheet-user-card {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .user-avatar-sheet {
+        width: 38px;
+        height: 38px;
+        background: linear-gradient(135deg, #2563eb, #1e3a8a);
+        color: #ffffff;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 15px;
+        box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
+    }
+
+    .sheet-user-name {
+        font-size: 13.5px;
+        font-weight: 700;
+        color: #0f172a;
+        line-height: 1.2;
+    }
+
+    .sheet-user-role {
+        font-size: 11px;
+        color: #64748b;
+        margin-top: 1px;
+    }
+
+    .sheet-close-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #f1f5f9;
+        border: none;
+        color: #64748b;
+        font-size: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+
+    .sheet-close-btn:active {
+        background: #e2e8f0;
+    }
+
+    .sheet-active-event-pill {
+        margin: 10px 20px 6px 20px;
+        padding: 8px 14px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        font-size: 11.5px;
+        color: #334155;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .sheet-active-event-pill .event-pill-text {
+        font-weight: 600;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .sheet-body {
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        padding: 12px 18px 20px 18px;
+        flex-grow: 1;
+    }
+
+    .sheet-category-title {
+        font-size: 11.5px;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 12px;
+    }
+
+    .sheet-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px 8px;
+    }
+
+    .sheet-tile {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        text-decoration: none;
+        color: #1e293b;
+        padding: 8px 4px;
+        border-radius: 14px;
+        transition: transform 0.15s ease, background 0.15s ease;
+    }
+
+    .sheet-tile:active {
+        transform: scale(0.92);
+        background: #f8fafc;
+    }
+
+    .tile-icon-bg {
+        width: 48px;
+        height: 48px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        margin-bottom: 6px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+        transition: transform 0.15s ease;
+    }
+
+    .tile-text {
+        font-size: 11px;
+        font-weight: 600;
+        color: #334155;
+        line-height: 1.2;
+        word-break: break-word;
+    }
+
+    /* Tile Icon Color Themes */
+    .bg-blue { background: #eff6ff; color: #2563eb; }
+    .bg-indigo { background: #eef2ff; color: #4f46e5; }
+    .bg-teal { background: #f0fdfa; color: #0d9488; }
+    .bg-cyan { background: #ecfeff; color: #0891b2; }
+    .bg-sky { background: #f0f9ff; color: #0284c7; }
+    .bg-purple { background: #faf5ff; color: #9333ea; }
+    .bg-emerald { background: #ecfdf5; color: #059669; }
+    .bg-amber { background: #fffbeb; color: #d97706; }
+    .bg-lime { background: #f7fee7; color: #65a30d; }
+    .bg-rose { background: #fff1f2; color: #e11d48; }
+    .bg-slate { background: #f8fafc; color: #475569; }
+    .bg-danger { background: #fef2f2; color: #dc2626; }
+}
+
