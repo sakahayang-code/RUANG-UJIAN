@@ -170,6 +170,40 @@ Sistem dilengkapi matriks 8 peran resmi:
 
 ---
 
+## ⚡ PANDUAN AKTIVASI AUTO DEPLOY (CI/CD KE RUMAHWEB)
+
+Aplikasi ini sudah dilengkapi dengan pipa **CI/CD GitHub Actions** (`.github/workflows/deploy.yml`) dan konfigurasi **cPanel Git** (`.cpanel.yml`). Setiap kali Anda melakukan `git push origin main`, sistem akan secara otomatis menguji kode dan mengunggah perubahan ke hosting tanpa menyentuh database produksi atau berkas yang sudah diunggah oleh siswa/guru.
+
+### Cara 1: Menggunakan GitHub Actions via FTPS (Sangat Direkomendasikan)
+
+1. Buka repositori Anda di GitHub: **`https://github.com/sakahayang-code/RUANG-UJIAN`**.
+2. Masuk ke tab **Settings** -> pilih menu **Secrets and variables** -> klik **Actions**.
+3. Klik tombol **New repository secret** dan tambahkan secret berikut:
+
+   | Nama Secret | Nilai / Keterangan | Contoh |
+   |---|---|---|
+   | `FTP_SERVER` | Alamat host FTP server Rumahweb Anda | `ftp.namasekolah.sch.id` atau IP server cPanel |
+   | `FTP_USERNAME` | Username cPanel atau akun FTP terdedikasi | `u1234567` |
+   | `FTP_PASSWORD` | Password akun cPanel atau akun FTP Anda | `password_anda` |
+   | `FTP_TARGET_DIR` | *(Opsional)* Folder target di server hosting | `public_html/` (atau folder subdomain) |
+   | `FTP_PORT` | *(Opsional)* Port FTP (default: `21`) | `21` |
+   | `FTP_PROTOCOL` | *(Opsional)* Protokol transfer (`ftps` atau `ftp`) | `ftps` |
+
+4. Setelah secret disimpan, setiap Anda melakukan `git push` ke branch `main`, GitHub Actions akan:
+   - Menjalankan seluruh pengujian 25 skenario otomatis.
+   - Mengunggah berkas terbaru ke hosting Rumahweb secara otomatis.
+   - **Melindungi data produksi**: Database SQLite produksi (`database/storage/*.sqlite`) dan berkas unggahan (`storage/uploads/`) **TIDAK AKAN TERTAMPAK / TERHAPUS**.
+
+### Cara 2: Menggunakan cPanel Git™ Version Control
+
+Jika Anda menggunakan fitur Git bawaan di dalam cPanel Rumahweb:
+1. Masuk ke cPanel -> menu **Git™ Version Control**.
+2. Buat repositori baru dan masukkan Clone URL: `https://github.com/sakahayang-code/RUANG-UJIAN.git`.
+3. Tentukan Repository Path di cPanel (misal: `/home/username/repo-ruang-ujian`).
+4. Berkas `.cpanel.yml` yang sudah tersedia akan mengeksekusi sinkronisasi otomatis ke direktori `public_html/` saat tombol **Deploy HEAD Commit** diklik atau saat Webhook GitHub dipicu.
+
+---
+
 ## 🧪 PENGUJIAN OTOMATIS (TEST SUITE)
 
 Aplikasi telah dilengkapi skrip pengujian otomatis komprehensif yang menguji **Skenario A hingga J** serta verifikasi batasan utama tanpa nilai akademik:

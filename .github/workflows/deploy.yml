@@ -1,0 +1,59 @@
+name: 🚀 CI/CD - Test & Auto Deploy RUANG UJIAN
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: # Memungkinkan eksekusi manual dari tab Actions di GitHub
+
+jobs:
+  test:
+    name: 🧪 Uji Otomatis (PHP Test Suite)
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🚚 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup PHP Environment
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: pdo, pdo_sqlite, sqlite3, gd, zip, mbstring, fileinfo
+          coverage: none
+
+      - name: 🔬 Jalankan Verifikasi Skenario A s.d. J
+        run: php tests/test_all_scenarios.php
+
+  deploy:
+    name: 📦 Auto Deploy ke Hosting Rumahweb (cPanel)
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: 🚚 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: 🚀 Unggah Berkas ke Hosting via FTPS
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          port: ${{ secrets.FTP_PORT || 21 }}
+          protocol: ${{ secrets.FTP_PROTOCOL || 'ftps' }}
+          server-dir: ${{ secrets.FTP_TARGET_DIR || 'public_html/' }}
+          security: loose # Menghindari kegagalan sertifikat self-signed pada beberapa server shared hosting
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/.github/**
+            tests/**
+            database/storage/*.sqlite
+            database/storage/*.sqlite-shm
+            database/storage/*.sqlite-wal
+            storage/backups/*.sqlite
+            storage/uploads/**
+            README.md
+            .cpanel.yml
