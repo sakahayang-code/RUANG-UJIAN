@@ -63,6 +63,11 @@
                                 <a href="<?= url('/committee/letters/export-docx?id=' . $l['id']) ?>" class="btn btn-secondary btn-sm" title="Ekspor ke Microsoft Word (.docx)">
                                     📄 Word
                                 </a>
+                                <form action="<?= url('/committee/letters/delete') ?>" method="POST" style="display: inline;" onsubmit="return confirmAction('Hapus surat ini?', this)">
+                                    <?= csrf_field() ?>
+                                    <input type="hidden" name="id" value="<?= $l['id'] ?>">
+                                    <button type="submit" class="btn btn-danger btn-sm" title="Hapus Surat">🗑️</button>
+                                </form>
                             </td>
                         </tr>
                     <?php endforeach; ?>

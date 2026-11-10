@@ -88,6 +88,54 @@ class CommitteeController
         Response::redirect(url('/committee'));
     }
 
+    public function updateMember(Request $request): void
+    {
+        $id = (int)$request->input('id');
+        $member = Database::fetch("SELECT * FROM committee_members WHERE id = ?", [$id]);
+        if (!$member) {
+            flash('error', 'Data anggota panitia tidak ditemukan.');
+            Response::back();
+        }
+
+        $teacherId = $request->input('teacher_id') ? (int)$request->input('teacher_id') : null;
+        $roleTitle = trim((string)$request->input('role_title'));
+        $sectionName = trim((string)$request->input('section_name', ''));
+        $phone = trim((string)$request->input('phone', ''));
+        $orderIndex = (int)$request->input('order_index', 0);
+
+        if (empty($roleTitle)) {
+            flash('error', 'Jabatan kepanitiaan wajib diisi.');
+            Response::back();
+        }
+
+        $nameSnapshot = $member['name_snapshot'];
+        $nipSnapshot = $member['nip_snapshot'];
+        if ($teacherId) {
+            $t = Database::fetch("SELECT name, nip_nuptk, phone FROM teachers WHERE id = ?", [$teacherId]);
+            if ($t) {
+                $nameSnapshot = $t['name'];
+                $nipSnapshot = $t['nip_nuptk'];
+                if (empty($phone)) $phone = $t['phone'];
+            }
+        } elseif ($request->input('name')) {
+            $nameSnapshot = trim((string)$request->input('name'));
+            $nipSnapshot = trim((string)$request->input('nip', ''));
+        }
+
+        Database::update('committee_members', [
+            'teacher_id' => $teacherId,
+            'name_snapshot' => $nameSnapshot,
+            'nip_snapshot' => $nipSnapshot,
+            'role_title' => $roleTitle,
+            'section_name' => $sectionName ?: null,
+            'phone' => $phone ?: null,
+            'order_index' => $orderIndex
+        ], 'id = :where_id', ['where_id' => $id]);
+
+        flash('success', 'Data anggota panitia berhasil diperbarui.');
+        Response::redirect(url('/committee'));
+    }
+
     public function deleteMember(Request $request): void
     {
         $id = (int)$request->input('id');
@@ -309,5 +357,18 @@ class CommitteeController
 
         $filename = 'surat_' . preg_replace('/[^a-zA-Z0-9_]/', '_', $letter['subject']) . '.docx';
         $docx->output($filename);
+    }
+
+    public function exportLetterDocx(Request $request): void
+    {
+        $this->exportDocxLetter($request);
+    }
+
+    public function deleteLetter(Request $request): void
+    {
+        $id = (int)$request->input('id');
+        Database::delete('committee_letters', 'id = ?', [$id]);
+        flash('success', 'Surat berhasil dihapus.');
+        Response::redirect(url('/committee/letters'));
     }
 }

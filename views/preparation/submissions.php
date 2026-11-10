@@ -116,6 +116,11 @@
                                 <button type="button" class="btn btn-outline btn-sm" onclick='openUpdateStatusModal(<?= json_encode($sub) ?>)'>
                                     ✏️ Telaah
                                 </button>
+                                <form action="<?= url('/preparation/submissions/delete') ?>" method="POST" style="display: inline;" onsubmit="return confirmAction('Hapus entri checklist ini?', this)">
+                                    <?= csrf_field() ?>
+                                    <input type="hidden" name="id" value="<?= $sub['id'] ?>">
+                                    <button type="submit" class="btn btn-danger btn-sm" title="Hapus Checklist">🗑️</button>
+                                </form>
                             </td>
                         </tr>
                     <?php endforeach; ?>

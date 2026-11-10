@@ -276,6 +276,36 @@ class WrittenExamController
         Response::redirect(url('/written-exam/rooms'));
     }
 
+    public function autoAssign(Request $request): void
+    {
+        $this->autoDistribute($request);
+    }
+
+    public function manualAssign(Request $request): void
+    {
+        $event = active_event();
+        $roomId = (int)$request->input('room_id');
+        $participantId = (int)$request->input('participant_id');
+        $seatNumber = (int)$request->input('seat_number', 1);
+
+        $exists = Database::fetch("SELECT id FROM exam_room_assignments WHERE exam_room_id = ? AND seat_number = ?", [$roomId, $seatNumber]);
+        if ($exists) {
+            flash('error', "Nomor meja {$seatNumber} pada ruangan tersebut sudah terisi.");
+            Response::back();
+        }
+
+        Database::insert('exam_room_assignments', [
+            'exam_event_id' => $event['id'],
+            'exam_room_id' => $roomId,
+            'participant_id' => $participantId,
+            'seat_number' => $seatNumber,
+            'created_at' => date('Y-m-d H:i:s')
+        ]);
+
+        flash('success', 'Peserta berhasil ditempatkan pada ruang ujian.');
+        Response::redirect(url('/written-exam/rooms'));
+    }
+
     // 3. Seating Plan (Denah Tempat Duduk)
     public function seating(Request $request): void
     {
@@ -381,6 +411,22 @@ class WrittenExamController
             'seatsGrid' => $seatsGrid,
             'assignments' => $assignments
         ], 'layouts/print');
+    }
+
+    public function updateLayout(Request $request): void
+    {
+        $roomId = (int)$request->input('room_id');
+        $rows = (int)$request->input('rows_count', 5);
+        $cols = (int)$request->input('cols_count', 4);
+
+        Database::update('exam_rooms', [
+            'rows_count' => $rows,
+            'cols_count' => $cols,
+            'capacity' => $rows * $cols
+        ], 'id = :where_id', ['where_id' => $roomId]);
+
+        flash('success', 'Tata letak dan kapasitas ruang ujian berhasil diperbarui.');
+        Response::redirect(url("/written-exam/seating?room_id={$roomId}"));
     }
 
     // 4. Supervisors Assignment with Collision Prevention
@@ -492,6 +538,25 @@ class WrittenExamController
         ], 'id = :where_id', ['where_id' => $id]);
 
         flash('success', 'Penugasan pengawas ruang berhasil disimpan.');
+        Response::redirect(url('/written-exam/supervisors'));
+    }
+
+    public function storeSupervisor(Request $request): void
+    {
+        $this->updateSupervisor($request);
+    }
+
+    public function deleteSupervisor(Request $request): void
+    {
+        $id = (int)$request->input('id');
+        Database::update('written_exam_supervisors', [
+            'supervisor1_id' => null,
+            'supervisor2_id' => null,
+            'supervisor1_name_snapshot' => null,
+            'supervisor2_name_snapshot' => null
+        ], 'id = :where_id', ['where_id' => $id]);
+
+        flash('success', 'Penugasan pengawas ruang berhasil dikosongkan.');
         Response::redirect(url('/written-exam/supervisors'));
     }
 
@@ -636,6 +701,21 @@ class WrittenExamController
         }
 
         Response::redirect(url("/written-exam/execution/manage?schedule_id={$scheduleId}&room_id={$roomId}"));
+    }
+
+    public function roomExecution(Request $request): void
+    {
+        $this->manageRoomExecution($request);
+    }
+
+    public function saveAttendance(Request $request): void
+    {
+        $this->saveAttendanceAndMinutes($request);
+    }
+
+    public function saveMinutes(Request $request): void
+    {
+        $this->saveAttendanceAndMinutes($request);
     }
 
     public function addIncident(Request $request): void

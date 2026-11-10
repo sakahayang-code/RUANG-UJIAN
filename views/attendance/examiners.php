@@ -3,6 +3,14 @@
         <h1 class="page-title">Daftar Hadir Penguji Praktik</h1>
         <p class="page-subtitle"><?= e($event['name']) ?> • Terintegrasi dari penugasan guru penguji ujian praktik per stasiun dan jadwal.</p>
     </div>
+    <div class="page-actions">
+        <a href="<?= url('/attendance/examiners/print') ?>" target="_blank" class="btn btn-primary">
+            🖨️ Cetak Presensi Penguji
+        </a>
+        <a href="<?= url('/attendance/examiners/export-excel') ?>" class="btn btn-secondary">
+            📤 Ekspor Excel
+        </a>
+    </div>
 </div>
 
 <div class="card">

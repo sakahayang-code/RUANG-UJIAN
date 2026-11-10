@@ -136,6 +136,16 @@ class DistributionController
         Response::redirect(url('/distribution/handover?type=' . $handoverType));
     }
 
+    public function handoverOut(Request $request): void
+    {
+        $this->store($request);
+    }
+
+    public function handoverIn(Request $request): void
+    {
+        $this->store($request);
+    }
+
     public function print(Request $request): void
     {
         $event = active_event();

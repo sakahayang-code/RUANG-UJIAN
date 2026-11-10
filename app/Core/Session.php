@@ -7,6 +7,25 @@ class Session
     public static function start(): void
     {
         if (session_status() === PHP_SESSION_NONE) {
+            // Ensure session save path is writable (crucial for shared hosting, cPanel, and sandboxes)
+            if (!headers_sent()) {
+                $savePath = session_save_path();
+                if (empty($savePath) || !is_dir($savePath) || !is_writable($savePath)) {
+                    $storageSessionPath = dirname(__DIR__, 2) . '/storage/sessions';
+                    if (!is_dir($storageSessionPath)) {
+                        @mkdir($storageSessionPath, 0755, true);
+                    }
+                    if (is_dir($storageSessionPath) && is_writable($storageSessionPath)) {
+                        @session_save_path($storageSessionPath);
+                    } else {
+                        $tmpPath = sys_get_temp_dir();
+                        if (is_dir($tmpPath) && is_writable($tmpPath)) {
+                            @session_save_path($tmpPath);
+                        }
+                    }
+                }
+            }
+
             if (php_sapi_name() === 'cli') {
                 @session_start();
                 return;
@@ -24,7 +43,7 @@ class Session
                     'httponly' => true,
                     'samesite' => 'Lax'
                 ]);
-                session_start();
+                @session_start();
             } else {
                 @session_start();
             }

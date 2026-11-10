@@ -81,6 +81,30 @@ class PreparationController
         ]);
     }
 
+    public function storeRule(Request $request): void
+    {
+        $event = active_event();
+        $type = (string)$request->input('rule_type', 'dokumen_pendukung');
+        $title = trim((string)$request->input('title'));
+        $content = trim((string)$request->input('content'));
+
+        if (empty($title)) {
+            flash('error', 'Judul peraturan wajib diisi.');
+            Response::back();
+        }
+
+        Database::insert('exam_rules', [
+            'exam_event_id' => $event['id'],
+            'rule_type' => $type,
+            'title' => $title,
+            'content' => $content,
+            'created_at' => date('Y-m-d H:i:s')
+        ]);
+
+        flash('success', 'Dokumen peraturan/juknis berhasil ditambahkan.');
+        Response::redirect(url('/preparation/rules'));
+    }
+
     public function updateRule(Request $request): void
     {
         $id = (int)$request->input('id');
@@ -94,6 +118,14 @@ class PreparationController
         ], 'id = :where_id', ['where_id' => $id]);
 
         flash('success', 'Dokumen peraturan/juknis berhasil diperbarui.');
+        Response::redirect(url('/preparation/rules'));
+    }
+
+    public function deleteRule(Request $request): void
+    {
+        $id = (int)$request->input('id');
+        Database::delete('exam_rules', 'id = ?', [$id]);
+        flash('success', 'Dokumen peraturan/juknis berhasil dihapus.');
         Response::redirect(url('/preparation/rules'));
     }
 
@@ -213,6 +245,19 @@ class PreparationController
         Response::redirect(url('/preparation/submissions'));
     }
 
+    public function updateSubmission(Request $request): void
+    {
+        $this->updateSubmissionStatus($request);
+    }
+
+    public function deleteSubmission(Request $request): void
+    {
+        $id = (int)$request->input('id');
+        Database::delete('exam_document_submissions', 'id = ?', [$id]);
+        flash('success', 'Catatan checklist dokumen berhasil dihapus.');
+        Response::redirect(url('/preparation/submissions'));
+    }
+
     // 3. Question Printing Records & Replication Preparation
     public function printing(Request $request): void
     {
@@ -315,6 +360,14 @@ class PreparationController
         ], 'id = :where_id', ['where_id' => $id]);
 
         flash('success', 'Data penggandaan naskah berhasil diperbarui.');
+        Response::redirect(url('/preparation/printing'));
+    }
+
+    public function deletePrinting(Request $request): void
+    {
+        $id = (int)$request->input('id');
+        Database::delete('exam_printing_records', 'id = ?', [$id]);
+        flash('success', 'Catatan penggandaan naskah berhasil dihapus.');
         Response::redirect(url('/preparation/printing'));
     }
 }

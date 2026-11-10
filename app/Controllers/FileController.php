@@ -13,6 +13,11 @@ class FileController
         $this->serveFile($request, false);
     }
 
+    public function serve(Request $request): void
+    {
+        $this->serveFile($request, false);
+    }
+
     public function download(Request $request): void
     {
         $this->serveFile($request, true);

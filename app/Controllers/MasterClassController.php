@@ -7,6 +7,7 @@ use App\Core\Database;
 use App\Core\Request;
 use App\Core\Response;
 use App\Core\View;
+use App\Services\ExcelExport;
 
 class MasterClassController
 {
@@ -115,6 +116,61 @@ class MasterClassController
         Auth::logAudit('DELETE', 'classes', $id, null, null);
 
         flash('success', 'Data kelas berhasil dihapus.');
+        Response::redirect(url('/master/classes'));
+    }
+
+    public function export(Request $request): void
+    {
+        $classes = Database::fetchAll("
+            SELECT c.name, c.grade, t.name as homeroom,
+                   (SELECT COUNT(*) FROM students WHERE class_id = c.id AND deleted_at IS NULL) as student_count
+            FROM classes c
+            LEFT JOIN teachers t ON c.homeroom_teacher_id = t.id
+            ORDER BY c.grade ASC, c.name ASC
+        ");
+
+        $headers = ['Nama Kelas', 'Tingkat', 'Wali Kelas', 'Jumlah Siswa'];
+        $rows = [];
+        foreach ($classes as $c) {
+            $rows[] = [$c['name'], $c['grade'], $c['homeroom'] ?: '-', (int)$c['student_count']];
+        }
+
+        ExcelExport::export('master_data_kelas_' . date('Ymd'), 'DATA MASTER KELAS', $headers, $rows);
+    }
+
+    public function import(Request $request): void
+    {
+        if (!$request->hasFile('file')) {
+            flash('error', 'Silakan pilih berkas CSV untuk diimpor.');
+            Response::back();
+        }
+
+        $rows = ExcelExport::parseCsv($request->file('file')['tmp_name']);
+        if (empty($rows)) {
+            flash('error', 'Berkas CSV kosong atau format header tidak sesuai.');
+            Response::back();
+        }
+
+        $success = 0;
+        foreach ($rows as $row) {
+            $name = trim($row['nama'] ?? $row['nama_kelas'] ?? $row['kelas'] ?? '');
+            if (!$name) continue;
+
+            $grade = trim($row['tingkat'] ?? 'VII');
+            $exists = Database::fetch("SELECT id FROM classes WHERE name = ?", [$name]);
+            if ($exists) continue;
+
+            Database::insert('classes', [
+                'name' => $name,
+                'grade' => $grade,
+                'homeroom_teacher_id' => null,
+                'student_count' => 0,
+                'created_at' => date('Y-m-d H:i:s')
+            ]);
+            $success++;
+        }
+
+        flash('success', "Impor berhasil: {$success} kelas baru berhasil ditambahkan.");
         Response::redirect(url('/master/classes'));
     }
 }

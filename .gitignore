@@ -20,6 +20,8 @@
 !/storage/uploads/students/.gitkeep
 
 # Environment & Konfigurasi Server Lokal
+/storage/sessions/*
+!/storage/sessions/.gitkeep
 .env
 *.log
 .DS_Store

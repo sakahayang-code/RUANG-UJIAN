@@ -7,6 +7,12 @@
         <button type="button" class="btn btn-primary" data-modal-open="addClassModal">
             ➕ Tambah Kelas
         </button>
+        <button type="button" class="btn btn-secondary" data-modal-open="importClassModal">
+            📥 Impor CSV
+        </button>
+        <a href="<?= url('/master/classes/export') ?>" class="btn btn-outline">
+            📤 Ekspor Excel
+        </a>
     </div>
 </div>
 
@@ -150,6 +156,32 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-modal-close="editClassModal">Batal</button>
                 <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Impor CSV Kelas -->
+<div class="modal-overlay" id="importClassModal">
+    <div class="modal-container">
+        <div class="modal-header">
+            <div class="modal-title">Impor Data Kelas (CSV)</div>
+            <button type="button" class="modal-close" data-modal-close="importClassModal">&times;</button>
+        </div>
+        <form action="<?= url('/master/classes/import') ?>" method="POST" enctype="multipart/form-data">
+            <?= csrf_field() ?>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    Format file CSV harus memiliki header: <code>nama,tingkat</code> (contoh baris: <code>VII-A,VII</code>).
+                </div>
+                <div class="form-group">
+                    <label class="form-label required">Pilih Berkas CSV</label>
+                    <input type="file" name="file" class="form-control" accept=".csv" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-modal-close="importClassModal">Batal</button>
+                <button type="submit" class="btn btn-primary">Mulai Impor</button>
             </div>
         </form>
     </div>

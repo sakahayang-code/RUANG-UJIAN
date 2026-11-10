@@ -382,4 +382,72 @@ class WorkProgramController
         $filename = 'program_kerja_' . preg_replace('/[^a-zA-Z0-9_]/', '_', $event['name']) . '.docx';
         $docx->output($filename);
     }
+
+    public function storeActivity(Request $request): void
+    {
+        $programId = (int)$request->input('work_program_id');
+        $name = trim((string)$request->input('name'));
+        $pic = trim((string)$request->input('pic_name', ''));
+        $start = $request->input('start_date') ?: null;
+        $end = $request->input('end_date') ?: null;
+        $notes = trim((string)$request->input('notes', ''));
+
+        if (!empty($name)) {
+            $order = (int)Database::fetchColumn("SELECT MAX(item_order) FROM committee_work_program_items WHERE work_program_id = ?", [$programId]) + 1;
+            Database::insert('committee_work_program_items', [
+                'work_program_id' => $programId,
+                'item_order' => $order,
+                'activity_name' => $name,
+                'start_date' => $start,
+                'end_date' => $end,
+                'pic_name' => $pic,
+                'notes' => $notes
+            ]);
+            flash('success', 'Kegiatan baru berhasil ditambahkan ke program kerja.');
+        }
+        Response::redirect(url('/work-program'));
+    }
+
+    public function deleteActivity(Request $request): void
+    {
+        $id = (int)$request->input('id');
+        Database::delete('committee_work_program_items', 'id = ?', [$id]);
+        flash('success', 'Kegiatan program kerja berhasil dihapus.');
+        Response::redirect(url('/work-program'));
+    }
+
+    public function storeBudget(Request $request): void
+    {
+        $programId = (int)$request->input('work_program_id');
+        $desc = trim((string)$request->input('description'));
+        $vol = (float)$request->input('volume', 1);
+        $unit = trim((string)$request->input('unit', 'Pcs'));
+        $price = (float)$request->input('unit_price', 0);
+        $total = $vol * $price;
+        $cat = (string)$request->input('category', 'Operasional');
+
+        if (!empty($desc)) {
+            $order = (int)Database::fetchColumn("SELECT MAX(item_order) FROM committee_budgets WHERE work_program_id = ?", [$programId]) + 1;
+            Database::insert('committee_budgets', [
+                'work_program_id' => $programId,
+                'item_order' => $order,
+                'description' => $desc,
+                'volume' => $vol,
+                'unit' => $unit,
+                'unit_price' => $price,
+                'total_amount' => $total,
+                'category' => $cat
+            ]);
+            flash('success', 'Rincian anggaran RAB berhasil ditambahkan.');
+        }
+        Response::redirect(url('/work-program'));
+    }
+
+    public function deleteBudget(Request $request): void
+    {
+        $id = (int)$request->input('id');
+        Database::delete('committee_budgets', 'id = ?', [$id]);
+        flash('success', 'Rincian anggaran RAB berhasil dihapus.');
+        Response::redirect(url('/work-program'));
+    }
 }

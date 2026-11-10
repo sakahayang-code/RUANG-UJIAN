@@ -63,6 +63,11 @@ function auth(): ?array
     return Auth::user();
 }
 
+function auth_user(): ?array
+{
+    return Auth::user();
+}
+
 function user(): ?array
 {
     return Auth::user();
@@ -172,6 +177,16 @@ function format_day_id(?string $date): string
     ];
 
     return $days[date('l', $time)] ?? date('l', $time);
+}
+
+function indo_date(?string $date, bool $withTime = false): string
+{
+    return format_date_id($date, $withTime);
+}
+
+function indo_day(?string $date): string
+{
+    return format_day_id($date);
 }
 
 function to_roman(int $number): string

@@ -70,6 +70,11 @@
                                 <button type="button" class="btn btn-outline btn-sm" onclick='openUpdatePrintingModal(<?= json_encode($r) ?>)'>
                                     ✏️ Update
                                 </button>
+                                <form action="<?= url('/preparation/printing/delete') ?>" method="POST" style="display: inline;" onsubmit="return confirmAction('Hapus catatan penggandaan ini?', this)">
+                                    <?= csrf_field() ?>
+                                    <input type="hidden" name="id" value="<?= $r['id'] ?>">
+                                    <button type="submit" class="btn btn-danger btn-sm" title="Hapus Catatan">🗑️</button>
+                                </form>
                             </td>
                         </tr>
                     <?php endforeach; ?>

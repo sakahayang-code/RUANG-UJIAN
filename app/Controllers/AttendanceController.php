@@ -104,6 +104,16 @@ class AttendanceController
         ], 'layouts/print');
     }
 
+    public function saveCommittee(Request $request): void
+    {
+        $this->saveCommitteeAttendance($request);
+    }
+
+    public function printCommittee(Request $request): void
+    {
+        $this->printCommitteeAttendance($request);
+    }
+
     public function exportCommitteeExcel(Request $request): void
     {
         $event = active_event();
@@ -266,6 +276,65 @@ class AttendanceController
         ], 'layouts/print');
     }
 
+    public function saveSupervisors(Request $request): void
+    {
+        $this->saveSupervisorAttendance($request);
+    }
+
+    public function printSupervisors(Request $request): void
+    {
+        $this->printSupervisorAttendance($request);
+    }
+
+    public function exportSupervisorsExcel(Request $request): void
+    {
+        $event = active_event();
+        $dateFilter = (string)$request->input('date', '');
+
+        $sql = "
+            SELECT ws.exam_date, ws.session, ws.start_time, ws.end_time,
+                   er.room_number, er.name as room_name,
+                   s.name as subject_name,
+                   t1.name as sup1_name,
+                   t2.name as sup2_name,
+                   sa.status as attendance_status, sa.check_in_time, sa.notes as attendance_notes
+            FROM written_exam_supervisors wes
+            JOIN written_exam_schedules ws ON wes.schedule_id = ws.id
+            JOIN exam_rooms er ON wes.room_id = er.id
+            JOIN subjects s ON ws.subject_id = s.id
+            LEFT JOIN teachers t1 ON wes.supervisor1_id = t1.id
+            LEFT JOIN teachers t2 ON wes.supervisor2_id = t2.id
+            LEFT JOIN supervisor_attendances sa ON (sa.written_supervisor_id = wes.id AND sa.attendance_date = ws.exam_date AND sa.session = ws.session)
+            WHERE ws.exam_event_id = ?
+        ";
+        $params = [$event['id']];
+        if (!empty($dateFilter)) {
+            $sql .= " AND ws.exam_date = ?";
+            $params[] = $dateFilter;
+        }
+        $sql .= " ORDER BY ws.exam_date ASC, ws.session ASC, er.room_number ASC";
+        $records = Database::fetchAll($sql, $params);
+
+        $headers = ['No', 'Tanggal', 'Sesi', 'Ruang', 'Mata Pelajaran', 'Pengawas 1', 'Pengawas 2', 'Status Kehadiran', 'Jam Hadir', 'Catatan'];
+        $rows = [];
+        foreach ($records as $idx => $r) {
+            $rows[] = [
+                $idx + 1,
+                $r['exam_date'],
+                'Sesi ' . $r['session'],
+                $r['room_number'] . ' - ' . $r['room_name'],
+                $r['subject_name'],
+                $r['sup1_name'] ?: '-',
+                $r['sup2_name'] ?: '-',
+                ucfirst($r['attendance_status'] ?: 'Hadir'),
+                $r['check_in_time'] ?: '-',
+                $r['attendance_notes'] ?: '-'
+            ];
+        }
+
+        ExcelExport::export('kehadiran_pengawas_' . ($dateFilter ?: date('Ymd')), 'DAFTAR HADIR PENGAWAS RUANG', $headers, $rows);
+    }
+
     // 3. Practical Examiners Attendance
     public function examiners(Request $request): void
     {
@@ -327,5 +396,77 @@ class AttendanceController
 
         flash('success', 'Presensi penguji praktik berhasil disimpan.');
         Response::back();
+    }
+
+    public function saveExaminers(Request $request): void
+    {
+        $this->saveExaminerAttendance($request);
+    }
+
+    public function printExaminersAttendance(Request $request): void
+    {
+        $event = active_event();
+        $school = school_setting();
+        $records = Database::fetchAll("
+            SELECT pa.*, ps.exam_date, ps.start_time, ps.end_time, ps.location, ps.station, s.name as subject_name,
+                   t.name as examiner_name, t.nip as examiner_nip,
+                   pea.status as attendance_status, pea.check_in_time, pea.notes as attendance_notes
+            FROM practical_exam_assignments pa
+            JOIN practical_exam_schedules ps ON pa.practical_schedule_id = ps.id
+            JOIN subjects s ON ps.subject_id = s.id
+            JOIN teachers t ON pa.examiner_id = t.id
+            LEFT JOIN practical_examiner_attendances pea ON (pea.practical_assignment_id = pa.id AND pea.attendance_date = ps.exam_date)
+            WHERE ps.exam_event_id = ?
+            ORDER BY ps.exam_date ASC, ps.start_time ASC
+        ", [$event['id']]);
+
+        View::render('attendance/print_examiners', [
+            'title' => 'Daftar Hadir Penguji Ujian Praktik',
+            'event' => $event,
+            'school' => $school,
+            'records' => $records
+        ], 'layouts/print');
+    }
+
+    public function printExaminers(Request $request): void
+    {
+        $this->printExaminersAttendance($request);
+    }
+
+    public function exportExaminersExcel(Request $request): void
+    {
+        $event = active_event();
+        $records = Database::fetchAll("
+            SELECT ps.exam_date, ps.start_time, ps.end_time, ps.location, ps.station, s.name as subject_name,
+                   t.name as examiner_name, t.nip as examiner_nip, pa.examiner_role,
+                   pea.status as attendance_status, pea.check_in_time, pea.notes as attendance_notes
+            FROM practical_exam_assignments pa
+            JOIN practical_exam_schedules ps ON pa.practical_schedule_id = ps.id
+            JOIN subjects s ON ps.subject_id = s.id
+            JOIN teachers t ON pa.examiner_id = t.id
+            LEFT JOIN practical_examiner_attendances pea ON (pea.practical_assignment_id = pa.id AND pea.attendance_date = ps.exam_date)
+            WHERE ps.exam_event_id = ?
+            ORDER BY ps.exam_date ASC, ps.start_time ASC
+        ", [$event['id']]);
+
+        $headers = ['No', 'Tanggal', 'Waktu', 'Mata Pelajaran', 'Lokasi/Pos', 'Nama Penguji', 'NIP', 'Peran', 'Status', 'Jam Hadir', 'Catatan'];
+        $rows = [];
+        foreach ($records as $idx => $r) {
+            $rows[] = [
+                $idx + 1,
+                $r['exam_date'],
+                $r['start_time'] . ' - ' . $r['end_time'],
+                $r['subject_name'],
+                $r['location'] . ($r['station'] ? ' (' . $r['station'] . ')' : ''),
+                $r['examiner_name'],
+                $r['examiner_nip'] ?: '-',
+                $r['examiner_role'],
+                ucfirst($r['attendance_status'] ?: 'Hadir'),
+                $r['check_in_time'] ?: '-',
+                $r['attendance_notes'] ?: '-'
+            ];
+        }
+
+        ExcelExport::export('kehadiran_penguji_' . date('Ymd'), 'DAFTAR HADIR PENGUJI PRAKTIK', $headers, $rows);
     }
 }

@@ -66,6 +66,11 @@
                                 <a href="<?= url('/practical-exam/execution/manage?schedule_id=' . $s['id']) ?>" class="btn btn-primary btn-sm">
                                     Presensi
                                 </a>
+                                <form action="<?= url('/practical-exam/schedules/delete') ?>" method="POST" style="display: inline;" onsubmit="return confirmAction('Hapus jadwal ujian praktik ini?', this)">
+                                    <?= csrf_field() ?>
+                                    <input type="hidden" name="id" value="<?= $s['id'] ?>">
+                                    <button type="submit" class="btn btn-danger btn-sm" title="Hapus Jadwal">🗑️</button>
+                                </form>
                             </td>
                         </tr>
                     <?php endforeach; ?>

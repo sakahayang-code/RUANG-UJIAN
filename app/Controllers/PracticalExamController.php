@@ -89,6 +89,16 @@ class PracticalExamController
         Response::redirect(url('/practical-exam'));
     }
 
+    public function deleteSchedule(Request $request): void
+    {
+        $id = (int)$request->input('id');
+        Database::delete('practical_exam_schedules', 'id = ?', [$id]);
+        Database::delete('practical_exam_assignments', 'practical_schedule_id = ?', [$id]);
+        Database::delete('practical_exam_attendances', 'practical_schedule_id = ?', [$id]);
+        flash('success', 'Jadwal sesi ujian praktik berhasil dihapus.');
+        Response::redirect(url('/practical-exam'));
+    }
+
     public function assignExaminer(Request $request): void
     {
         $scheduleId = (int)$request->input('practical_schedule_id');
@@ -281,5 +291,18 @@ class PracticalExamController
         }
 
         Response::redirect(url('/practical-exam/execution/manage?schedule_id=' . $scheduleId));
+    }
+
+    public function uploadDoc(Request $request): void
+    {
+        $this->uploadDocument($request);
+    }
+
+    public function deleteAssignment(Request $request): void
+    {
+        $id = (int)$request->input('id');
+        Database::delete('practical_exam_assignments', 'id = ?', [$id]);
+        flash('success', 'Penugasan penguji berhasil dihapus.');
+        Response::redirect(url('/practical-exam'));
     }
 }
