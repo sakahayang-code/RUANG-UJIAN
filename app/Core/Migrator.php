@@ -4,6 +4,11 @@ namespace App\Core;
 
 class Migrator
 {
+    public static function migrate(): array
+    {
+        return self::run();
+    }
+
     public static function run(): array
     {
         $pdo = Database::getConnection();

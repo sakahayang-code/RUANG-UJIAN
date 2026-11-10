@@ -37,6 +37,7 @@ require_once dirname(__DIR__) . '/app/Core/Helpers.php';
 
 use App\Core\Auth;
 use App\Core\Database;
+use App\Core\Migrator;
 use App\Core\Request;
 use App\Core\Response;
 use App\Core\Router;
@@ -93,6 +94,11 @@ try {
         $userCount = Database::fetchColumn("SELECT COUNT(*) FROM users");
         if ($userCount !== false && (int)$userCount > 0) {
             $isDatabaseReady = true;
+            try {
+                Migrator::run();
+            } catch (\Throwable $e) {
+                // Ignore if migrations already up to date
+            }
         }
     }
 } catch (\Throwable $e) {

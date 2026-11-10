@@ -3,6 +3,17 @@ deployment:
   tasks:
     - export DEPLOYPATH=/home/mulw1713/public_html/ruangujian
     - /bin/mkdir -p $DEPLOYPATH
+    # 1. Lindungi database SQLite live pengguna di hosting sebelum proses pembaruan file
+    - if [ -f $DEPLOYPATH/database/storage/ruang_ujian.sqlite ]; then /bin/cp -f $DEPLOYPATH/database/storage/ruang_ujian.sqlite /tmp/ruang_ujian_live.sqlite; fi
+    # 2. Lindungi seluruh dokumen dan berkas unggahan pengguna (SK Panitia, Logo, Foto Siswa, Dokumen Ujian)
+    - /bin/mkdir -p /tmp/ruangujian_uploads_backup
+    - if [ -d $DEPLOYPATH/storage/uploads ]; then /bin/cp -rf $DEPLOYPATH/storage/uploads/* /tmp/ruangujian_uploads_backup/ 2>/dev/null || true; fi
+    # 3. Salin seluruh pembaruan kode aplikasi, controller, tampilan, dan tema terbaru
     - /bin/cp -R * $DEPLOYPATH/
     - /bin/cp .htaccess $DEPLOYPATH/
+    # 4. Kembalikan database live pengguna (Data siswa, jadwal, kepanitiaan di hosting 100% AMAN & TIDAK tertimpa)
+    - if [ -f /tmp/ruang_ujian_live.sqlite ]; then /bin/cp -f /tmp/ruang_ujian_live.sqlite $DEPLOYPATH/database/storage/ruang_ujian.sqlite && /bin/rm -f /tmp/ruang_ujian_live.sqlite; fi
+    # 5. Kembalikan seluruh berkas unggahan live pengguna
+    - if [ -d /tmp/ruangujian_uploads_backup ]; then /bin/cp -rf /tmp/ruangujian_uploads_backup/* $DEPLOYPATH/storage/uploads/ 2>/dev/null || true; /bin/rm -rf /tmp/ruangujian_uploads_backup; fi
+    # 6. Pastikan izin akses folder storage dan database tetap dapat ditulisi oleh web server
     - /bin/chmod -R 775 $DEPLOYPATH/storage $DEPLOYPATH/database
