@@ -16,26 +16,28 @@
 </div>
 
 <!-- Event Info Banner -->
-<div class="card" style="background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%); color: #ffffff; border: none; margin-bottom: 24px;">
-    <div class="card-body" style="padding: 24px;">
+<div class="card hero-banner" style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 30%, #4f46e5 70%, #7c3aed 100%); color: #ffffff; border: 1px solid rgba(255,255,255,0.15); border-radius: 18px; box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.35); margin-bottom: 24px; position: relative; overflow: hidden;">
+    <div style="position: absolute; right: -40px; top: -40px; width: 180px; height: 180px; background: radial-gradient(circle, rgba(236, 72, 153, 0.25) 0%, transparent 70%); border-radius: 50%; pointer-events: none;"></div>
+    <div class="card-body" style="padding: 24px 26px; position: relative; z-index: 2;">
         <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px;">
             <div>
-                <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.85; font-weight: 600;">Kegiatan Ujian Aktif</div>
-                <h2 style="font-size: 22px; font-weight: 800; margin: 4px 0; color: #fff;">
+                <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; opacity: 0.85; font-weight: 700; color: #a5b4fc;">Kegiatan Ujian Aktif</div>
+                <h2 style="font-size: 23px; font-weight: 800; margin: 5px 0 6px 0; color: #fff; letter-spacing: -0.3px;">
                     <?= $event ? e($event['name']) : 'Belum Ada Kegiatan Ujian Aktif' ?>
                 </h2>
-                <div style="font-size: 13px; opacity: 0.9; margin-top: 4px;">
+                <div style="font-size: 13px; opacity: 0.95; margin-top: 4px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
                     <?php if ($event): ?>
-                        Jenis: <strong><?= e($event['exam_type']) ?></strong> •
-                        Periode: <strong><?= format_date_id($event['start_date']) ?> s.d. <?= format_date_id($event['end_date']) ?></strong> •
-                        Status: <span class="badge badge-success" style="vertical-align: middle;"><?= strtoupper(e($event['status'])) ?></span>
+                        <span>Jenis: <strong><?= e($event['exam_type']) ?></strong></span>
+                        <span>•</span>
+                        <span>Periode: <strong><?= format_date_id($event['start_date']) ?> s.d. <?= format_date_id($event['end_date']) ?></strong></span>
+                        <span class="badge badge-success" style="vertical-align: middle; background: rgba(16, 185, 129, 0.25); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.4);"><?= strtoupper(e($event['status'])) ?></span>
                     <?php else: ?>
                         Silakan buat atau aktifkan kegiatan ujian melalui menu <strong>Kegiatan Ujian</strong>.
                     <?php endif; ?>
                 </div>
             </div>
             <div>
-                <a href="<?= url('/events') ?>" class="btn btn-secondary" style="background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.3);">
+                <a href="<?= url('/events') ?>" class="btn btn-secondary" style="background: rgba(255,255,255,0.18); color: #fff; border: 1px solid rgba(255,255,255,0.35); backdrop-filter: blur(8px); font-weight: 600;">
                     ⚙️ Kelola Kegiatan
                 </a>
             </div>
@@ -45,26 +47,26 @@
 
 <!-- Notifications Center -->
 <?php if (!empty($notifications)): ?>
-<div class="card" style="border-left: 4px solid #f59e0b; margin-bottom: 24px;">
-    <div class="card-header" style="background: #fffbeb;">
-        <div class="card-title" style="color: #92400e; display: flex; align-items: center; gap: 8px;">
-            <span>🔔</span> <strong>Pusat Notifikasi & Kendali Administrasi</strong>
+<div class="card" style="border-left: 5px solid #f59e0b; margin-bottom: 24px; border-radius: 16px; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.08);">
+    <div class="card-header" style="background: linear-gradient(90deg, #fffbeb 0%, #fff 100%);">
+        <div class="card-title" style="color: #92400e; display: flex; align-items: center; gap: 8px; font-weight: 700;">
+            <span>🔔</span> <span>Pusat Notifikasi & Kendali Administrasi</span>
         </div>
         <span class="badge badge-warning"><?= count($notifications) ?> Perhatian</span>
     </div>
-    <div class="card-body" style="padding: 12px 20px;">
+    <div class="card-body" style="padding: 14px 20px;">
         <div style="display: flex; flex-direction: column; gap: 10px;">
             <?php foreach ($notifications as $n): ?>
-                <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: #fff; border: 1px solid #fed7aa; border-radius: var(--radius-sm);">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <span style="font-size: 16px;"><?= $n['type'] === 'danger' ? '🔴' : ($n['type'] === 'warning' ? '🟠' : '🔵') ?></span>
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: #fff; border: 1px solid #fed7aa; border-radius: 12px; transition: transform 0.15s ease;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span style="font-size: 18px;"><?= $n['type'] === 'danger' ? '🔴' : ($n['type'] === 'warning' ? '🟠' : '🔵') ?></span>
                         <div>
-                            <div style="font-weight: 600; font-size: 13px; color: #1e293b;"><?= e($n['title']) ?></div>
-                            <div style="font-size: 12px; color: #64748b;"><?= e($n['message']) ?></div>
+                            <div style="font-weight: 700; font-size: 13px; color: #1e293b;"><?= e($n['title']) ?></div>
+                            <div style="font-size: 12px; color: #64748b; margin-top: 1px;"><?= e($n['message']) ?></div>
                         </div>
                     </div>
                     <?php if (!empty($n['url'])): ?>
-                        <a href="<?= $n['url'] ?>" class="btn btn-outline btn-sm" style="font-size: 11px;">
+                        <a href="<?= $n['url'] ?>" class="btn btn-outline btn-sm" style="font-size: 11.5px; border-radius: 8px;">
                             Tindak Lanjut →
                         </a>
                     <?php endif; ?>
@@ -77,7 +79,7 @@
 
 <!-- Stats Grid -->
 <div class="stats-grid">
-    <div class="stat-card">
+    <div class="stat-card primary">
         <div class="stat-icon primary">👨‍🎓</div>
         <div class="stat-info">
             <div class="stat-label">Peserta Ujian</div>
@@ -95,8 +97,8 @@
         </div>
     </div>
 
-    <div class="stat-card success">
-        <div class="stat-icon success">📚</div>
+    <div class="stat-card teal">
+        <div class="stat-icon teal">📚</div>
         <div class="stat-info">
             <div class="stat-label">Mata Pelajaran</div>
             <div class="stat-value"><?= number_format($subjectCount) ?></div>
@@ -113,8 +115,8 @@
         </div>
     </div>
 
-    <div class="stat-card primary">
-        <div class="stat-icon primary">👥</div>
+    <div class="stat-card pink">
+        <div class="stat-icon pink">👥</div>
         <div class="stat-info">
             <div class="stat-label">Panitia Ujian</div>
             <div class="stat-value"><?= number_format($committeeCount) ?></div>
@@ -131,8 +133,8 @@
         </div>
     </div>
 
-    <div class="stat-card success">
-        <div class="stat-icon success">🩺</div>
+    <div class="stat-card rose">
+        <div class="stat-icon rose">🩺</div>
         <div class="stat-info">
             <div class="stat-label">Penguji Praktik</div>
             <div class="stat-value"><?= number_format($examinerCount) ?></div>
@@ -140,8 +142,8 @@
         </div>
     </div>
 
-    <div class="stat-card indigo">
-        <div class="stat-icon indigo">🗓️</div>
+    <div class="stat-card cyan">
+        <div class="stat-icon cyan">🗓️</div>
         <div class="stat-info">
             <div class="stat-label">Jadwal Sesi</div>
             <div class="stat-value"><?= number_format($scheduleCount) ?></div>

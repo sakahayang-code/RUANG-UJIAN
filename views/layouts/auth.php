@@ -7,7 +7,7 @@
     
     <!-- PWA Android Configuration -->
     <link rel="manifest" href="<?= url('/manifest.json') ?>">
-    <meta name="theme-color" content="#1e3a8a">
+    <meta name="theme-color" content="#4f46e5">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -16,47 +16,70 @@
     <link rel="alternate icon" type="image/png" href="<?= asset('images/icons/icon-192.png') ?>">
     <link rel="apple-touch-icon" href="<?= asset('images/icons/icon-192.png') ?>">
 
+    <!-- Google Fonts: Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
     <link rel="stylesheet" href="<?= asset('css/app.css') ?>">
     <style>
         body {
-            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: 
+                radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.35) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(236, 72, 153, 0.3) 0%, transparent 45%),
+                radial-gradient(circle at 50% 50%, rgba(6, 182, 212, 0.15) 0%, transparent 60%),
+                linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 20px;
+            position: relative;
+            overflow-x: hidden;
         }
         .auth-card {
-            background: #ffffff;
-            border-radius: var(--radius-lg);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.25), 0 8px 10px -6px rgba(0, 0, 0, 0.25);
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 22px;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 
+                0 25px 50px -12px rgba(15, 23, 42, 0.45),
+                0 0 0 1px rgba(99, 102, 241, 0.15);
             width: 100%;
             max-width: 440px;
-            padding: 36px 32px;
+            padding: 38px 32px;
+            position: relative;
+            z-index: 10;
         }
         .auth-brand {
             text-align: center;
             margin-bottom: 28px;
         }
         .auth-brand .logo-box {
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, #2563eb, #1e3a8a);
-            border-radius: 16px;
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+            border-radius: 18px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             color: #ffffff;
-            font-size: 26px;
+            font-size: 28px;
             font-weight: 800;
-            box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.4);
-            margin-bottom: 12px;
+            box-shadow: 0 10px 25px -3px rgba(99, 102, 241, 0.5);
+            margin-bottom: 14px;
+            transition: transform 0.2s ease;
+        }
+        .auth-brand .logo-box:hover {
+            transform: scale(1.05) rotate(3deg);
         }
         .auth-brand h1 {
-            font-size: 22px;
+            font-size: 23px;
             font-weight: 800;
             color: #0f172a;
-            letter-spacing: 0.5px;
+            letter-spacing: -0.5px;
         }
         .auth-brand p {
             font-size: 13px;
