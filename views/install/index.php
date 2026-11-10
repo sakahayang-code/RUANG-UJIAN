@@ -1,6 +1,6 @@
 <div style="max-width: 650px; margin: 30px auto; padding: 25px; background: #fff; border-radius: 10px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border: 1px solid #e2e8f0;">
     <div style="text-align: center; margin-bottom: 25px;">
-        <div style="font-size: 36px; margin-bottom: 8px;">🏛️</div>
+        <img src="<?= asset('images/icons/icon.svg') ?>" alt="Logo RUANG UJIAN" style="width: 64px; height: 64px; margin-bottom: 12px; border-radius: 16px; box-shadow: 0 8px 20px -3px rgba(79, 70, 229, 0.4);">
         <h1 style="font-size: 22px; font-weight: 800; color: #0f172a; margin: 0;">RUANG UJIAN</h1>
         <p style="font-size: 13px; color: #64748b; margin-top: 5px;">Pemeriksa Kesiapan Lingkungan & Pemasangan Otomatis</p>
     </div>

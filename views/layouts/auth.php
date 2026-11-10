@@ -58,22 +58,25 @@
             margin-bottom: 28px;
         }
         .auth-brand .logo-box {
-            width: 64px;
-            height: 64px;
-            background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
-            border-radius: 18px;
+            width: 72px;
+            height: 72px;
+            background: transparent;
+            border-radius: 20px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            color: #ffffff;
-            font-size: 28px;
-            font-weight: 800;
-            box-shadow: 0 10px 25px -3px rgba(99, 102, 241, 0.5);
+            box-shadow: 0 12px 28px -3px rgba(79, 70, 229, 0.45);
             margin-bottom: 14px;
-            transition: transform 0.2s ease;
+            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .auth-brand .logo-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 20px;
         }
         .auth-brand .logo-box:hover {
-            transform: scale(1.05) rotate(3deg);
+            transform: scale(1.08) rotate(3deg);
         }
         .auth-brand h1 {
             font-size: 23px;
@@ -92,7 +95,9 @@
 
 <div class="auth-card">
     <div class="auth-brand">
-        <div class="logo-box">RU</div>
+        <div class="logo-box">
+            <img src="<?= asset('images/icons/icon.svg') ?>" alt="Logo RUANG UJIAN">
+        </div>
         <h1>RUANG UJIAN</h1>
         <p>Sistem Administrasi Ujian Sekolah Terpadu</p>
     </div>

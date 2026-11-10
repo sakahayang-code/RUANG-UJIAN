@@ -46,7 +46,9 @@ $allEvents = \App\Core\Database::fetchAll("SELECT * FROM exam_events ORDER BY id
     <!-- Sidebar Navigation -->
     <aside class="app-sidebar" id="appSidebar">
         <div class="sidebar-header">
-            <div class="brand-icon">RU</div>
+            <div class="brand-icon">
+                <img src="<?= asset('images/icons/icon.svg') ?>" alt="Logo RUANG UJIAN" style="width: 38px; height: 38px; object-fit: contain; border-radius: 10px;">
+            </div>
             <div>
                 <div class="brand-title">RUANG UJIAN</div>
                 <div class="brand-sub">Sistem Administrasi</div>
