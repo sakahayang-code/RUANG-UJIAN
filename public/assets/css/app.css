@@ -807,35 +807,41 @@ textarea.form-control {
 .badge-cyan      { background: #ecfeff; color: #0e7490; border: 1px solid #a5f3fc; }
 .badge-secondary { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
 
-/* Modal */
-.modal-overlay {
+/* Modal System - Standardized & Robust */
+.modal-overlay,
+.modal {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
     background: rgba(15, 23, 42, 0.65);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1100;
+    z-index: 2100;
     padding: 20px;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.22s ease;
+    transition: opacity 0.22s ease, visibility 0.22s ease;
+    visibility: hidden;
 }
 
-.modal-overlay.active {
+.modal-overlay.active,
+.modal.active {
     opacity: 1;
     pointer-events: auto;
+    visibility: visible;
 }
 
-.modal-container {
+.modal-container,
+.modal-dialog,
+.modal-content {
     background: #ffffff;
     border-radius: var(--radius-lg);
-    box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
+    box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.35);
     width: 100%;
     max-width: 600px;
     max-height: 90vh;
@@ -844,15 +850,33 @@ textarea.form-control {
     overflow: hidden;
     transform: scale(0.96);
     transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
-    border: 1px solid rgba(226, 232, 240, 0.8);
+    border: 1px solid rgba(226, 232, 240, 0.85);
+    position: relative;
 }
 
-.modal-overlay.active .modal-container {
+.modal-overlay.active .modal-container,
+.modal.active .modal-container,
+.modal.active .modal-dialog,
+.modal.active .modal-content {
     transform: scale(1);
 }
 
-.modal-container.modal-lg { max-width: 900px; }
-.modal-container.modal-xl { max-width: 1150px; }
+.modal-container.modal-lg, .modal-dialog.modal-lg { max-width: 900px; }
+.modal-container.modal-xl, .modal-dialog.modal-xl { max-width: 1150px; }
+
+/* Ensure any form inside modal-container behaves as flex column with bounded height */
+.modal-container > form,
+.modal-dialog > form,
+.modal-content > form {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: inherit;
+    overflow: hidden;
+    width: 100%;
+    margin: 0;
+}
 
 .modal-header {
     padding: 16px 22px;
@@ -861,6 +885,8 @@ textarea.form-control {
     align-items: center;
     justify-content: space-between;
     background: #ffffff;
+    flex-shrink: 0;
+    z-index: 2;
 }
 
 .modal-title {
@@ -868,14 +894,18 @@ textarea.form-control {
     font-weight: 700;
     color: var(--secondary);
     letter-spacing: -0.2px;
+    margin: 0;
+    line-height: 1.35;
+    word-break: break-word;
 }
 
 .modal-close {
     background: #f1f5f9;
     border: none;
-    font-size: 16px;
-    width: 30px;
-    height: 30px;
+    font-size: 18px;
+    line-height: 1;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     cursor: pointer;
     color: var(--text-muted);
@@ -883,16 +913,23 @@ textarea.form-control {
     align-items: center;
     justify-content: center;
     transition: var(--transition);
+    flex-shrink: 0;
+    margin-left: 12px;
+    padding: 0;
 }
 .modal-close:hover {
     background: #fee2e2;
     color: var(--danger);
+    transform: rotate(90deg);
 }
 
 .modal-body {
     padding: 22px;
     overflow-y: auto;
-    flex-grow: 1;
+    -webkit-overflow-scrolling: touch;
+    flex: 1 1 auto;
+    min-height: 0;
+    background: #ffffff;
 }
 
 .modal-footer {
@@ -903,6 +940,8 @@ textarea.form-control {
     align-items: center;
     justify-content: flex-end;
     gap: 10px;
+    flex-shrink: 0;
+    z-index: 2;
 }
 
 /* Tabs */
@@ -1370,39 +1409,91 @@ textarea.form-control {
     }
 
     /* Modals as Native Android Bottom Sheet on Mobile */
-    .modal-overlay {
+    .modal-overlay,
+    .modal {
         padding: 0 !important;
         align-items: flex-end !important;
-        z-index: 1100 !important;
+        justify-content: center !important;
+        z-index: 2200 !important;
     }
 
-    .modal-container {
+    .modal-container,
+    .modal-dialog,
+    .modal-content {
         max-width: 100% !important;
         width: 100% !important;
-        max-height: 88vh !important;
+        max-height: 90vh !important;
         border-radius: 24px 24px 0 0 !important;
         margin: 0 !important;
+        border-left: none !important;
+        border-right: none !important;
+        border-bottom: none !important;
         transform: translateY(100%) !important;
-        transition: transform 0.25s cubic-bezier(0.32, 0.72, 0, 1) !important;
+        transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1) !important;
+        display: flex !important;
+        flex-direction: column !important;
+        overflow: hidden !important;
     }
 
-    .modal-overlay.active .modal-container {
+    /* Native Android Handle Bar Indicator */
+    .modal-container::before,
+    .modal-dialog::before,
+    .modal-content::before {
+        content: "";
+        display: block;
+        width: 44px;
+        height: 4px;
+        background: #cbd5e1;
+        border-radius: 2px;
+        margin: 10px auto 0 auto;
+        flex-shrink: 0;
+    }
+
+    .modal-overlay.active .modal-container,
+    .modal.active .modal-container,
+    .modal.active .modal-dialog,
+    .modal.active .modal-content {
         transform: translateY(0) !important;
     }
 
     .modal-header {
-        padding: 14px 18px !important;
+        padding: 12px 18px 14px !important;
+        flex-shrink: 0 !important;
     }
 
     .modal-body {
         padding: 14px 18px !important;
-        max-height: calc(88vh - 120px) !important;
+        max-height: calc(90vh - 125px) !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        flex: 1 1 auto !important;
+    }
+
+    /* Stack multi-column inputs cleanly inside modal on mobile */
+    .modal-body .row,
+    .modal-body .form-row {
+        flex-direction: column !important;
+        gap: 12px !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    .modal-body .row > .col,
+    .modal-body .row > [class*="col-"],
+    .modal-body .form-col {
+        width: 100% !important;
+        flex: 1 1 100% !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
     }
 
     .modal-footer {
         padding: 12px 18px max(16px, var(--sab)) !important;
         gap: 8px !important;
         flex-wrap: wrap !important;
+        flex-shrink: 0 !important;
+        border-top: 1px solid var(--border-color) !important;
+        background: #f8fafc !important;
     }
 
     .modal-footer .btn {

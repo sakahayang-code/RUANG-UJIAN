@@ -26,69 +26,67 @@
 </div>
 
 <!-- Modal Buat Batch Pengemasan -->
-<div class="modal" id="createBatchModal">
-    <div class="modal-dialog" style="max-width: 650px;">
-        <div class="modal-content">
-            <form method="POST" action="<?= url('/answer-sheets/packing') ?>">
-                <?= csrf_field() ?>
-                <div class="modal-header">
-                    <h3 class="modal-title">Buat Batch Pengemasan (Packing) Amplop</h3>
-                    <button type="button" class="modal-close" data-modal-close="createBatchModal">&times;</button>
+<div class="modal-overlay" id="createBatchModal">
+    <div class="modal-container" style="max-width: 650px;">
+        <form method="POST" action="<?= url('/answer-sheets/packing') ?>">
+            <?= csrf_field() ?>
+            <div class="modal-header">
+                <h3 class="modal-title">Buat Batch Pengemasan (Packing) Amplop</h3>
+                <button type="button" class="modal-close" data-modal-close="createBatchModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group mb-3">
+                    <label class="form-label required">Pilih Mode Pengemasan</label>
+                    <select name="packing_mode" id="packing_mode_select" class="form-control" required onchange="toggleModeInputs()">
+                        <option value="per_kelas">Mode 1: Per Kelas Asal (1 Amplop berisi seluruh mapel untuk 1 kelas)</option>
+                        <option value="per_mapel">Mode 2: Per Mata Pelajaran (1 Amplop berisi seluruh kelas untuk 1 mapel)</option>
+                        <option value="per_kelas_mapel">Mode 3: Per Kelas & Mata Pelajaran (1 Amplop khusus 1 kelas & 1 mapel)</option>
+                    </select>
                 </div>
-                <div class="modal-body">
-                    <div class="form-group mb-3">
-                        <label class="form-label required">Pilih Mode Pengemasan</label>
-                        <select name="packing_mode" id="packing_mode_select" class="form-control" required onchange="toggleModeInputs()">
-                            <option value="per_kelas">Mode 1: Per Kelas Asal (1 Amplop berisi seluruh mapel untuk 1 kelas)</option>
-                            <option value="per_mapel">Mode 2: Per Mata Pelajaran (1 Amplop berisi seluruh kelas untuk 1 mapel)</option>
-                            <option value="per_kelas_mapel">Mode 3: Per Kelas & Mata Pelajaran (1 Amplop khusus 1 kelas & 1 mapel)</option>
-                        </select>
-                    </div>
 
-                    <div class="form-group mb-3" id="class_input_group">
-                        <label class="form-label" id="class_label">Pilih Kelas Asal</label>
-                        <select name="class_name" class="form-control">
-                            <option value="">-- Pilih Kelas Asal --</option>
-                            <?php foreach ($classes as $c): ?>
-                                <option value="<?= e($c['name']) ?>"><?= e($c['name']) ?> (Tingkat <?= e($c['grade']) ?>)</option>
-                            <?php endforeach; ?>
-                        </select>
-                        <small class="text-muted">Wajib dipilih untuk Mode 1 dan Mode 3.</small>
-                    </div>
-
-                    <div class="form-group mb-3" id="subject_input_group" style="display: none;">
-                        <label class="form-label" id="subject_label">Pilih Mata Pelajaran</label>
-                        <select name="subject_id" class="form-control">
-                            <option value="">-- Pilih Mata Pelajaran --</option>
-                            <?php foreach ($subjects as $s): ?>
-                                <option value="<?= $s['id'] ?>"><?= e($s['code']) ?> - <?= e($s['name']) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                        <small class="text-muted">Wajib dipilih untuk Mode 2 dan Mode 3.</small>
-                    </div>
-
-                    <div class="row mb-3">
-                        <div class="col" style="flex: 1;">
-                            <label class="form-label required">Jumlah Amplop Fisik</label>
-                            <input type="number" name="envelope_count" class="form-control" value="1" min="1" required>
-                            <small class="text-muted">Berapa amplop yang disiapkan (misal 1 dari 1, atau 1 dari 2).</small>
-                        </div>
-                        <div class="col" style="flex: 1;">
-                            <label class="form-label required">Petugas Pengemas (Packing)</label>
-                            <input type="text" name="packing_officer" class="form-control" value="<?= e(auth_user()['full_name'] ?? 'Petugas Panitia') ?>" required>
-                        </div>
-                    </div>
-
-                    <p style="font-size: 12px; color: #64748b; margin-top: 10px;">
-                        <em>Sistem akan otomatis menghimpun lembar jawaban yang belum dikemas sesuai kriteria yang dipilih, memeriksa selisih fisik, serta menerbitkan label stiker amplop resmi.</em>
-                    </p>
+                <div class="form-group mb-3" id="class_input_group">
+                    <label class="form-label" id="class_label">Pilih Kelas Asal</label>
+                    <select name="class_name" class="form-control">
+                        <option value="">-- Pilih Kelas Asal --</option>
+                        <?php foreach ($classes as $c): ?>
+                            <option value="<?= e($c['name']) ?>"><?= e($c['name']) ?> (Tingkat <?= e($c['grade']) ?>)</option>
+                        <?php endforeach; ?>
+                    </select>
+                    <small class="text-muted">Wajib dipilih untuk Mode 1 dan Mode 3.</small>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-modal-close="createBatchModal">Batal</button>
-                    <button type="submit" class="btn btn-primary">Simpan & Kemas ke Amplop</button>
+
+                <div class="form-group mb-3" id="subject_input_group" style="display: none;">
+                    <label class="form-label" id="subject_label">Pilih Mata Pelajaran</label>
+                    <select name="subject_id" class="form-control">
+                        <option value="">-- Pilih Mata Pelajaran --</option>
+                        <?php foreach ($subjects as $s): ?>
+                            <option value="<?= $s['id'] ?>"><?= e($s['code']) ?> - <?= e($s['name']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <small class="text-muted">Wajib dipilih untuk Mode 2 dan Mode 3.</small>
                 </div>
-            </form>
-        </div>
+
+                <div class="row mb-3">
+                    <div class="col" style="flex: 1;">
+                        <label class="form-label required">Jumlah Amplop Fisik</label>
+                        <input type="number" name="envelope_count" class="form-control" value="1" min="1" required>
+                        <small class="text-muted">Berapa amplop yang disiapkan (misal 1 dari 1, atau 1 dari 2).</small>
+                    </div>
+                    <div class="col" style="flex: 1;">
+                        <label class="form-label required">Petugas Pengemas (Packing)</label>
+                        <input type="text" name="packing_officer" class="form-control" value="<?= e(auth_user()['full_name'] ?? 'Petugas Panitia') ?>" required>
+                    </div>
+                </div>
+
+                <p style="font-size: 12px; color: #64748b; margin-top: 10px;">
+                    <em>Sistem akan otomatis menghimpun lembar jawaban yang belum dikemas sesuai kriteria yang dipilih, memeriksa selisih fisik, serta menerbitkan label stiker amplop resmi.</em>
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-modal-close="createBatchModal">Batal</button>
+                <button type="submit" class="btn btn-primary">Simpan & Kemas ke Amplop</button>
+            </div>
+        </form>
     </div>
 </div>
 

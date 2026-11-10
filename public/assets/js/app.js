@@ -64,6 +64,23 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+    // Close modal on click outside (backdrop)
+    document.addEventListener('click', function (e) {
+        if (e.target && (e.target.classList.contains('modal-overlay') || e.target.classList.contains('modal'))) {
+            closeModal(e.target.id);
+        }
+    });
+
+    // Close active modal on ESC key
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+            const activeModal = document.querySelector('.modal-overlay.active, .modal.active');
+            if (activeModal) {
+                closeModal(activeModal.id);
+            }
+        }
+    });
+
     // 5. Work Program & RAB Dynamic Calculations
     initWorkProgramBudgetCalc();
 
@@ -83,6 +100,12 @@ function openModal(id) {
     if (modal) {
         modal.classList.add('active');
         document.body.style.overflow = 'hidden';
+
+        // Focus first input field if exists
+        setTimeout(() => {
+            const firstInput = modal.querySelector('input:not([type="hidden"]), select, textarea');
+            if (firstInput) firstInput.focus();
+        }, 120);
     }
 }
 
@@ -90,7 +113,10 @@ function closeModal(id) {
     const modal = document.getElementById(id);
     if (modal) {
         modal.classList.remove('active');
-        document.body.style.overflow = '';
+        // Only restore body overflow if no other modals/sheets remain active
+        if (!document.querySelector('.modal-overlay.active, .modal.active, .android-sheet-backdrop.active')) {
+            document.body.style.overflow = '';
+        }
     }
 }
 

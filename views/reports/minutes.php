@@ -11,72 +11,70 @@
 </div>
 
 <!-- Modal Catat Insiden -->
-<div class="modal" id="addIncidentModal">
-    <div class="modal-dialog" style="max-width: 600px;">
-        <div class="modal-content">
-            <form method="POST" action="<?= url('/reports/incidents') ?>">
-                <?= csrf_field() ?>
-                <div class="modal-header">
-                    <h3 class="modal-title">Pencatatan Kejadian Khusus / Insiden Ujian</h3>
-                    <button type="button" class="modal-close" data-modal-close="addIncidentModal">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div class="row mb-3">
-                        <div class="col" style="flex: 1;">
-                            <label class="form-label required">Tanggal</label>
-                            <input type="date" name="incident_date" class="form-control" value="<?= date('Y-m-d') ?>" required>
-                        </div>
-                        <div class="col" style="flex: 1;">
-                            <label class="form-label required">Waktu (Jam)</label>
-                            <input type="text" name="incident_time" class="form-control" value="<?= date('H:i') ?> WIB" required>
-                        </div>
+<div class="modal-overlay" id="addIncidentModal">
+    <div class="modal-container" style="max-width: 600px;">
+        <form method="POST" action="<?= url('/reports/incidents') ?>">
+            <?= csrf_field() ?>
+            <div class="modal-header">
+                <h3 class="modal-title">Pencatatan Kejadian Khusus / Insiden Ujian</h3>
+                <button type="button" class="modal-close" data-modal-close="addIncidentModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col" style="flex: 1;">
+                        <label class="form-label required">Tanggal</label>
+                        <input type="date" name="incident_date" class="form-control" value="<?= date('Y-m-d') ?>" required>
                     </div>
-                    <div class="row mb-3">
-                        <div class="col" style="flex: 1;">
-                            <label class="form-label required">Kategori</label>
-                            <select name="category" class="form-control" required>
-                                <option value="tertulis">Ujian Tertulis</option>
-                                <option value="praktik">Ujian Praktik</option>
-                                <option value="naskah">Naskah Soal & Lembar Jawaban</option>
-                                <option value="kepanitiaan">Kepanitiaan / Sarana</option>
-                                <option value="kesehatan">Kesehatan Peserta</option>
-                                <option value="lainnya">Lainnya</option>
-                            </select>
-                        </div>
-                        <div class="col" style="flex: 1;">
-                            <label class="form-label">Lokasi / Ruang</label>
-                            <input type="text" name="location" class="form-control" placeholder="Misal: Ruang 03 / Lab IPA">
-                        </div>
-                    </div>
-                    <div class="form-group mb-3">
-                        <label class="form-label required">Uraian Kejadian</label>
-                        <textarea name="description" class="form-control" rows="3" required placeholder="Jelaskan secara rinci kronologi kejadian..."></textarea>
-                    </div>
-                    <div class="form-group mb-3">
-                        <label class="form-label">Tindak Lanjut / Solusi yang Diambil</label>
-                        <textarea name="follow_up" class="form-control" rows="2" placeholder="Tindakan yang dilakukan oleh pengawas / panitia..."></textarea>
-                    </div>
-                    <div class="row">
-                        <div class="col" style="flex: 1;">
-                            <label class="form-label">Nama Pelapor</label>
-                            <input type="text" name="reporter_name" class="form-control" value="<?= e(auth_user()['full_name'] ?? 'Petugas Panitia') ?>">
-                        </div>
-                        <div class="col" style="flex: 1;">
-                            <label class="form-label">Status Penyelesaian</label>
-                            <select name="status" class="form-control">
-                                <option value="Selesai">Selesai (Tertangani)</option>
-                                <option value="Dalam Proses">Dalam Proses</option>
-                                <option value="Perlu Perhatian">Perlu Perhatian Khusus</option>
-                            </select>
-                        </div>
+                    <div class="col" style="flex: 1;">
+                        <label class="form-label required">Waktu (Jam)</label>
+                        <input type="text" name="incident_time" class="form-control" value="<?= date('H:i') ?> WIB" required>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-modal-close="addIncidentModal">Batal</button>
-                    <button type="submit" class="btn btn-primary">Simpan Catatan Kejadian</button>
+                <div class="row mb-3">
+                    <div class="col" style="flex: 1;">
+                        <label class="form-label required">Kategori</label>
+                        <select name="category" class="form-control" required>
+                            <option value="tertulis">Ujian Tertulis</option>
+                            <option value="praktik">Ujian Praktik</option>
+                            <option value="naskah">Naskah Soal & Lembar Jawaban</option>
+                            <option value="kepanitiaan">Kepanitiaan / Sarana</option>
+                            <option value="kesehatan">Kesehatan Peserta</option>
+                            <option value="lainnya">Lainnya</option>
+                        </select>
+                    </div>
+                    <div class="col" style="flex: 1;">
+                        <label class="form-label">Lokasi / Ruang</label>
+                        <input type="text" name="location" class="form-control" placeholder="Misal: Ruang 03 / Lab IPA">
+                    </div>
                 </div>
-            </form>
-        </div>
+                <div class="form-group mb-3">
+                    <label class="form-label required">Uraian Kejadian</label>
+                    <textarea name="description" class="form-control" rows="3" required placeholder="Jelaskan secara rinci kronologi kejadian..."></textarea>
+                </div>
+                <div class="form-group mb-3">
+                    <label class="form-label">Tindak Lanjut / Solusi yang Diambil</label>
+                    <textarea name="follow_up" class="form-control" rows="2" placeholder="Tindakan yang dilakukan oleh pengawas / panitia..."></textarea>
+                </div>
+                <div class="row">
+                    <div class="col" style="flex: 1;">
+                        <label class="form-label">Nama Pelapor</label>
+                        <input type="text" name="reporter_name" class="form-control" value="<?= e(auth_user()['full_name'] ?? 'Petugas Panitia') ?>">
+                    </div>
+                    <div class="col" style="flex: 1;">
+                        <label class="form-label">Status Penyelesaian</label>
+                        <select name="status" class="form-control">
+                            <option value="Selesai">Selesai (Tertangani)</option>
+                            <option value="Dalam Proses">Dalam Proses</option>
+                            <option value="Perlu Perhatian">Perlu Perhatian Khusus</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-modal-close="addIncidentModal">Batal</button>
+                <button type="submit" class="btn btn-primary">Simpan Catatan Kejadian</button>
+            </div>
+        </form>
     </div>
 </div>
 

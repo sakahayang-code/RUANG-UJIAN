@@ -46,61 +46,57 @@
 </div>
 
 <!-- Modal Buat Backup Manual -->
-<div class="modal" id="createBackupModal">
-    <div class="modal-dialog" style="max-width: 500px;">
-        <div class="modal-content">
-            <form method="POST" action="<?= url('/backup/create') ?>">
-                <?= csrf_field() ?>
-                <div class="modal-header">
-                    <h3 class="modal-title">Buat Backup Database Baru</h3>
-                    <button type="button" class="modal-close" data-modal-close="createBackupModal">&times;</button>
+<div class="modal-overlay" id="createBackupModal">
+    <div class="modal-container" style="max-width: 500px;">
+        <form method="POST" action="<?= url('/backup/create') ?>">
+            <?= csrf_field() ?>
+            <div class="modal-header">
+                <h3 class="modal-title">Buat Backup Database Baru</h3>
+                <button type="button" class="modal-close" data-modal-close="createBackupModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group mb-3">
+                    <label class="form-label">Catatan / Keterangan Backup</label>
+                    <input type="text" name="notes" class="form-control" placeholder="Misal: Sebelum impor siswa baru / Akhir semester" value="Backup manual sistem">
+                    <small class="text-muted">Membantu mengidentifikasi kondisi data pada waktu backup dibuat.</small>
                 </div>
-                <div class="modal-body">
-                    <div class="form-group mb-3">
-                        <label class="form-label">Catatan / Keterangan Backup</label>
-                        <input type="text" name="notes" class="form-control" placeholder="Misal: Sebelum impor siswa baru / Akhir semester" value="Backup manual sistem">
-                        <small class="text-muted">Membantu mengidentifikasi kondisi data pada waktu backup dibuat.</small>
-                    </div>
-                    <p style="font-size: 12px; color: #475569;">
-                        Sistem akan menjalankan perintah pencadangan atomik SQLite ke folder penyimpanan lokal yang aman.
-                    </p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-modal-close="createBackupModal">Batal</button>
-                    <button type="submit" class="btn btn-primary">Mulai Proses Backup</button>
-                </div>
-            </form>
-        </div>
+                <p style="font-size: 12px; color: #475569;">
+                    Sistem akan menjalankan perintah pencadangan atomik SQLite ke folder penyimpanan lokal yang aman.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-modal-close="createBackupModal">Batal</button>
+                <button type="submit" class="btn btn-primary">Mulai Proses Backup</button>
+            </div>
+        </form>
     </div>
 </div>
 
 <!-- Modal Unggah & Restore File Backup -->
-<div class="modal" id="uploadRestoreModal">
-    <div class="modal-dialog" style="max-width: 550px;">
-        <div class="modal-content">
-            <form method="POST" action="<?= url('/backup/restore') ?>" enctype="multipart/form-data">
-                <?= csrf_field() ?>
-                <div class="modal-header">
-                    <h3 class="modal-title">Unggah & Restore File Backup</h3>
-                    <button type="button" class="modal-close" data-modal-close="uploadRestoreModal">&times;</button>
+<div class="modal-overlay" id="uploadRestoreModal">
+    <div class="modal-container" style="max-width: 550px;">
+        <form method="POST" action="<?= url('/backup/restore') ?>" enctype="multipart/form-data">
+            <?= csrf_field() ?>
+            <div class="modal-header">
+                <h3 class="modal-title">Unggah & Restore File Backup</h3>
+                <button type="button" class="modal-close" data-modal-close="uploadRestoreModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning" style="font-size: 12px; margin-bottom: 15px;">
+                    ⚠️ <strong>PENTING:</strong> Restore akan menimpa data yang saat ini aktif dengan isi berkas backup. Sistem akan otomatis membuat salinan pengaman terlebih dahulu.
                 </div>
-                <div class="modal-body">
-                    <div class="alert alert-warning" style="font-size: 12px; margin-bottom: 15px;">
-                        ⚠️ <strong>PENTING:</strong> Restore akan menimpa data yang saat ini aktif dengan isi berkas backup. Sistem akan otomatis membuat salinan pengaman terlebih dahulu.
-                    </div>
-                    <div class="form-group mb-3">
-                        <label class="form-label required">Pilih Berkas Backup (.sqlite / .db)</label>
-                        <input type="file" name="backup_file" class="form-control" accept=".sqlite,.db,.sqlite3" required>
-                    </div>
+                <div class="form-group mb-3">
+                    <label class="form-label required">Pilih Berkas Backup (.sqlite / .db)</label>
+                    <input type="file" name="backup_file" class="form-control" accept=".sqlite,.db,.sqlite3" required>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-modal-close="uploadRestoreModal">Batal</button>
-                    <button type="submit" class="btn btn-danger" onclick="return confirm('PERINGATAN: Apakah Anda yakin ingin memulihkan database dari file ini?');">
-                        Unggah & Pulihkan (Restore)
-                    </button>
-                </div>
-            </form>
-        </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-modal-close="uploadRestoreModal">Batal</button>
+                <button type="submit" class="btn btn-danger" onclick="return confirm('PERINGATAN: Apakah Anda yakin ingin memulihkan database dari file ini?');">
+                    Unggah & Pulihkan (Restore)
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 

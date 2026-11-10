@@ -31,58 +31,56 @@
 </div>
 
 <!-- Modal Tambah Pengguna -->
-<div class="modal" id="addUserModal">
-    <div class="modal-dialog" style="max-width: 550px;">
-        <div class="modal-content">
-            <form method="POST" action="<?= url('/users') ?>">
-                <?= csrf_field() ?>
-                <div class="modal-header">
-                    <h3 class="modal-title">Tambah Pengguna Baru</h3>
-                    <button type="button" class="modal-close" data-modal-close="addUserModal">&times;</button>
+<div class="modal-overlay" id="addUserModal">
+    <div class="modal-container" style="max-width: 550px;">
+        <form method="POST" action="<?= url('/users') ?>">
+            <?= csrf_field() ?>
+            <div class="modal-header">
+                <h3 class="modal-title">Tambah Pengguna Baru</h3>
+                <button type="button" class="modal-close" data-modal-close="addUserModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group mb-3">
+                    <label class="form-label required">Nama Lengkap</label>
+                    <input type="text" name="full_name" class="form-control" required placeholder="Nama lengkap beserta gelar jika ada">
                 </div>
-                <div class="modal-body">
-                    <div class="form-group mb-3">
-                        <label class="form-label required">Nama Lengkap</label>
-                        <input type="text" name="full_name" class="form-control" required placeholder="Nama lengkap beserta gelar jika ada">
+                <div class="row mb-3">
+                    <div class="col" style="flex: 1;">
+                        <label class="form-label required">Username</label>
+                        <input type="text" name="username" class="form-control" required placeholder="huruf kecil tanpa spasi">
                     </div>
-                    <div class="row mb-3">
-                        <div class="col" style="flex: 1;">
-                            <label class="form-label required">Username</label>
-                            <input type="text" name="username" class="form-control" required placeholder="huruf kecil tanpa spasi">
-                        </div>
-                        <div class="col" style="flex: 1;">
-                            <label class="form-label">Email</label>
-                            <input type="email" name="email" class="form-control" placeholder="user@sekolah.sch.id">
-                        </div>
-                    </div>
-                    <div class="form-group mb-3">
-                        <label class="form-label required">Password Akun</label>
-                        <input type="password" name="password" class="form-control" required placeholder="Minimal 6 karakter (dihash dengan Bcrypt)">
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col" style="flex: 1;">
-                            <label class="form-label required">Peran / Hak Akses (Role)</label>
-                            <select name="role_id" class="form-control" required>
-                                <?php foreach ($roles as $r): ?>
-                                    <option value="<?= $r['id'] ?>"><?= e($r['display_name']) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="col" style="flex: 1;">
-                            <label class="form-label required">Status Akun</label>
-                            <select name="is_active" class="form-control" required>
-                                <option value="1">Aktif (Dapat Login)</option>
-                                <option value="0">Nonaktif</option>
-                            </select>
-                        </div>
+                    <div class="col" style="flex: 1;">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" class="form-control" placeholder="user@sekolah.sch.id">
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-modal-close="addUserModal">Batal</button>
-                    <button type="submit" class="btn btn-primary">Simpan Pengguna</button>
+                <div class="form-group mb-3">
+                    <label class="form-label required">Password Akun</label>
+                    <input type="password" name="password" class="form-control" required placeholder="Minimal 6 karakter (dihash dengan Bcrypt)">
                 </div>
-            </form>
-        </div>
+                <div class="row mb-3">
+                    <div class="col" style="flex: 1;">
+                        <label class="form-label required">Peran / Hak Akses (Role)</label>
+                        <select name="role_id" class="form-control" required>
+                            <?php foreach ($roles as $r): ?>
+                                <option value="<?= $r['id'] ?>"><?= e($r['display_name']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col" style="flex: 1;">
+                        <label class="form-label required">Status Akun</label>
+                        <select name="is_active" class="form-control" required>
+                            <option value="1">Aktif (Dapat Login)</option>
+                            <option value="0">Nonaktif</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-modal-close="addUserModal">Batal</button>
+                <button type="submit" class="btn btn-primary">Simpan Pengguna</button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -129,64 +127,64 @@
                                 <form method="POST" action="<?= url('/users/delete') ?>" style="display: inline-block;" onsubmit="return confirm('Yakin ingin menghapus pengguna ini?');">
                                     <?= csrf_field() ?>
                                     <input type="hidden" name="id" value="<?= $u['id'] ?>">
-                                    <button type="submit" class="btn btn-sm btn-outline text-danger">Hapus</button>
+                                     <button type="submit" class="btn btn-sm btn-outline text-danger">Hapus</button>
                                 </form>
                             <?php endif; ?>
                         </td>
                     </tr>
-
-                    <!-- Edit User Modal -->
-                    <div class="modal" id="editUserModal_<?= $u['id'] ?>">
-                        <div class="modal-dialog" style="max-width: 550px;">
-                            <div class="modal-content">
-                                <form method="POST" action="<?= url('/users/update') ?>">
-                                    <?= csrf_field() ?>
-                                    <input type="hidden" name="id" value="<?= $u['id'] ?>">
-                                    <div class="modal-header">
-                                        <h3 class="modal-title">Edit Akun: <?= e($u['username']) ?></h3>
-                                        <button type="button" class="modal-close" data-modal-close="editUserModal_<?= $u['id'] ?>">&times;</button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <div class="form-group mb-3">
-                                            <label class="form-label required">Nama Lengkap</label>
-                                            <input type="text" name="full_name" class="form-control" value="<?= e($u['full_name']) ?>" required>
-                                        </div>
-                                        <div class="form-group mb-3">
-                                            <label class="form-label">Email</label>
-                                            <input type="email" name="email" class="form-control" value="<?= e($u['email']) ?>">
-                                        </div>
-                                        <div class="form-group mb-3">
-                                            <label class="form-label">Ubah Password (Kosongkan jika tidak ingin diubah)</label>
-                                            <input type="password" name="password" class="form-control" placeholder="Isi password baru untuk reset">
-                                        </div>
-                                        <div class="row mb-3">
-                                            <div class="col" style="flex: 1;">
-                                                <label class="form-label required">Peran / Hak Akses</label>
-                                                <select name="role_id" class="form-control" required>
-                                                    <?php foreach ($roles as $r): ?>
-                                                        <option value="<?= $r['id'] ?>" <?= $r['id'] == $u['role_id'] ? 'selected' : '' ?>><?= e($r['display_name']) ?></option>
-                                                    <?php endforeach; ?>
-                                                </select>
-                                            </div>
-                                            <div class="col" style="flex: 1;">
-                                                <label class="form-label required">Status Akun</label>
-                                                <select name="is_active" class="form-control" required>
-                                                    <option value="1" <?= $u['is_active'] ? 'selected' : '' ?>>Aktif</option>
-                                                    <option value="0" <?= !$u['is_active'] ? 'selected' : '' ?>>Nonaktif</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary" data-modal-close="editUserModal_<?= $u['id'] ?>">Batal</button>
-                                        <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
                 <?php endforeach; ?>
             </tbody>
         </table>
     </div>
 </div>
+
+<!-- Modals Edit Pengguna (Ditempatkan di luar tabel untuk stabilitas DOM HTML5) -->
+<?php foreach ($users as $u): ?>
+<div class="modal-overlay" id="editUserModal_<?= $u['id'] ?>">
+    <div class="modal-container" style="max-width: 550px;">
+        <form method="POST" action="<?= url('/users/update') ?>">
+            <?= csrf_field() ?>
+            <input type="hidden" name="id" value="<?= $u['id'] ?>">
+            <div class="modal-header">
+                <h3 class="modal-title">Edit Akun: <?= e($u['username']) ?></h3>
+                <button type="button" class="modal-close" data-modal-close="editUserModal_<?= $u['id'] ?>">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group mb-3">
+                    <label class="form-label required">Nama Lengkap</label>
+                    <input type="text" name="full_name" class="form-control" value="<?= e($u['full_name']) ?>" required>
+                </div>
+                <div class="form-group mb-3">
+                    <label class="form-label">Email</label>
+                    <input type="email" name="email" class="form-control" value="<?= e($u['email']) ?>">
+                </div>
+                <div class="form-group mb-3">
+                    <label class="form-label">Ubah Password (Kosongkan jika tidak ingin diubah)</label>
+                    <input type="password" name="password" class="form-control" placeholder="Isi password baru untuk reset">
+                </div>
+                <div class="row mb-3">
+                    <div class="col" style="flex: 1;">
+                        <label class="form-label required">Peran / Hak Akses</label>
+                        <select name="role_id" class="form-control" required>
+                            <?php foreach ($roles as $r): ?>
+                                <option value="<?= $r['id'] ?>" <?= $r['id'] == $u['role_id'] ? 'selected' : '' ?>><?= e($r['display_name']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col" style="flex: 1;">
+                        <label class="form-label required">Status Akun</label>
+                        <select name="is_active" class="form-control" required>
+                            <option value="1" <?= $u['is_active'] ? 'selected' : '' ?>>Aktif</option>
+                            <option value="0" <?= !$u['is_active'] ? 'selected' : '' ?>>Nonaktif</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-modal-close="editUserModal_<?= $u['id'] ?>">Batal</button>
+                <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+            </div>
+        </form>
+    </div>
+</div>
+<?php endforeach; ?>
