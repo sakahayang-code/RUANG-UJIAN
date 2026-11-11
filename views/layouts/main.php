@@ -81,6 +81,9 @@ $allEvents = \App\Core\Database::fetchAll("SELECT * FROM exam_events ORDER BY id
             <a href="<?= url('/master/subjects') ?>" class="menu-item <?= str_contains($currentUrl, '/master/subjects') ? 'active' : '' ?>">
                 <span class="menu-icon">📚</span> Data Mata Pelajaran
             </a>
+            <a href="<?= url('/written-exam/rooms') ?>" class="menu-item <?= (str_contains($currentUrl, '/written-exam/rooms') || str_contains($currentUrl, '/master/rooms')) ? 'active' : '' ?>">
+                <span class="menu-icon">🚪</span> Atur Ruangan
+            </a>
             <?php endif; ?>
 
             <?php if (has_role(['super_admin', 'admin', 'ketua_panitia', 'sekretaris', 'operator'])): ?>
@@ -118,8 +121,8 @@ $allEvents = \App\Core\Database::fetchAll("SELECT * FROM exam_events ORDER BY id
                 <span class="menu-icon">🗓️</span> Jadwal Ujian Tertulis
             </a>
             <?php if (!has_role('pengawas')): ?>
-            <a href="<?= url('/written-exam/rooms') ?>" class="menu-item <?= str_contains($currentUrl, '/written-exam/rooms') ? 'active' : '' ?>">
-                <span class="menu-icon">🚪</span> Ruang & Penempatan
+            <a href="<?= url('/written-exam/rooms') ?>" class="menu-item <?= (str_contains($currentUrl, '/written-exam/rooms') || str_contains($currentUrl, '/master/rooms')) ? 'active' : '' ?>">
+                <span class="menu-icon">🚪</span> Atur Ruangan & Peserta
             </a>
             <a href="<?= url('/written-exam/seating') ?>" class="menu-item <?= str_contains($currentUrl, '/written-exam/seating') ? 'active' : '' ?>">
                 <span class="menu-icon">🪑</span> Denah Tempat Duduk
@@ -379,6 +382,10 @@ $allEvents = \App\Core\Database::fetchAll("SELECT * FROM exam_events ORDER BY id
                     <div class="tile-icon-bg bg-amber">📚</div>
                     <span class="tile-text">Mapel</span>
                 </a>
+                <a href="<?= url('/written-exam/rooms') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-purple">🚪</div>
+                    <span class="tile-text">Atur Ruang</span>
+                </a>
                 <?php endif; ?>
 
                 <?php if (has_role(['super_admin', 'admin', 'ketua_panitia', 'sekretaris', 'operator'])): ?>
@@ -419,7 +426,7 @@ $allEvents = \App\Core\Database::fetchAll("SELECT * FROM exam_events ORDER BY id
                 <?php if (!has_role('pengawas')): ?>
                 <a href="<?= url('/written-exam/rooms') ?>" class="sheet-tile">
                     <div class="tile-icon-bg bg-teal">🚪</div>
-                    <span class="tile-text">Ruang Ujian</span>
+                    <span class="tile-text">Atur Ruangan</span>
                 </a>
                 <a href="<?= url('/written-exam/seating') ?>" class="sheet-tile">
                     <div class="tile-icon-bg bg-cyan">🪑</div>

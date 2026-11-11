@@ -1,6 +1,6 @@
 <div class="page-header">
     <div>
-        <h1 class="page-title">Pengaturan Ruang Ujian & Pembagian Peserta</h1>
+        <h1 class="page-title">Atur Ruangan Ujian & Pembagian Peserta</h1>
         <p class="page-subtitle"><?= e($event['name']) ?> • Pengelolaan kapasitas ruang dan sistem alokasi peserta (campuran multi-tingkat/kelas).</p>
     </div>
     <div class="page-actions">

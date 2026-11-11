@@ -201,6 +201,7 @@ Router::post('/master/subjects/delete', [MasterSubjectController::class, 'delete
 Router::post('/master/subjects/delete-all', [MasterSubjectController::class, 'deleteAll'], ['auth', 'csrf']);
 Router::post('/master/subjects/import', [MasterSubjectController::class, 'import'], ['auth', 'csrf']);
 Router::get('/master/subjects/export', [MasterSubjectController::class, 'export'], ['auth']);
+Router::get('/master/rooms', [WrittenExamController::class, 'rooms'], ['auth']);
 
 // 7. Exam Events
 Router::get('/events', [ExamEventController::class, 'index'], ['auth']);

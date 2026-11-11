@@ -106,14 +106,16 @@
         </div>
     </div>
 
-    <div class="stat-card purple">
-        <div class="stat-icon purple">🚪</div>
-        <div class="stat-info">
-            <div class="stat-label">Ruang Ujian</div>
-            <div class="stat-value"><?= number_format($roomCount) ?></div>
-            <div class="stat-subtext">Ruang tertulis aktif</div>
+    <a href="<?= url('/written-exam/rooms') ?>" style="text-decoration: none; color: inherit; display: block;">
+        <div class="stat-card purple" style="cursor: pointer; transition: transform 0.18s ease, box-shadow 0.18s ease;">
+            <div class="stat-icon purple">🚪</div>
+            <div class="stat-info">
+                <div class="stat-label">Ruang Ujian</div>
+                <div class="stat-value"><?= number_format($roomCount) ?></div>
+                <div class="stat-subtext">Klik untuk atur ruangan →</div>
+            </div>
         </div>
-    </div>
+    </a>
 
     <div class="stat-card pink">
         <div class="stat-icon pink">👥</div>
