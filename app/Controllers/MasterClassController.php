@@ -119,6 +119,26 @@ class MasterClassController
         Response::redirect(url('/master/classes'));
     }
 
+    public function deleteAll(Request $request): void
+    {
+        $studentCount = (int)Database::fetchColumn("SELECT COUNT(*) FROM students WHERE deleted_at IS NULL");
+        if ($studentCount > 0) {
+            flash('error', "Tidak dapat mengosongkan data kelas karena masih terdapat {$studentCount} siswa terdaftar.");
+            Response::back();
+        }
+
+        $count = (int)Database::fetchColumn("SELECT COUNT(*) FROM classes");
+        if ($count === 0) {
+            flash('info', 'Data kelas sudah kosong.');
+            Response::redirect(url('/master/classes'));
+        }
+
+        Database::query("DELETE FROM classes");
+        Auth::logAudit('DELETE', 'classes', 0, null, ['deleted_all_count' => $count]);
+        flash('success', "Berhasil mengosongkan seluruh data kelas ({$count} kelas).");
+        Response::redirect(url('/master/classes'));
+    }
+
     public function export(Request $request): void
     {
         $classes = Database::fetchAll("

@@ -13,6 +13,14 @@
         <a href="<?= url('/master/teachers/export') ?>" class="btn btn-outline">
             📤 Ekspor Excel
         </a>
+        <?php if (!empty($teachers)): ?>
+            <form action="<?= url('/master/teachers/delete-all') ?>" method="POST" style="display: inline;" onsubmit="return confirm('PERINGATAN: Apakah Anda yakin ingin menghapus seluruh data guru dan tendik? Tindakan ini tidak dapat dibatalkan.');">
+                <?= csrf_field() ?>
+                <button type="submit" class="btn btn-outline text-danger">
+                    🗑️ Kosongkan Data Guru
+                </button>
+            </form>
+        <?php endif; ?>
     </div>
 </div>
 

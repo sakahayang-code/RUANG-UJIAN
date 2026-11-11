@@ -13,6 +13,14 @@
         <a href="<?= url('/master/classes/export') ?>" class="btn btn-outline">
             📤 Ekspor Excel
         </a>
+        <?php if (!empty($classes)): ?>
+            <form action="<?= url('/master/classes/delete-all') ?>" method="POST" style="display: inline;" onsubmit="return confirm('PERINGATAN: Apakah Anda yakin ingin menghapus seluruh data kelas? Tindakan ini tidak dapat dibatalkan.');">
+                <?= csrf_field() ?>
+                <button type="submit" class="btn btn-outline text-danger">
+                    🗑️ Kosongkan Data Kelas
+                </button>
+            </form>
+        <?php endif; ?>
     </div>
 </div>
 

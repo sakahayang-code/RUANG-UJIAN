@@ -111,6 +111,24 @@ class MasterTeacherController
         Response::redirect(url('/master/teachers'));
     }
 
+    public function deleteAll(Request $request): void
+    {
+        $count = (int)Database::fetchColumn("SELECT COUNT(*) FROM teachers");
+        if ($count === 0) {
+            flash('info', 'Data guru sudah kosong.');
+            Response::redirect(url('/master/teachers'));
+        }
+
+        Database::query("UPDATE classes SET homeroom_teacher_id = NULL");
+        Database::query("UPDATE committee_members SET teacher_id = NULL");
+        Database::query("DELETE FROM written_exam_supervisors");
+        Database::query("DELETE FROM teachers");
+
+        Auth::logAudit('DELETE', 'teachers', 0, null, ['deleted_all_count' => $count]);
+        flash('success', "Berhasil mengosongkan seluruh data guru/tendik ({$count} data).");
+        Response::redirect(url('/master/teachers'));
+    }
+
     public function export(Request $request): void
     {
         $teachers = Database::fetchAll("SELECT name, nip, nuptk, position, phone, status FROM teachers ORDER BY name ASC");

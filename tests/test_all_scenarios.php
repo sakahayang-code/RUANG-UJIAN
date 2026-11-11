@@ -163,6 +163,16 @@ assertTest('Skenario A', 'Label Amplop Soal Bebas Kolom Tanda Tangan (Sesuai Ket
 // 3. Scenario B: Distribution & Handover per Room & Subject
 echo "\n>>> SKENARIO B: Distribusi Naskah Soal & Selisih Pengembalian...\n";
 $testSubj = Database::fetch("SELECT * FROM subjects LIMIT 1");
+if (!$testSubj) {
+    $subjId = Database::insert('subjects', [
+        'code' => 'TEST-MAT',
+        'name' => 'Matematika Test',
+        'grade' => 'Semua',
+        'exam_type' => 'written',
+        'created_at' => date('Y-m-d H:i:s')
+    ]);
+    $testSubj = Database::fetch("SELECT * FROM subjects WHERE id = ?", [$subjId]);
+}
 $handoverOutId = Database::insert('exam_paper_handover_records', [
     'exam_event_id' => $activeEvent['id'],
     'room_id' => $testRoomA,
@@ -341,6 +351,17 @@ assertTest('Skenario G', 'Ekspor Dokumen Word (.docx) Berhasil Dibuat', file_exi
 // 9. Scenario H: Attendance Linked to Assigned Roles
 echo "\n>>> SKENARIO H: Integrasi Kehadiran dengan Penugasan Resmi...\n";
 $teacher = Database::fetch("SELECT * FROM teachers LIMIT 1");
+if (!$teacher) {
+    $tId = Database::insert('teachers', [
+        'name' => 'Budi Santoso, S.Pd.',
+        'nip' => '198001012005011001',
+        'position' => 'Guru Matematika',
+        'phone' => '081234567890',
+        'status' => 'Aktif',
+        'created_at' => date('Y-m-d H:i:s')
+    ]);
+    $teacher = Database::fetch("SELECT * FROM teachers WHERE id = ?", [$tId]);
+}
 if ($teacher) {
     $sched = Database::fetch("SELECT * FROM written_exam_schedules WHERE exam_event_id = ?", [$activeEvent['id']]);
     if (!$sched) {
@@ -439,12 +460,19 @@ assertTest('PWA', 'Service Worker & Offline Fallback Tersedia', file_exists(dirn
 $mainLayout = file_get_contents(dirname(__DIR__) . '/views/layouts/main.php');
 assertTest('PWA', 'Navigasi Bawah Android (Material 3) Terpasang', str_contains($mainLayout, 'android-bottom-nav') && str_contains($mainLayout, 'android-bottom-sheet'));
 
-// Clean up test room, participant, and dummy student records created during test
+// Clean up all test room, participant, and master records created during test
 Database::query("DELETE FROM exam_room_assignments WHERE exam_room_id = ?", [$testRoomA]);
 Database::query("DELETE FROM exam_rooms WHERE id = ?", [$testRoomA]);
 Database::query("DELETE FROM exam_participants WHERE participant_number LIKE 'TEST-%'");
 Database::query("DELETE FROM students WHERE name LIKE 'Siswa %' OR nis LIKE '100%'");
-Database::query("UPDATE classes SET student_count = 0");
+Database::query("DELETE FROM classes WHERE name IN ('VII A', 'VII B', 'VIII A', 'IX B')");
+Database::query("DELETE FROM written_exam_supervisors");
+Database::query("DELETE FROM written_exam_schedules");
+Database::query("DELETE FROM exam_paper_handover_records");
+Database::query("DELETE FROM answer_sheet_receipts");
+Database::query("DELETE FROM answer_sheet_packing_batches");
+Database::query("DELETE FROM teachers WHERE nip = '198001012005011001'");
+Database::query("DELETE FROM subjects WHERE code = 'TEST-MAT'");
 
 echo "\n====================================================================\n";
 echo "HASIL PENGUJIAN OTOMATIS: {$passed} LULUS, {$failed} GAGAL\n";

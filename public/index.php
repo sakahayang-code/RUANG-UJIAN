@@ -178,6 +178,7 @@ Router::post('/master/classes', [MasterClassController::class, 'store'], ['auth'
 Router::post('/master/classes/store', [MasterClassController::class, 'store'], ['auth', 'csrf']);
 Router::post('/master/classes/update', [MasterClassController::class, 'update'], ['auth', 'csrf']);
 Router::post('/master/classes/delete', [MasterClassController::class, 'delete'], ['auth', 'csrf']);
+Router::post('/master/classes/delete-all', [MasterClassController::class, 'deleteAll'], ['auth', 'csrf']);
 Router::post('/master/classes/import', [MasterClassController::class, 'import'], ['auth', 'csrf']);
 Router::get('/master/classes/export', [MasterClassController::class, 'export'], ['auth']);
 
@@ -187,6 +188,7 @@ Router::post('/master/teachers', [MasterTeacherController::class, 'store'], ['au
 Router::post('/master/teachers/store', [MasterTeacherController::class, 'store'], ['auth', 'csrf']);
 Router::post('/master/teachers/update', [MasterTeacherController::class, 'update'], ['auth', 'csrf']);
 Router::post('/master/teachers/delete', [MasterTeacherController::class, 'delete'], ['auth', 'csrf']);
+Router::post('/master/teachers/delete-all', [MasterTeacherController::class, 'deleteAll'], ['auth', 'csrf']);
 Router::post('/master/teachers/import', [MasterTeacherController::class, 'import'], ['auth', 'csrf']);
 Router::get('/master/teachers/export', [MasterTeacherController::class, 'export'], ['auth']);
 
@@ -196,6 +198,7 @@ Router::post('/master/subjects', [MasterSubjectController::class, 'store'], ['au
 Router::post('/master/subjects/store', [MasterSubjectController::class, 'store'], ['auth', 'csrf']);
 Router::post('/master/subjects/update', [MasterSubjectController::class, 'update'], ['auth', 'csrf']);
 Router::post('/master/subjects/delete', [MasterSubjectController::class, 'delete'], ['auth', 'csrf']);
+Router::post('/master/subjects/delete-all', [MasterSubjectController::class, 'deleteAll'], ['auth', 'csrf']);
 Router::post('/master/subjects/import', [MasterSubjectController::class, 'import'], ['auth', 'csrf']);
 Router::get('/master/subjects/export', [MasterSubjectController::class, 'export'], ['auth']);
 

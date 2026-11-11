@@ -115,6 +115,26 @@ class MasterSubjectController
         Response::redirect(url('/master/subjects'));
     }
 
+    public function deleteAll(Request $request): void
+    {
+        $count = (int)Database::fetchColumn("SELECT COUNT(*) FROM subjects");
+        if ($count === 0) {
+            flash('info', 'Data mata pelajaran sudah kosong.');
+            Response::redirect(url('/master/subjects'));
+        }
+
+        Database::query("DELETE FROM written_exam_supervisors");
+        Database::query("DELETE FROM written_exam_schedules");
+        Database::query("DELETE FROM exam_paper_handover_records");
+        Database::query("DELETE FROM answer_sheet_receipts");
+        Database::query("DELETE FROM answer_sheet_packing_batches");
+        Database::query("DELETE FROM subjects");
+
+        Auth::logAudit('DELETE', 'subjects', 0, null, ['deleted_all_count' => $count]);
+        flash('success', "Berhasil mengosongkan seluruh data mata pelajaran ({$count} mapel).");
+        Response::redirect(url('/master/subjects'));
+    }
+
     public function export(Request $request): void
     {
         $subjects = Database::fetchAll("SELECT code, name, grade, exam_type FROM subjects ORDER BY grade ASC, code ASC");
