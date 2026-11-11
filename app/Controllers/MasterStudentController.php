@@ -201,6 +201,50 @@ class MasterStudentController
         Response::redirect(url('/master/students'));
     }
 
+    public function deleteDummy(Request $request): void
+    {
+        $count = (int)Database::fetchColumn("SELECT COUNT(*) FROM students WHERE name LIKE 'Siswa %' OR nis LIKE '100%'");
+        if ($count === 0) {
+            flash('info', 'Tidak ada data siswa dummy yang ditemukan.');
+            Response::redirect(url('/master/students'));
+        }
+
+        Database::query("DELETE FROM exam_room_assignments WHERE participant_id IN (SELECT id FROM exam_participants WHERE participant_number LIKE 'TEST-%' OR student_name_snapshot LIKE 'Siswa %')");
+        Database::query("DELETE FROM exam_participants WHERE participant_number LIKE 'TEST-%' OR student_name_snapshot LIKE 'Siswa %'");
+        Database::query("DELETE FROM students WHERE name LIKE 'Siswa %' OR nis LIKE '100%'");
+
+        $allClasses = Database::fetchAll("SELECT id FROM classes");
+        foreach ($allClasses as $c) {
+            self::syncClassStudentCount((int)$c['id']);
+        }
+
+        Auth::logAudit('DELETE', 'students', 0, null, ['deleted_dummy_count' => $count]);
+        flash('success', "Berhasil menghapus {$count} data siswa dummy.");
+        Response::redirect(url('/master/students'));
+    }
+
+    public function deleteAll(Request $request): void
+    {
+        $count = (int)Database::fetchColumn("SELECT COUNT(*) FROM students WHERE deleted_at IS NULL");
+        if ($count === 0) {
+            flash('info', 'Data siswa sudah kosong.');
+            Response::redirect(url('/master/students'));
+        }
+
+        Database::query("DELETE FROM exam_room_assignments");
+        Database::query("DELETE FROM exam_participants");
+        Database::query("DELETE FROM students");
+
+        $allClasses = Database::fetchAll("SELECT id FROM classes");
+        foreach ($allClasses as $c) {
+            self::syncClassStudentCount((int)$c['id']);
+        }
+
+        Auth::logAudit('DELETE', 'students', 0, null, ['deleted_all_count' => $count]);
+        flash('success', "Berhasil mengosongkan seluruh data siswa ({$count} siswa).");
+        Response::redirect(url('/master/students'));
+    }
+
     public function export(Request $request): void
     {
         $students = Database::fetchAll("

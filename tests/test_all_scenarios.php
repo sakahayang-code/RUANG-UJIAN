@@ -65,8 +65,10 @@ assertTest('Init', 'Identitas Sekolah Terkonfigurasi', !empty($school['name']), 
 // 2. Scenario A: Combined Question Paper Envelope Label (1 Room = 1 Envelope = 1 Label)
 echo "\n>>> SKENARIO A: Label Amplop Naskah Soal Gabungan (1 Ruang = 1 Amplop = 1 Label)...\n";
 // Clean up previous test artifacts if any
+Database::query("DELETE FROM exam_room_assignments WHERE exam_room_id IN (SELECT id FROM exam_rooms WHERE room_number = '99')");
 Database::query("DELETE FROM exam_rooms WHERE exam_event_id = ? AND room_number = '99'", [$activeEvent['id']]);
 Database::query("DELETE FROM exam_participants WHERE participant_number LIKE 'TEST-%'");
+Database::query("DELETE FROM students WHERE name LIKE 'Siswa %' OR nis LIKE '100%'");
 
 // Create test room for Scenario A
 $testRoomA = Database::insert('exam_rooms', [
@@ -437,8 +439,12 @@ assertTest('PWA', 'Service Worker & Offline Fallback Tersedia', file_exists(dirn
 $mainLayout = file_get_contents(dirname(__DIR__) . '/views/layouts/main.php');
 assertTest('PWA', 'Navigasi Bawah Android (Material 3) Terpasang', str_contains($mainLayout, 'android-bottom-nav') && str_contains($mainLayout, 'android-bottom-sheet'));
 
-// Clean up test room and participant records created during test
+// Clean up test room, participant, and dummy student records created during test
+Database::query("DELETE FROM exam_room_assignments WHERE exam_room_id = ?", [$testRoomA]);
 Database::query("DELETE FROM exam_rooms WHERE id = ?", [$testRoomA]);
+Database::query("DELETE FROM exam_participants WHERE participant_number LIKE 'TEST-%'");
+Database::query("DELETE FROM students WHERE name LIKE 'Siswa %' OR nis LIKE '100%'");
+Database::query("UPDATE classes SET student_count = 0");
 
 echo "\n====================================================================\n";
 echo "HASIL PENGUJIAN OTOMATIS: {$passed} LULUS, {$failed} GAGAL\n";
