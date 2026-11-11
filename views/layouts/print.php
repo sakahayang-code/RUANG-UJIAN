@@ -36,25 +36,32 @@ $activeEvent = active_event();
 
 <div class="print-container">
     <?php if (empty($hideKop)): ?>
-    <!-- Official Kop Surat -->
-    <div class="kop-surat">
-        <?php if (!empty($school['logo_path']) && file_exists(dirname(__DIR__, 2) . '/storage/uploads/' . $school['logo_path'])): ?>
-            <img src="<?= url('/file/view?path=' . urlencode($school['logo_path'])) ?>" alt="Logo" class="kop-logo">
+        <?php if (!empty($school['letterhead_image_path']) && file_exists(dirname(__DIR__, 2) . '/storage/uploads/' . $school['letterhead_image_path'])): ?>
+            <!-- Official Kop Surat Bergambar -->
+            <div class="kop-surat-image" style="width: 100%; text-align: center; margin-bottom: 18px;">
+                <img src="<?= url('/file/view?path=' . urlencode($school['letterhead_image_path'])) ?>" alt="Kop Surat <?= e($school['name']) ?>" style="width: 100%; max-height: 180px; object-fit: contain; display: block; margin: 0 auto;">
+            </div>
         <?php else: ?>
-            <div style="width: 75px; height: 75px; border: 2px solid #000; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16pt;">
-                RU
+            <!-- Official Kop Surat Teks & Logo -->
+            <div class="kop-surat">
+                <?php if (!empty($school['logo_path']) && file_exists(dirname(__DIR__, 2) . '/storage/uploads/' . $school['logo_path'])): ?>
+                    <img src="<?= url('/file/view?path=' . urlencode($school['logo_path'])) ?>" alt="Logo" class="kop-logo">
+                <?php else: ?>
+                    <div style="width: 75px; height: 75px; border: 2px solid #000; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16pt;">
+                        RU
+                    </div>
+                <?php endif; ?>
+
+                <div class="kop-content">
+                    <div class="kop-agency"><?= nl2br(e($school['letterhead_text'] ?? 'PEMERINTAH DAERAH\nDINAS PENDIDIKAN')) ?></div>
+                    <div class="kop-school"><?= e($school['name']) ?></div>
+                    <div class="kop-address">
+                        <?= e($school['address']) ?>, Desa/Kel. <?= e($school['village']) ?>, Kec. <?= e($school['district']) ?>, <?= e($school['regency']) ?> - <?= e($school['province']) ?> <?= e($school['postal_code']) ?><br>
+                        Telp: <?= e($school['phone']) ?> | Email: <?= e($school['email']) ?> | Website: <?= e($school['website']) ?>
+                    </div>
+                </div>
             </div>
         <?php endif; ?>
-
-        <div class="kop-content">
-            <div class="kop-agency"><?= nl2br(e($school['letterhead_text'] ?? 'PEMERINTAH DAERAH\nDINAS PENDIDIKAN')) ?></div>
-            <div class="kop-school"><?= e($school['name']) ?></div>
-            <div class="kop-address">
-                <?= e($school['address']) ?>, Desa/Kel. <?= e($school['village']) ?>, Kec. <?= e($school['district']) ?>, <?= e($school['regency']) ?> - <?= e($school['province']) ?> <?= e($school['postal_code']) ?><br>
-                Telp: <?= e($school['phone']) ?> | Email: <?= e($school['email']) ?> | Website: <?= e($school['website']) ?>
-            </div>
-        </div>
-    </div>
     <?php endif; ?>
 
     <!-- Document Body -->

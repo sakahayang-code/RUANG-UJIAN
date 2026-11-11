@@ -133,6 +133,7 @@ function school_setting(): array
             'date_format' => 'd F Y',
             'signature_city' => 'Bogor',
             'logo_path' => null,
+            'letterhead_image_path' => null,
         ];
     }
     return $settings;

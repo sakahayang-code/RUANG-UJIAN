@@ -67,11 +67,11 @@
     <div class="signature-block">
         <div></div>
         <div class="signature-box">
-            <?= e($school['signature_city']) ?>, <?= format_date_id($letter['letter_date']) ?><br>
-            <?= e($letter['signer_title']) ?>,
+            <?= e($school['signature_city'] ?? 'Bogor') ?>, <?= format_date_id($letter['letter_date'] ?? date('Y-m-d')) ?><br>
+            <?= e($letter['signer_title'] ?? 'Ketua Panitia') ?>,
             <div class="signature-space"></div>
-            <div class="signature-name"><?= e($letter['signer_name']) ?></div>
-            <div>NIP. <?= e($letter['signer_nip'] ?: '-') ?></div>
+            <div class="signature-name"><?= e($letter['signer_name'] ?? ($school['committee_head'] ?? 'Panitia Ujian')) ?></div>
+            <div>NIP. <?= e(!empty($letter['signer_nip']) ? $letter['signer_nip'] : '-') ?></div>
         </div>
     </div>
 </div>

@@ -54,13 +54,26 @@ class SchoolController
             'updated_at' => date('Y-m-d H:i:s'),
         ];
 
+        // Handle Remove Logo
+        if ($request->input('remove_logo') === '1') {
+            if (!empty($school['logo_path'])) {
+                $oldLogo = dirname(__DIR__, 2) . '/storage/uploads/' . $school['logo_path'];
+                if (file_exists($oldLogo)) {
+                    @unlink($oldLogo);
+                }
+            }
+            $data['logo_path'] = null;
+        }
+
         // Handle Logo Upload
         if ($request->hasFile('logo')) {
             $file = $request->file('logo');
-            $allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+            $allowedMimes = ['image/jpeg', 'image/png', 'image/webp'];
+            $allowedExts = ['jpg', 'jpeg', 'png', 'webp'];
             $mime = mime_content_type($file['tmp_name']);
+            $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
 
-            if (!in_array($mime, $allowedTypes, true)) {
+            if (!in_array($ext, $allowedExts, true) || !in_array($mime, $allowedMimes, true)) {
                 flash('error', 'Format logo tidak valid. Hanya menerima format JPG, PNG, atau WEBP.');
                 Response::back();
             }
@@ -70,8 +83,15 @@ class SchoolController
                 Response::back();
             }
 
-            $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
-            $newFileName = 'logo_' . time() . '.' . $ext;
+            // Remove previous logo if exists
+            if (!empty($school['logo_path'])) {
+                $oldLogo = dirname(__DIR__, 2) . '/storage/uploads/' . $school['logo_path'];
+                if (file_exists($oldLogo)) {
+                    @unlink($oldLogo);
+                }
+            }
+
+            $newFileName = 'logo_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
             $targetDir = dirname(__DIR__, 2) . '/storage/uploads/logos';
             if (!is_dir($targetDir)) {
                 mkdir($targetDir, 0755, true);
@@ -80,6 +100,55 @@ class SchoolController
             $destination = $targetDir . '/' . $newFileName;
             if (move_uploaded_file($file['tmp_name'], $destination)) {
                 $data['logo_path'] = 'logos/' . $newFileName;
+            }
+        }
+
+        // Handle Remove Letterhead Image
+        if ($request->input('remove_letterhead_image') === '1') {
+            if (!empty($school['letterhead_image_path'])) {
+                $oldLetterhead = dirname(__DIR__, 2) . '/storage/uploads/' . $school['letterhead_image_path'];
+                if (file_exists($oldLetterhead)) {
+                    @unlink($oldLetterhead);
+                }
+            }
+            $data['letterhead_image_path'] = null;
+        }
+
+        // Handle Letterhead Image Upload
+        if ($request->hasFile('letterhead_image')) {
+            $file = $request->file('letterhead_image');
+            $allowedMimes = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml', 'text/plain', 'text/xml'];
+            $allowedExts = ['jpg', 'jpeg', 'png', 'webp', 'svg'];
+            $mime = mime_content_type($file['tmp_name']);
+            $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+
+            if (!in_array($ext, $allowedExts, true) || !in_array($mime, $allowedMimes, true)) {
+                flash('error', 'Format kop surat tidak valid. Hanya menerima berkas PNG, JPG, WEBP, atau SVG.');
+                Response::back();
+            }
+
+            if ($file['size'] > 5 * 1024 * 1024) {
+                flash('error', 'Ukuran berkas kop surat tidak boleh melebihi 5 MB.');
+                Response::back();
+            }
+
+            // Remove previous letterhead image if exists
+            if (!empty($school['letterhead_image_path'])) {
+                $oldLetterhead = dirname(__DIR__, 2) . '/storage/uploads/' . $school['letterhead_image_path'];
+                if (file_exists($oldLetterhead)) {
+                    @unlink($oldLetterhead);
+                }
+            }
+
+            $newFileName = 'kop_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
+            $targetDir = dirname(__DIR__, 2) . '/storage/uploads/letterheads';
+            if (!is_dir($targetDir)) {
+                mkdir($targetDir, 0755, true);
+            }
+
+            $destination = $targetDir . '/' . $newFileName;
+            if (move_uploaded_file($file['tmp_name'], $destination)) {
+                $data['letterhead_image_path'] = 'letterheads/' . $newFileName;
             }
         }
 
