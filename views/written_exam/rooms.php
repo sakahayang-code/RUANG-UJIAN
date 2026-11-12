@@ -140,13 +140,14 @@
                             <td class="text-center font-bold"><?= $r['capacity'] ?> Kursi</td>
                             <td class="text-center"><?= $r['rows_count'] ?> Baris × <?= $r['cols_count'] ?> Kolom</td>
                             <td class="text-center">
-                                <span class="badge badge-info" style="font-size: 13px;"><?= $r['assigned_count'] ?> Siswa</span>
+                                <?php $assignedCount = (int)($r['assigned_count'] ?? 0); ?>
+                                <span class="badge badge-info" style="font-size: 13px;"><?= $assignedCount ?> Siswa</span>
                             </td>
                             <td class="text-center">
-                                <?php if ($r['assigned_count'] >= $r['capacity']): ?>
-                                    <span class="badge badge-success">Penuh (<?= $r['assigned_count'] ?>/<?= $r['capacity'] ?>)</span>
-                                <?php elseif ($r['assigned_count'] > 0): ?>
-                                    <span class="badge badge-warning">Terisi Sebagian (<?= $r['assigned_count'] ?>/<?= $r['capacity'] ?>)</span>
+                                <?php if ($assignedCount >= $r['capacity']): ?>
+                                    <span class="badge badge-success">Penuh (<?= $assignedCount ?>/<?= $r['capacity'] ?>)</span>
+                                <?php elseif ($assignedCount > 0): ?>
+                                    <span class="badge badge-warning">Terisi Sebagian (<?= $assignedCount ?>/<?= $r['capacity'] ?>)</span>
                                 <?php else: ?>
                                     <span class="badge badge-secondary">Kosong (0/<?= $r['capacity'] ?>)</span>
                                 <?php endif; ?>

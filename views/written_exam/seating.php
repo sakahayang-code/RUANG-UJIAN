@@ -19,7 +19,7 @@
             <select name="room_id" class="form-control" style="width: auto; min-width: 250px;" onchange="this.form.submit()">
                 <?php foreach ($rooms as $r): ?>
                     <option value="<?= $r['id'] ?>" <?= ($selectedRoom && $selectedRoom['id'] == $r['id']) ? 'selected' : '' ?>>
-                        <?= e($r['room_number']) ?> - <?= e($r['name']) ?> (<?= $r['assigned_count'] ?>/<?= $r['capacity'] ?> Kursi)
+                        <?= e($r['room_number']) ?> - <?= e($r['name']) ?> (<?= (int)($r['assigned_count'] ?? 0) ?>/<?= $r['capacity'] ?> Kursi)
                     </option>
                 <?php endforeach; ?>
             </select>

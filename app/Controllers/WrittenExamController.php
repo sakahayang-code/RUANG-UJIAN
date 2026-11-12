@@ -466,7 +466,13 @@ class WrittenExamController
         $event = active_event();
         $roomId = (int)$request->input('room_id', 0);
 
-        $rooms = Database::fetchAll("SELECT * FROM exam_rooms WHERE exam_event_id = ? ORDER BY room_number ASC", [$event['id']]);
+        $rooms = Database::fetchAll("
+            SELECT er.*,
+                   (SELECT COUNT(*) FROM exam_room_assignments WHERE exam_room_id = er.id) as assigned_count
+            FROM exam_rooms er
+            WHERE er.exam_event_id = ?
+            ORDER BY er.room_number ASC
+        ", [$event['id']]);
 
         $selectedRoom = null;
         $seatsGrid = [];
