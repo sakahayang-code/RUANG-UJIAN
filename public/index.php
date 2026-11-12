@@ -255,6 +255,7 @@ Router::post('/master/students/delete-dummy', [MasterStudentController::class, '
 Router::post('/master/students/delete-all', [MasterStudentController::class, 'deleteAll'], ['auth', 'csrf']);
 Router::post('/master/students/import', [MasterStudentController::class, 'import'], ['auth', 'csrf']);
 Router::get('/master/students/export', [MasterStudentController::class, 'export'], ['auth']);
+Router::get('/master/students/template', [MasterStudentController::class, 'template'], ['auth']);
 
 // Classes
 Router::get('/master/classes', [MasterClassController::class, 'index'], ['auth']);

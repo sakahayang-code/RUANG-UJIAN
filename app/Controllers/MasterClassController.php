@@ -165,9 +165,10 @@ class MasterClassController
             Response::back();
         }
 
-        $rows = ExcelExport::parseCsv($request->file('file')['tmp_name']);
+        $file = $request->file('file');
+        $rows = ExcelExport::parseSpreadsheet($file['tmp_name'], $file['name'] ?? null);
         if (empty($rows)) {
-            flash('error', 'Berkas CSV kosong atau format header tidak sesuai.');
+            flash('error', 'Berkas Excel/CSV kosong atau format header tidak sesuai.');
             Response::back();
         }
 

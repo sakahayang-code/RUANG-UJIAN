@@ -8,7 +8,7 @@
             ➕ Tambah Siswa
         </button>
         <button type="button" class="btn btn-secondary" data-modal-open="importStudentModal">
-            📥 Impor CSV
+            📥 Impor Excel
         </button>
         <a href="<?= url('/master/students/export') ?>" class="btn btn-outline">
             📤 Ekspor Excel
@@ -304,31 +304,53 @@
     </div>
 </div>
 
-<!-- Modal Impor CSV -->
+<!-- Modal Impor Data Siswa -->
 <div class="modal-overlay" id="importStudentModal">
     <div class="modal-container">
         <div class="modal-header">
-            <div class="modal-title">Impor Data Siswa dari CSV</div>
+            <div class="modal-title">📥 Impor Data Siswa dari Excel / CSV</div>
             <button type="button" class="modal-close" data-modal-close="importStudentModal">&times;</button>
         </div>
         <form action="<?= url('/master/students/import') ?>" method="POST" enctype="multipart/form-data">
             <?= csrf_field() ?>
             <div class="modal-body">
-                <div class="form-group">
-                    <label class="form-label required">Pilih Berkas CSV</label>
-                    <input type="file" name="file" class="form-control" accept=".csv,text/csv" required>
+                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 14px 16px; margin-bottom: 16px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <div style="font-weight: 700; color: #166534; font-size: 13px; display: flex; align-items: center; gap: 6px;">
+                                <span>📄</span> Template Format Excel Resmi
+                            </div>
+                            <div style="font-size: 12px; color: #15803d; margin-top: 3px;">
+                                Unduh format tabel Excel (.xlsx) untuk mempermudah pengisian data siswa.
+                            </div>
+                        </div>
+                        <a href="<?= url('/master/students/template') ?>" class="btn btn-sm btn-success" style="background: #16a34a; border-color: #16a34a; color: #ffffff; font-weight: 600; text-decoration: none;">
+                            📥 Unduh Template Excel
+                        </a>
+                    </div>
                 </div>
-                <div class="alert alert-info" style="font-size: 12px; margin-top: 12px;">
-                    <strong>Format Kolom Header CSV:</strong><br>
-                    <code>nis, nisn, nama, jk, tingkat, kelas</code><br>
-                    Contoh baris data:<br>
-                    <code>1001, 0081234567, Ahmad Fauzi, L, VII, VII A</code><br>
-                    <code>1002, 0081234568, Siti Aisyah, P, VII, VII A</code>
+
+                <div class="form-group">
+                    <label class="form-label required">Pilih Berkas Excel (.xlsx / .xls) atau CSV</label>
+                    <input type="file" name="file" class="form-control" accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv" required>
+                    <div class="form-text">Mendukung berkas Microsoft Excel (.xlsx, .xls) dan CSV (Maksimal 10MB).</div>
+                </div>
+
+                <div class="alert alert-info" style="font-size: 12px; margin-top: 14px; line-height: 1.6;">
+                    <strong>Petunjuk Format Kolom:</strong><br>
+                    Baris pertama dokumen harus berupa judul kolom:<br>
+                    <code>NIS, NISN, Nama Siswa, L/P, Tingkat, Kelas, Status</code><br>
+                    <span style="color: #64748b; font-size: 11px;">
+                        • Kolom <strong>Nama Siswa</strong> dan <strong>Kelas</strong> wajib diisi.<br>
+                        • Jika nama kelas belum terdaftar, sistem akan otomatis membuatkan kelas baru.<br>
+                        • Format jenis kelamin: <code>L</code> (Laki-laki) atau <code>P</code> (Perempuan).<br>
+                        • Kolom NIS dan NISN tidak akan terpotong angka nol di depannya.
+                    </span>
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-modal-close="importStudentModal">Batal</button>
-                <button type="submit" class="btn btn-primary">Mulai Impor</button>
+                <button type="submit" class="btn btn-primary">Mulai Impor Siswa</button>
             </div>
         </form>
     </div>

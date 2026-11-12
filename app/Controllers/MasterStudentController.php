@@ -272,18 +272,32 @@ class MasterStudentController
         ExcelExport::export('master_data_siswa_' . date('Ymd'), 'DATA MASTER SISWA', $headers, $rows);
     }
 
+    public function template(Request $request): void
+    {
+        $headers = ['NIS', 'NISN', 'Nama Siswa', 'L/P', 'Tingkat', 'Kelas', 'Status'];
+        $sampleRows = [
+            ['1001', '0081234567', 'Ahmad Fauzi', 'L', 'VII', 'VII A', 'Aktif'],
+            ['1002', '0081234568', 'Siti Aisyah', 'P', 'VII', 'VII A', 'Aktif'],
+            ['1003', '0081234569', 'Budi Santoso', 'L', 'VIII', 'VIII A', 'Aktif'],
+            ['1004', '0081234570', 'Dewi Lestari', 'P', 'VIII', 'VIII B', 'Aktif'],
+            ['1005', '0081234571', 'Eko Prasetyo', 'L', 'IX', 'IX A', 'Aktif'],
+        ];
+
+        ExcelExport::exportXlsx('template_import_siswa', 'TEMPLATE DATA SISWA', $headers, $sampleRows);
+    }
+
     public function import(Request $request): void
     {
         if (!$request->hasFile('file')) {
-            flash('error', 'Silakan pilih berkas CSV untuk diimpor.');
+            flash('error', 'Silakan pilih berkas Excel (.xlsx / .xls) atau CSV untuk diimpor.');
             Response::back();
         }
 
         $file = $request->file('file');
-        $rows = ExcelExport::parseCsv($file['tmp_name']);
+        $rows = ExcelExport::parseSpreadsheet($file['tmp_name'], $file['name'] ?? null);
 
         if (empty($rows)) {
-            flash('error', 'Berkas CSV kosong atau format header tidak sesuai.');
+            flash('error', 'Berkas Excel/CSV kosong, tidak terbaca, atau format kolom header tidak sesuai.');
             Response::back();
         }
 
@@ -291,18 +305,30 @@ class MasterStudentController
         $skipped = 0;
 
         foreach ($rows as $row) {
-            $name = $row['nama'] ?? $row['nama_siswa'] ?? null;
+            $name = $row['nama_siswa'] ?? $row['nama'] ?? $row['nama_lengkap'] ?? $row['name'] ?? null;
             if (!$name) {
                 $skipped++;
                 continue;
             }
 
-            $nis = $row['nis'] ?? null;
+            $nis = $row['nis'] ?? $row['nomor_induk'] ?? null;
             $nisn = $row['nisn'] ?? null;
-            $gender = strtoupper($row['jk'] ?? $row['l_p'] ?? $row['gender'] ?? 'L');
-            $gender = ($gender === 'P' || $gender === 'PEREMPUAN') ? 'P' : 'L';
-            $grade = $row['tingkat'] ?? 'VII';
-            $className = $row['kelas'] ?? $row['nama_kelas'] ?? 'VII A';
+            $rawGender = strtoupper(trim((string)($row['l_p'] ?? $row['jk'] ?? $row['jenis_kelamin'] ?? $row['gender'] ?? 'L')));
+            $gender = (str_starts_with($rawGender, 'P') || $rawGender === 'PEREMPUAN') ? 'P' : 'L';
+            
+            $className = trim((string)($row['kelas'] ?? $row['nama_kelas'] ?? $row['rombel'] ?? 'VII A'));
+            $grade = trim((string)($row['tingkat'] ?? $row['tingkat_kelas'] ?? $row['grade'] ?? ''));
+            if (empty($grade)) {
+                if (preg_match('/^(XII|XI|X|IX|VIII|VII|12|11|10|9|8|7)\b/i', $className, $gm)) {
+                    $found = strtoupper($gm[1]);
+                    $map = ['7' => 'VII', '8' => 'VIII', '9' => 'IX', '10' => 'X', '11' => 'XI', '12' => 'XII'];
+                    $grade = $map[$found] ?? $found;
+                } else {
+                    $grade = 'VII';
+                }
+            }
+
+            $status = trim((string)($row['status'] ?? 'Aktif')) ?: 'Aktif';
 
             // Find or create class
             $class = Database::fetch("SELECT id FROM classes WHERE name = ?", [$className]);
@@ -324,6 +350,12 @@ class MasterStudentController
                     $skipped++;
                     continue;
                 }
+            } elseif (!empty($nisn)) {
+                $exists = Database::fetch("SELECT id FROM students WHERE nisn = ? AND deleted_at IS NULL", [$nisn]);
+                if ($exists) {
+                    $skipped++;
+                    continue;
+                }
             }
 
             Database::insert('students', [
@@ -333,7 +365,7 @@ class MasterStudentController
                 'gender' => $gender,
                 'grade' => $grade,
                 'class_id' => $classId,
-                'status' => 'Aktif',
+                'status' => $status,
                 'created_at' => date('Y-m-d H:i:s')
             ]);
             $success++;
@@ -342,10 +374,10 @@ class MasterStudentController
         // Resync all class counts
         $allClasses = Database::fetchAll("SELECT id FROM classes");
         foreach ($allClasses as $c) {
-            self::syncClassStudentCount($c['id']);
+            self::syncClassStudentCount((int)$c['id']);
         }
 
-        flash('success', "Impor selesai: {$success} siswa berhasil ditambahkan, {$skipped} dilewati (duplikat/tidak lengkap).");
+        flash('success', "Impor berhasil: {$success} siswa berhasil ditambahkan dari berkas Excel/CSV, {$skipped} dilewati (duplikat/tanpa nama).");
         Response::redirect(url('/master/students'));
     }
 
