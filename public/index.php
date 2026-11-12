@@ -266,6 +266,7 @@ Router::post('/master/classes/delete', [MasterClassController::class, 'delete'],
 Router::post('/master/classes/delete-all', [MasterClassController::class, 'deleteAll'], ['auth', 'csrf']);
 Router::post('/master/classes/import', [MasterClassController::class, 'import'], ['auth', 'csrf']);
 Router::get('/master/classes/export', [MasterClassController::class, 'export'], ['auth']);
+Router::get('/master/classes/template', [MasterClassController::class, 'template'], ['auth']);
 
 // Teachers
 Router::get('/master/teachers', [MasterTeacherController::class, 'index'], ['auth']);
@@ -276,6 +277,7 @@ Router::post('/master/teachers/delete', [MasterTeacherController::class, 'delete
 Router::post('/master/teachers/delete-all', [MasterTeacherController::class, 'deleteAll'], ['auth', 'csrf']);
 Router::post('/master/teachers/import', [MasterTeacherController::class, 'import'], ['auth', 'csrf']);
 Router::get('/master/teachers/export', [MasterTeacherController::class, 'export'], ['auth']);
+Router::get('/master/teachers/template', [MasterTeacherController::class, 'template'], ['auth']);
 
 // Subjects
 Router::get('/master/subjects', [MasterSubjectController::class, 'index'], ['auth']);
@@ -286,6 +288,7 @@ Router::post('/master/subjects/delete', [MasterSubjectController::class, 'delete
 Router::post('/master/subjects/delete-all', [MasterSubjectController::class, 'deleteAll'], ['auth', 'csrf']);
 Router::post('/master/subjects/import', [MasterSubjectController::class, 'import'], ['auth', 'csrf']);
 Router::get('/master/subjects/export', [MasterSubjectController::class, 'export'], ['auth']);
+Router::get('/master/subjects/template', [MasterSubjectController::class, 'template'], ['auth']);
 Router::get('/master/rooms', [WrittenExamController::class, 'rooms'], ['auth']);
 
 // 7. Exam Events

@@ -8,7 +8,7 @@
             ➕ Tambah Mapel
         </button>
         <button type="button" class="btn btn-secondary" data-modal-open="importSubjectModal">
-            📥 Impor CSV
+            📥 Impor Excel
         </button>
         <a href="<?= url('/master/subjects/export') ?>" class="btn btn-outline">
             📤 Ekspor Excel
@@ -205,24 +205,49 @@
     </div>
 </div>
 
-<!-- Modal Impor CSV -->
+<!-- Modal Impor Data Mata Pelajaran -->
 <div class="modal-overlay" id="importSubjectModal">
     <div class="modal-container">
         <div class="modal-header">
-            <div class="modal-title">Impor Mata Pelajaran dari CSV</div>
+            <div class="modal-title">📥 Impor Data Mata Pelajaran dari Excel / CSV</div>
             <button type="button" class="modal-close" data-modal-close="importSubjectModal">&times;</button>
         </div>
         <form action="<?= url('/master/subjects/import') ?>" method="POST" enctype="multipart/form-data">
             <?= csrf_field() ?>
             <div class="modal-body">
-                <div class="form-group">
-                    <label class="form-label required">Pilih Berkas CSV</label>
-                    <input type="file" name="file" class="form-control" accept=".csv,text/csv" required>
+                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 14px 16px; margin-bottom: 16px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <div style="font-weight: 700; color: #166534; font-size: 13px; display: flex; align-items: center; gap: 6px;">
+                                <span>📄</span> Template Format Excel Resmi
+                            </div>
+                            <div style="font-size: 12px; color: #15803d; margin-top: 3px;">
+                                Unduh format tabel Excel (.xlsx) untuk mempermudah penyiapan data mata pelajaran.
+                            </div>
+                        </div>
+                        <a href="<?= url('/master/subjects/template') ?>" class="btn btn-sm btn-success" style="background: #16a34a; border-color: #16a34a; color: #ffffff; font-weight: 600; text-decoration: none;">
+                            📥 Unduh Template Excel
+                        </a>
+                    </div>
                 </div>
-                <div class="alert alert-info" style="font-size: 12px; margin-top: 12px;">
-                    <strong>Header Kolom CSV yang Diharapkan:</strong><br>
-                    <code>kode, nama, tingkat, jenis_ujian</code><br>
-                    Contoh jenis_ujian: <code>written</code>, <code>practical</code>, atau <code>both</code>
+
+                <div class="form-group">
+                    <label class="form-label required">Pilih Berkas Excel (.xlsx / .xls) atau CSV</label>
+                    <input type="file" name="file" class="form-control" accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv" required>
+                    <div class="form-text">Mendukung berkas Microsoft Excel (.xlsx, .xls) dan CSV (Maksimal 10MB).</div>
+                </div>
+
+                <div class="alert alert-info" style="font-size: 12px; margin-top: 14px; line-height: 1.6;">
+                    <strong>Petunjuk Format Kolom:</strong><br>
+                    Baris pertama dokumen harus berupa judul kolom:<br>
+                    <code>Kode Mapel, Nama Mata Pelajaran, Tingkat, Jenis Ujian</code><br>
+                    <span style="color: #64748b; font-size: 11px;">
+                        • Kolom <strong>Nama Mata Pelajaran</strong> wajib diisi.<br>
+                        • Kolom <strong>Kode Mapel</strong> (contoh: <code>BIN</code>, <code>MAT</code>, <code>IPA</code>). Jika kosong, otomatis dibuatkan kode.<br>
+                        • Kolom <strong>Tingkat</strong>: <code>Semua Tingkat</code>, <code>VII</code>, <code>VIII</code>, <code>IX</code>, dsb (default: Semua Tingkat).<br>
+                        • Kolom <strong>Jenis Ujian</strong>: <code>Tertulis</code>, <code>Praktik</code>, atau <code>Tertulis & Praktik</code>.<br>
+                        • Jika kode mapel sudah ada, data mata pelajaran akan diperbarui secara otomatis.
+                    </span>
                 </div>
             </div>
             <div class="modal-footer">

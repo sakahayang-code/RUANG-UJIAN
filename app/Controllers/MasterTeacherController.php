@@ -141,10 +141,23 @@ class MasterTeacherController
         ExcelExport::export('master_guru_tendik_' . date('Ymd'), 'DATA GURU DAN TENAGA KEPENDIDIKAN', $headers, $rows);
     }
 
+    public function template(Request $request): void
+    {
+        $headers = ['Nama Lengkap', 'NIP', 'NUPTK', 'Jabatan', 'No Telepon', 'Status'];
+        $sampleRows = [
+            ['Budi Santoso, S.Pd.', '198001012005011001', '1234567890123456', 'Guru Mata Pelajaran', '081234567890', 'Aktif'],
+            ['Siti Rahmawati, M.Pd.', '198502022008012002', '2345678901234567', 'Wali Kelas', '081234567891', 'Aktif'],
+            ['Ahmad Hidayat, S.Kom.', '', '', 'Tenaga Administrasi / IT', '081234567892', 'Aktif'],
+            ['Sri Wahyuni, S.Pd.', '199003032015012003', '', 'Guru Mata Pelajaran', '081234567893', 'Aktif'],
+        ];
+
+        ExcelExport::exportXlsx('template_import_guru_tendik', 'TEMPLATE DATA GURU DAN TENDIK', $headers, $sampleRows);
+    }
+
     public function import(Request $request): void
     {
         if (!$request->hasFile('file')) {
-            flash('error', 'Silakan pilih berkas CSV untuk diimpor.');
+            flash('error', 'Silakan pilih berkas Excel (.xlsx / .xls) atau CSV untuk diimpor.');
             Response::back();
         }
 
@@ -156,29 +169,63 @@ class MasterTeacherController
         }
 
         $success = 0;
+        $updated = 0;
+
         foreach ($rows as $row) {
-            $name = $row['nama'] ?? $row['nama_lengkap'] ?? null;
+            $name = trim($row['nama_lengkap'] ?? $row['nama'] ?? $row['nama_guru'] ?? $row['guru'] ?? '');
             if (!$name) continue;
 
-            $nip = $row['nip'] ?? null;
-            $nuptk = $row['nuptk'] ?? null;
-            $position = $row['jabatan'] ?? 'Guru Mata Pelajaran';
-            $phone = $row['telepon'] ?? $row['no_telepon'] ?? null;
-            $status = $row['status'] ?? 'Aktif';
+            $nip = isset($row['nip']) ? (string)$row['nip'] : (isset($row['nomor_induk_pegawai']) ? (string)$row['nomor_induk_pegawai'] : '');
+            $nip = trim($nip);
 
-            Database::insert('teachers', [
-                'name' => $name,
-                'nip' => $nip,
-                'nuptk' => $nuptk,
-                'position' => $position,
-                'phone' => $phone,
-                'status' => $status,
-                'created_at' => date('Y-m-d H:i:s')
-            ]);
-            $success++;
+            $nuptk = isset($row['nuptk']) ? (string)$row['nuptk'] : '';
+            $nuptk = trim($nuptk);
+
+            $position = trim($row['jabatan'] ?? $row['tugas'] ?? $row['posisi'] ?? $row['position'] ?? 'Guru Mata Pelajaran');
+            $phone = isset($row['telepon']) ? (string)$row['telepon'] : (isset($row['no_telepon']) ? (string)$row['no_telepon'] : (isset($row['no_hp']) ? (string)$row['no_hp'] : (isset($row['hp']) ? (string)$row['hp'] : '')));
+            $phone = trim($phone);
+
+            $status = trim($row['status'] ?? 'Aktif');
+            $status = (stripos($status, 'non') !== false) ? 'Nonaktif' : 'Aktif';
+
+            // Check if teacher exists by NIP (if available) or exact name
+            $existing = null;
+            if ($nip !== '') {
+                $existing = Database::fetch("SELECT id FROM teachers WHERE nip = ?", [$nip]);
+            }
+            if (!$existing) {
+                $existing = Database::fetch("SELECT id FROM teachers WHERE LOWER(name) = ?", [mb_strtolower($name)]);
+            }
+
+            if ($existing) {
+                Database::update('teachers', [
+                    'nip' => $nip ?: null,
+                    'nuptk' => $nuptk ?: null,
+                    'position' => $position,
+                    'phone' => $phone ?: null,
+                    'status' => $status,
+                    'updated_at' => date('Y-m-d H:i:s')
+                ], 'id = :id', ['id' => $existing['id']]);
+                $updated++;
+            } else {
+                Database::insert('teachers', [
+                    'name' => $name,
+                    'nip' => $nip ?: null,
+                    'nuptk' => $nuptk ?: null,
+                    'position' => $position,
+                    'phone' => $phone ?: null,
+                    'status' => $status,
+                    'created_at' => date('Y-m-d H:i:s')
+                ]);
+                $success++;
+            }
         }
 
-        flash('success', "Impor berhasil: {$success} data guru/tendik ditambahkan.");
+        $msg = "Impor data guru/tendik selesai: {$success} guru baru ditambahkan.";
+        if ($updated > 0) {
+            $msg .= " ({$updated} data guru diperbarui).";
+        }
+        flash('success', $msg);
         Response::redirect(url('/master/teachers'));
     }
 }

@@ -158,10 +158,24 @@ class MasterClassController
         ExcelExport::export('master_data_kelas_' . date('Ymd'), 'DATA MASTER KELAS', $headers, $rows);
     }
 
+    public function template(Request $request): void
+    {
+        $headers = ['Nama Kelas', 'Tingkat', 'Wali Kelas'];
+        $sampleRows = [
+            ['VII A', 'VII', 'Budi Santoso, S.Pd.'],
+            ['VII B', 'VII', ''],
+            ['VIII A', 'VIII', 'Siti Rahmawati, M.Pd.'],
+            ['VIII B', 'VIII', ''],
+            ['IX A', 'IX', ''],
+        ];
+
+        ExcelExport::exportXlsx('template_import_kelas', 'TEMPLATE DATA KELAS', $headers, $sampleRows);
+    }
+
     public function import(Request $request): void
     {
         if (!$request->hasFile('file')) {
-            flash('error', 'Silakan pilih berkas CSV untuk diimpor.');
+            flash('error', 'Silakan pilih berkas Excel (.xlsx / .xls) atau CSV untuk diimpor.');
             Response::back();
         }
 
@@ -172,26 +186,82 @@ class MasterClassController
             Response::back();
         }
 
-        $success = 0;
-        foreach ($rows as $row) {
-            $name = trim($row['nama'] ?? $row['nama_kelas'] ?? $row['kelas'] ?? '');
-            if (!$name) continue;
-
-            $grade = trim($row['tingkat'] ?? 'VII');
-            $exists = Database::fetch("SELECT id FROM classes WHERE name = ?", [$name]);
-            if ($exists) continue;
-
-            Database::insert('classes', [
-                'name' => $name,
-                'grade' => $grade,
-                'homeroom_teacher_id' => null,
-                'student_count' => 0,
-                'created_at' => date('Y-m-d H:i:s')
-            ]);
-            $success++;
+        // Cache all teachers for matching homeroom teacher
+        $teachers = Database::fetchAll("SELECT id, name, nip FROM teachers");
+        $teacherMap = [];
+        foreach ($teachers as $t) {
+            $teacherMap[mb_strtolower(trim($t['name']))] = (int)$t['id'];
+            if (!empty($t['nip'])) {
+                $cleanNip = preg_replace('/[^0-9]/', '', (string)$t['nip']);
+                if ($cleanNip) {
+                    $teacherMap[$cleanNip] = (int)$t['id'];
+                }
+            }
         }
 
-        flash('success', "Impor berhasil: {$success} kelas baru berhasil ditambahkan.");
+        $success = 0;
+        $updated = 0;
+
+        foreach ($rows as $row) {
+            $name = trim($row['nama_kelas'] ?? $row['nama'] ?? $row['kelas'] ?? $row['rombel'] ?? '');
+            if (!$name) continue;
+
+            $grade = trim($row['tingkat'] ?? $row['grade'] ?? $row['tingkat_kelas'] ?? '');
+            if (!$grade) {
+                // Auto-detect grade from class name (e.g. "VII A", "Kelas 7", "X IPA", "12 RPL")
+                if (preg_match('/\b(VII|VIII|IX|X|XI|XII)\b/i', $name, $m)) {
+                    $grade = strtoupper($m[1]);
+                } elseif (preg_match('/\b(7|8|9|10|11|12)\b/', $name, $m)) {
+                    $gradeMap = ['7' => 'VII', '8' => 'VIII', '9' => 'IX', '10' => 'X', '11' => 'XI', '12' => 'XII'];
+                    $grade = $gradeMap[$m[1]] ?? $m[1];
+                } else {
+                    $grade = 'VII';
+                }
+            }
+
+            // Match homeroom teacher if provided
+            $homeroomInput = trim($row['wali_kelas'] ?? $row['wali'] ?? $row['nama_wali'] ?? $row['guru'] ?? '');
+            $teacherId = null;
+            if ($homeroomInput) {
+                $lowerWali = mb_strtolower($homeroomInput);
+                $cleanNip = preg_replace('/[^0-9]/', '', $homeroomInput);
+                if (isset($teacherMap[$lowerWali])) {
+                    $teacherId = $teacherMap[$lowerWali];
+                } elseif ($cleanNip && isset($teacherMap[$cleanNip])) {
+                    $teacherId = $teacherMap[$cleanNip];
+                } else {
+                    foreach ($teachers as $t) {
+                        if (stripos($t['name'], $homeroomInput) !== false || stripos($homeroomInput, $t['name']) !== false) {
+                            $teacherId = (int)$t['id'];
+                            break;
+                        }
+                    }
+                }
+            }
+
+            $existing = Database::fetch("SELECT id, homeroom_teacher_id FROM classes WHERE name = ?", [$name]);
+            if ($existing) {
+                if ($teacherId !== null && empty($existing['homeroom_teacher_id'])) {
+                    Database::update('classes', ['homeroom_teacher_id' => $teacherId, 'updated_at' => date('Y-m-d H:i:s')], 'id = :id', ['id' => $existing['id']]);
+                    $updated++;
+                }
+            } else {
+                Database::insert('classes', [
+                    'name' => $name,
+                    'grade' => $grade,
+                    'homeroom_teacher_id' => $teacherId,
+                    'student_count' => 0,
+                    'created_at' => date('Y-m-d H:i:s')
+                ]);
+                $success++;
+            }
+        }
+
+        $msg = "Impor data kelas selesai: {$success} kelas baru ditambahkan.";
+        if ($updated > 0) {
+            $msg .= " ({$updated} wali kelas diperbarui).";
+        }
+        flash('success', $msg);
         Response::redirect(url('/master/classes'));
     }
 }

@@ -63,19 +63,11 @@ class ExcelExport
         exit;
     }
 
-    public static function exportXlsx(string $filename, string $title, array $headers, array $rows): void
+    public static function createXlsxFile(string $filePath, string $title, array $headers, array $rows): bool
     {
-        $cleanFilename = preg_replace('/[^a-zA-Z0-9_\-\.]/', '_', $filename);
-        if (!str_ends_with($cleanFilename, '.xlsx')) {
-            $cleanFilename .= '.xlsx';
-        }
-
         $zip = new \ZipArchive();
-        $tmp = tempnam(sys_get_temp_dir(), 'xlsx_');
-        if ($zip->open($tmp, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
-            // Fallback to HTML-based Excel export if ZipArchive fails
-            self::export($filename, $title, $headers, $rows);
-            return;
+        if ($zip->open($filePath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+            return false;
         }
 
         $zip->addFromString('[Content_Types].xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -165,7 +157,22 @@ class ExcelExport
         $sheetXml .= '</worksheet>';
 
         $zip->addFromString('xl/worksheets/sheet1.xml', $sheetXml);
-        $zip->close();
+        return $zip->close();
+    }
+
+    public static function exportXlsx(string $filename, string $title, array $headers, array $rows): void
+    {
+        $cleanFilename = preg_replace('/[^a-zA-Z0-9_\-\.]/', '_', $filename);
+        if (!str_ends_with($cleanFilename, '.xlsx')) {
+            $cleanFilename .= '.xlsx';
+        }
+
+        $tmp = tempnam(sys_get_temp_dir(), 'xlsx_');
+        if (!self::createXlsxFile($tmp, $title, $headers, $rows)) {
+            // Fallback to HTML-based Excel export if ZipArchive fails
+            self::export($filename, $title, $headers, $rows);
+            return;
+        }
 
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment; filename="' . $cleanFilename . '"');

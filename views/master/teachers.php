@@ -8,7 +8,7 @@
             ➕ Tambah Guru / Tendik
         </button>
         <button type="button" class="btn btn-secondary" data-modal-open="importTeacherModal">
-            📥 Impor CSV
+            📥 Impor Excel
         </button>
         <a href="<?= url('/master/teachers/export') ?>" class="btn btn-outline">
             📤 Ekspor Excel
@@ -207,23 +207,49 @@
     </div>
 </div>
 
-<!-- Modal Impor CSV -->
+<!-- Modal Impor Data Guru & Tendik -->
 <div class="modal-overlay" id="importTeacherModal">
     <div class="modal-container">
         <div class="modal-header">
-            <div class="modal-title">Impor Guru & Tendik dari CSV</div>
+            <div class="modal-title">📥 Impor Data Guru & Tendik dari Excel / CSV</div>
             <button type="button" class="modal-close" data-modal-close="importTeacherModal">&times;</button>
         </div>
         <form action="<?= url('/master/teachers/import') ?>" method="POST" enctype="multipart/form-data">
             <?= csrf_field() ?>
             <div class="modal-body">
-                <div class="form-group">
-                    <label class="form-label required">Pilih Berkas CSV</label>
-                    <input type="file" name="file" class="form-control" accept=".csv,text/csv" required>
+                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 14px 16px; margin-bottom: 16px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <div style="font-weight: 700; color: #166534; font-size: 13px; display: flex; align-items: center; gap: 6px;">
+                                <span>📄</span> Template Format Excel Resmi
+                            </div>
+                            <div style="font-size: 12px; color: #15803d; margin-top: 3px;">
+                                Unduh format tabel Excel (.xlsx) untuk mempermudah penyiapan data guru & tendik.
+                            </div>
+                        </div>
+                        <a href="<?= url('/master/teachers/template') ?>" class="btn btn-sm btn-success" style="background: #16a34a; border-color: #16a34a; color: #ffffff; font-weight: 600; text-decoration: none;">
+                            📥 Unduh Template Excel
+                        </a>
+                    </div>
                 </div>
-                <div class="alert alert-info" style="font-size: 12px; margin-top: 12px;">
-                    <strong>Header Kolom CSV yang Diharapkan:</strong><br>
-                    <code>nama, nip, nuptk, jabatan, telepon, status</code>
+
+                <div class="form-group">
+                    <label class="form-label required">Pilih Berkas Excel (.xlsx / .xls) atau CSV</label>
+                    <input type="file" name="file" class="form-control" accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv" required>
+                    <div class="form-text">Mendukung berkas Microsoft Excel (.xlsx, .xls) dan CSV (Maksimal 10MB).</div>
+                </div>
+
+                <div class="alert alert-info" style="font-size: 12px; margin-top: 14px; line-height: 1.6;">
+                    <strong>Petunjuk Format Kolom:</strong><br>
+                    Baris pertama dokumen harus berupa judul kolom:<br>
+                    <code>Nama Lengkap, NIP, NUPTK, Jabatan, No Telepon, Status</code><br>
+                    <span style="color: #64748b; font-size: 11px;">
+                        • Kolom <strong>Nama Lengkap</strong> wajib diisi.<br>
+                        • Kolom NIP, NUPTK, dan No Telepon tidak akan terpotong angka nol di depannya.<br>
+                        • Kolom <strong>Jabatan</strong> contoh: <code>Guru Mata Pelajaran</code>, <code>Wali Kelas</code>, <code>Tenaga Administrasi</code>.<br>
+                        • Kolom <strong>Status</strong>: <code>Aktif</code> atau <code>Nonaktif</code> (default: Aktif).<br>
+                        • Jika data guru dengan NIP atau Nama yang sama sudah ada, sistem akan memperbarui datanya secara otomatis.
+                    </span>
                 </div>
             </div>
             <div class="modal-footer">

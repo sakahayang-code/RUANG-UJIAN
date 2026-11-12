@@ -153,10 +153,26 @@ class MasterSubjectController
         ExcelExport::export('master_mata_pelajaran_' . date('Ymd'), 'DATA MASTER MATA PELAJARAN', $headers, $rows);
     }
 
+    public function template(Request $request): void
+    {
+        $headers = ['Kode Mapel', 'Nama Mata Pelajaran', 'Tingkat', 'Jenis Ujian'];
+        $sampleRows = [
+            ['BIN', 'Bahasa Indonesia', 'Semua Tingkat', 'Tertulis & Praktik'],
+            ['MAT', 'Matematika', 'Semua Tingkat', 'Tertulis'],
+            ['IPA', 'Ilmu Pengetahuan Alam', 'Semua Tingkat', 'Tertulis & Praktik'],
+            ['BIG', 'Bahasa Inggris', 'Semua Tingkat', 'Tertulis & Praktik'],
+            ['PAI', 'Pendidikan Agama Islam', 'Semua Tingkat', 'Tertulis & Praktik'],
+            ['PJOK', 'Pendidikan Jasmani & Olahraga', 'Semua Tingkat', 'Praktik'],
+            ['INF', 'Informatika', 'Semua Tingkat', 'Tertulis & Praktik'],
+        ];
+
+        ExcelExport::exportXlsx('template_import_mata_pelajaran', 'TEMPLATE DATA MATA PELAJARAN', $headers, $sampleRows);
+    }
+
     public function import(Request $request): void
     {
         if (!$request->hasFile('file')) {
-            flash('error', 'Silakan pilih berkas CSV untuk diimpor.');
+            flash('error', 'Silakan pilih berkas Excel (.xlsx / .xls) atau CSV untuk diimpor.');
             Response::back();
         }
 
@@ -168,32 +184,65 @@ class MasterSubjectController
         }
 
         $success = 0;
-        foreach ($rows as $row) {
-            $code = strtoupper($row['kode'] ?? $row['kode_mapel'] ?? null);
-            $name = $row['nama'] ?? $row['nama_mapel'] ?? null;
-            if (!$code || !$name) continue;
+        $updated = 0;
 
-            $grade = $row['tingkat'] ?? 'Semua Tingkat';
-            $examType = strtolower($row['jenis_ujian'] ?? 'written');
-            if (str_contains($examType, 'praktik') && str_contains($examType, 'tertulis')) {
+        foreach ($rows as $row) {
+            $code = strtoupper(trim($row['kode_mapel'] ?? $row['kode'] ?? $row['code'] ?? ''));
+            $name = trim($row['nama_mata_pelajaran'] ?? $row['nama_mapel'] ?? $row['nama'] ?? $row['mata_pelajaran'] ?? $row['mapel'] ?? $row['name'] ?? '');
+            if (!$name) continue;
+
+            if (!$code) {
+                // Generate a code if not specified
+                $words = preg_split('/\s+/', $name);
+                if (count($words) >= 2) {
+                    $code = strtoupper(substr($words[0], 0, 2) . substr($words[1], 0, 2));
+                } else {
+                    $code = strtoupper(substr($name, 0, 4));
+                }
+            }
+
+            $grade = trim($row['tingkat'] ?? $row['grade'] ?? $row['tingkat_kelas'] ?? 'Semua Tingkat');
+            if (!$grade) {
+                $grade = 'Semua Tingkat';
+            }
+
+            $examTypeInput = strtolower(trim($row['jenis_ujian'] ?? $row['jenis'] ?? $row['tipe'] ?? $row['exam_type'] ?? 'written'));
+            if (str_contains($examTypeInput, 'praktik') && str_contains($examTypeInput, 'tertulis')) {
                 $examType = 'both';
-            } elseif (str_contains($examType, 'praktik')) {
+            } elseif (str_contains($examTypeInput, 'both') || str_contains($examTypeInput, 'keduanya')) {
+                $examType = 'both';
+            } elseif (str_contains($examTypeInput, 'praktik') || str_contains($examTypeInput, 'practical')) {
                 $examType = 'practical';
             } else {
                 $examType = 'written';
             }
 
-            Database::insert('subjects', [
-                'code' => $code,
-                'name' => $name,
-                'grade' => $grade,
-                'exam_type' => $examType,
-                'created_at' => date('Y-m-d H:i:s')
-            ]);
-            $success++;
+            $existing = Database::fetch("SELECT id FROM subjects WHERE code = ?", [$code]);
+            if ($existing) {
+                Database::update('subjects', [
+                    'name' => $name,
+                    'grade' => $grade,
+                    'exam_type' => $examType,
+                    'updated_at' => date('Y-m-d H:i:s')
+                ], 'id = :id', ['id' => $existing['id']]);
+                $updated++;
+            } else {
+                Database::insert('subjects', [
+                    'code' => $code,
+                    'name' => $name,
+                    'grade' => $grade,
+                    'exam_type' => $examType,
+                    'created_at' => date('Y-m-d H:i:s')
+                ]);
+                $success++;
+            }
         }
 
-        flash('success', "Impor berhasil: {$success} mata pelajaran ditambahkan.");
+        $msg = "Impor data mata pelajaran selesai: {$success} mapel baru ditambahkan.";
+        if ($updated > 0) {
+            $msg .= " ({$updated} mapel diperbarui).";
+        }
+        flash('success', $msg);
         Response::redirect(url('/master/subjects'));
     }
 }

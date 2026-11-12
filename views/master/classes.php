@@ -8,7 +8,7 @@
             ➕ Tambah Kelas
         </button>
         <button type="button" class="btn btn-secondary" data-modal-open="importClassModal">
-            📥 Impor CSV
+            📥 Impor Excel
         </button>
         <a href="<?= url('/master/classes/export') ?>" class="btn btn-outline">
             📤 Ekspor Excel
@@ -169,22 +169,47 @@
     </div>
 </div>
 
-<!-- Modal Impor CSV Kelas -->
+<!-- Modal Impor Data Kelas -->
 <div class="modal-overlay" id="importClassModal">
     <div class="modal-container">
         <div class="modal-header">
-            <div class="modal-title">Impor Data Kelas (CSV)</div>
+            <div class="modal-title">📥 Impor Data Kelas dari Excel / CSV</div>
             <button type="button" class="modal-close" data-modal-close="importClassModal">&times;</button>
         </div>
         <form action="<?= url('/master/classes/import') ?>" method="POST" enctype="multipart/form-data">
             <?= csrf_field() ?>
             <div class="modal-body">
-                <div class="alert alert-info">
-                    Format file CSV harus memiliki header: <code>nama,tingkat</code> (contoh baris: <code>VII-A,VII</code>).
+                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 14px 16px; margin-bottom: 16px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <div style="font-weight: 700; color: #166534; font-size: 13px; display: flex; align-items: center; gap: 6px;">
+                                <span>📄</span> Template Format Excel Resmi
+                            </div>
+                            <div style="font-size: 12px; color: #15803d; margin-top: 3px;">
+                                Unduh format tabel Excel (.xlsx) untuk mempermudah penyiapan data kelas.
+                            </div>
+                        </div>
+                        <a href="<?= url('/master/classes/template') ?>" class="btn btn-sm btn-success" style="background: #16a34a; border-color: #16a34a; color: #ffffff; font-weight: 600; text-decoration: none;">
+                            📥 Unduh Template Excel
+                        </a>
+                    </div>
                 </div>
+
                 <div class="form-group">
-                    <label class="form-label required">Pilih Berkas CSV</label>
-                    <input type="file" name="file" class="form-control" accept=".csv" required>
+                    <label class="form-label required">Pilih Berkas Excel (.xlsx / .xls) atau CSV</label>
+                    <input type="file" name="file" class="form-control" accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv" required>
+                    <div class="form-text">Mendukung berkas Microsoft Excel (.xlsx, .xls) dan CSV (Maksimal 10MB).</div>
+                </div>
+
+                <div class="alert alert-info" style="font-size: 12px; margin-top: 14px; line-height: 1.6;">
+                    <strong>Petunjuk Format Kolom:</strong><br>
+                    Baris pertama dokumen harus berupa judul kolom:<br>
+                    <code>Nama Kelas, Tingkat, Wali Kelas</code><br>
+                    <span style="color: #64748b; font-size: 11px;">
+                        • Kolom <strong>Nama Kelas</strong> wajib diisi (contoh: <code>VII A</code>, <code>8-B</code>, <code>X RPL 1</code>).<br>
+                        • Kolom <strong>Tingkat</strong> opsional (jika kosong, otomatis dideteksi dari angka/romawi pada nama kelas).<br>
+                        • Kolom <strong>Wali Kelas</strong> opsional (dapat diisi nama guru atau NIP yang sudah ada di Master Guru).
+                    </span>
                 </div>
             </div>
             <div class="modal-footer">
