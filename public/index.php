@@ -42,6 +42,7 @@ use App\Core\Request;
 use App\Core\Response;
 use App\Core\Router;
 use App\Core\Session;
+use App\Core\View;
 
 use App\Controllers\AnswerSheetController;
 use App\Controllers\AttendanceController;

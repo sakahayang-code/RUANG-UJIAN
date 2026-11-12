@@ -64,12 +64,17 @@ class PrintController
         $roomId = (int)$request->input('room_id', 0);
 
         $sql = "
-            SELECT ep.*, ep.student_name_snapshot as name, ep.nis_snapshot as nis, ep.nisn_snapshot as nisn,
-                   ep.class_name_snapshot as class_name, ep.grade_snapshot as grade,
+            SELECT ep.*, 
+                   COALESCE(NULLIF(ep.student_name_snapshot, ''), s.name, '-') as name,
+                   COALESCE(NULLIF(ep.nis_snapshot, ''), s.nis, '-') as nis,
+                   COALESCE(NULLIF(ep.nisn_snapshot, ''), s.nisn, '-') as nisn,
+                   COALESCE(NULLIF(ep.class_name_snapshot, ''), c.name, s.grade, '-') as class_name,
+                   COALESCE(NULLIF(ep.grade_snapshot, ''), s.grade, 'VII') as grade,
                    era.seat_number, er.room_number, er.name as room_name,
                    s.photo_path as photo
             FROM exam_participants ep
             LEFT JOIN students s ON ep.student_id = s.id
+            LEFT JOIN classes c ON s.class_id = c.id
             LEFT JOIN exam_room_assignments era ON ep.id = era.participant_id
             LEFT JOIN exam_rooms er ON era.exam_room_id = er.id
             WHERE ep.exam_event_id = ?
@@ -127,7 +132,7 @@ class PrintController
 
         if ($type === 'panitia') {
             $members = Database::fetchAll("
-                SELECT cm.*, cm.role_title as position, COALESCE(cm.custom_name, t.name) as name, COALESCE(cm.custom_nip, t.nip) as nip, t.photo as teacher_photo
+                SELECT cm.*, cm.role_title as position, COALESCE(cm.custom_name, t.name) as name, COALESCE(cm.custom_nip, t.nip) as nip
                 FROM committee_members cm
                 JOIN committees c ON cm.committee_id = c.id
                 LEFT JOIN teachers t ON cm.teacher_id = t.id

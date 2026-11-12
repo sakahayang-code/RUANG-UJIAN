@@ -6,9 +6,22 @@ class View
 {
     private static array $sections = [];
     private static ?string $currentSection = null;
+    private static ?string $activeLayout = 'layouts/main';
 
-    public static function render(string $view, array $data = [], ?string $layout = 'layouts/main'): void
+    public static function layout(?string $layout): void
     {
+        self::$activeLayout = $layout;
+    }
+
+    public static function render(string $view, array $data = [], ?string $layout = 'USE_DEFAULT'): void
+    {
+        if ($layout === 'USE_DEFAULT') {
+            $layout = self::$activeLayout;
+        }
+
+        // Reset active layout back to default for subsequent renders
+        self::$activeLayout = 'layouts/main';
+
         $viewFile = dirname(__DIR__, 2) . '/views/' . str_replace('.', '/', $view) . '.php';
         if (!file_exists($viewFile)) {
             die("View [{$view}] tidak ditemukan di {$viewFile}");
