@@ -480,7 +480,7 @@ class WrittenExamController
 
         if ($selectedRoom) {
             $assignments = Database::fetchAll("
-                SELECT era.*, ep.participant_number, ep.student_name_snapshot, ep.class_name_snapshot, ep.grade_snapshot
+                SELECT era.*, ep.participant_number, ep.student_name_snapshot, ep.nis_snapshot, ep.nisn_snapshot, ep.class_name_snapshot, ep.grade_snapshot
                 FROM exam_room_assignments era
                 JOIN exam_participants ep ON era.participant_id = ep.id
                 WHERE era.exam_room_id = ?
@@ -529,7 +529,7 @@ class WrittenExamController
         $event = Database::fetch("SELECT * FROM exam_events WHERE id = ?", [$room['exam_event_id']]);
 
         $assignments = Database::fetchAll("
-            SELECT era.*, ep.participant_number, ep.student_name_snapshot, ep.class_name_snapshot, ep.grade_snapshot
+            SELECT era.*, ep.participant_number, ep.student_name_snapshot, ep.nis_snapshot, ep.nisn_snapshot, ep.class_name_snapshot, ep.grade_snapshot
             FROM exam_room_assignments era
             JOIN exam_participants ep ON era.participant_id = ep.id
             WHERE era.exam_room_id = ?

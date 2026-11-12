@@ -62,10 +62,10 @@
                 <tr>
                     <td class="text-center"><?= $idx + 1 ?></td>
                     <td class="text-center font-bold">#<?= $a['seat_number'] ?></td>
-                    <td><code><?= e($a['participant_number']) ?></code></td>
-                    <td><strong><?= e($a['student_name_snapshot']) ?></strong></td>
-                    <td class="text-center"><?= e($a['nis_snapshot'] ?: '-') ?></td>
-                    <td class="text-center"><?= e($a['class_name_snapshot']) ?></td>
+                    <td><code><?= e($a['participant_number'] ?? '-') ?></code></td>
+                    <td><strong><?= e($a['student_name_snapshot'] ?? '-') ?></strong></td>
+                    <td class="text-center"><?= e(!empty($a['nis_snapshot']) ? $a['nis_snapshot'] : (!empty($a['nis']) ? $a['nis'] : '-')) ?></td>
+                    <td class="text-center"><?= e($a['class_name_snapshot'] ?? '-') ?></td>
                     <td style="width: 120px; font-size: 8pt; color: #666;">
                         <?= $idx + 1 ?>. ....................
                     </td>
