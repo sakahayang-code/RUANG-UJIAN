@@ -120,15 +120,30 @@
 }
 </style>
 
-<div class="no-print" style="background: #f8fafc; border-bottom: 1px solid #cbd5e1; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center;">
-    <div>
-        <strong>Cetak Kartu Peserta Ujian</strong> (<?= count($participants) ?> Peserta)
-    </div>
-    <div>
-        <button onclick="window.print()" class="btn btn-primary">🖨️ Cetak Kartu Sekarang</button>
-        <button onclick="window.close()" class="btn btn-secondary">Tutup</button>
-    </div>
-</div>
+<?php
+// Resolve school logo (from logo_url or logo_path)
+$schoolLogo = $school['logo_url'] ?? '';
+if (empty($schoolLogo) && !empty($school['logo_path'])) {
+    $fullLogoPath = dirname(__DIR__, 2) . '/storage/uploads/' . $school['logo_path'];
+    if (file_exists($fullLogoPath) && is_file($fullLogoPath)) {
+        $ext = strtolower(pathinfo($fullLogoPath, PATHINFO_EXTENSION));
+        $mime = match($ext) {
+            'png' => 'image/png',
+            'jpg', 'jpeg' => 'image/jpeg',
+            'svg' => 'image/svg+xml',
+            'webp' => 'image/webp',
+            default => 'image/png'
+        };
+        $schoolLogo = 'data:' . $mime . ';base64,' . base64_encode((string)file_get_contents($fullLogoPath));
+    } else {
+        $schoolLogo = url('/file/view?path=' . urlencode($school['logo_path']));
+    }
+}
+
+// Ketua Panitia fallback
+$committeeSignerName = $committeeSignerName ?? (!empty($school['committee_head']) ? $school['committee_head'] : 'Ketua Panitia');
+$committeeSignerNip = $committeeSignerNip ?? '';
+?>
 
 <div class="cards-container">
     <?php if (empty($participants)): ?>
@@ -139,10 +154,21 @@
         <?php foreach ($participants as $p): ?>
             <div class="participant-card">
                 <div class="card-header-inner">
-                    <?php if (!empty($school['logo_url'])): ?>
-                        <img src="<?= e($school['logo_url']) ?>" alt="Logo" class="card-logo">
+                    <?php if (!empty($schoolLogo)): ?>
+                        <img src="<?= e($schoolLogo) ?>" alt="Logo <?= e($school['name']) ?>" class="card-logo">
                     <?php else: ?>
-                        <div style="width: 42px; height: 42px; background: #e2e8f0; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px;">RU</div>
+                        <!-- Logo Resmi Sekolah (Emblem Pendidikan) jika belum unggah logo khusus -->
+                        <svg class="card-logo" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="24" cy="24" r="22" fill="#f8fafc" stroke="#1e3a8a" stroke-width="2"/>
+                            <circle cx="24" cy="24" r="18" fill="none" stroke="#d97706" stroke-width="1" stroke-dasharray="2 2"/>
+                            <!-- Sayap & Toga Akademik -->
+                            <path d="M24 13L35 18L24 23L13 18L24 13Z" fill="#1e3a8a"/>
+                            <path d="M17 20.5V26C17 28.5 20.1 30.5 24 30.5C27.9 30.5 31 28.5 31 26V20.5" stroke="#1e3a8a" stroke-width="1.8" stroke-linecap="round"/>
+                            <path d="M33 19V27" stroke="#d97706" stroke-width="1.5" stroke-linecap="round"/>
+                            <circle cx="33" cy="28" r="1.5" fill="#d97706"/>
+                            <!-- Kitab / Buku Terbuka -->
+                            <path d="M18 35C20.5 33.5 22.5 33.8 24 34.5C25.5 33.8 27.5 33.5 30 35V32C27.5 30.8 25.5 31.2 24 32C22.5 31.2 20.5 30.8 18 32V35Z" fill="#d97706" opacity="0.9"/>
+                        </svg>
                     <?php endif; ?>
                     <div class="card-header-text">
                         <div class="card-school-name"><?= e($school['name']) ?></div>
@@ -153,8 +179,11 @@
 
                 <div class="card-body-inner">
                     <div class="card-photo-box">
-                        <?php if (!empty($p['photo'])): ?>
-                            <img src="<?= e($p['photo']) ?>" style="width: 100%; height: 100%; object-fit: cover;">
+                        <?php 
+                        $photoSrc = !empty($p['photo_url']) ? $p['photo_url'] : (!empty($p['photo']) ? (str_starts_with($p['photo'], 'data:') || str_starts_with($p['photo'], 'http') || str_starts_with($p['photo'], '/') ? $p['photo'] : url('/file/view?path=' . urlencode($p['photo']))) : null); 
+                        ?>
+                        <?php if (!empty($photoSrc)): ?>
+                            <img src="<?= e($photoSrc) ?>" style="width: 100%; height: 100%; object-fit: cover;">
                         <?php else: ?>
                             <span>FOTO<br>3 x 4</span>
                         <?php endif; ?>
@@ -183,7 +212,13 @@
                         <tr>
                             <td class="label">Ruang / Meja</td>
                             <td>:</td>
-                            <td><span style="border: 1px solid #000; padding: 1px 5px; font-weight: bold;">Ruang <?= e($p['room_number'] ?? '-') ?></span> &nbsp; No Meja: <strong><?= e($p['seat_number'] ?? '-') ?></strong></td>
+                            <td>
+                                <?php
+                                $rNum = $p['room_number'] ?? '-';
+                                $roomText = ($rNum !== '-' && !preg_match('/^ruang/i', trim((string)$rNum))) ? 'Ruang ' . $rNum : $rNum;
+                                ?>
+                                <span style="border: 1px solid #000; padding: 1px 5px; font-weight: bold;"><?= e($roomText) ?></span> &nbsp; No Meja: <strong><?= e($p['seat_number'] ?? '-') ?></strong>
+                            </td>
                         </tr>
                     </table>
                 </div>
@@ -193,11 +228,11 @@
                         <?= $p['qr_svg'] ?>
                     </div>
                     <div class="signature-box">
-                        <div><?= e($school['district'] ?? 'Tempat') ?>, <?= e(indo_date(date('Y-m-d'))) ?></div>
-                        <div style="font-weight: 600;">Kepala Sekolah / Ketua Panitia,</div>
+                        <div><?= e(!empty($school['signature_city']) ? $school['signature_city'] : ($school['district'] ?? 'Tempat')) ?>, <?= e(indo_date(date('Y-m-d'))) ?></div>
+                        <div style="font-weight: 600;">Ketua Panitia,</div>
                         <div style="height: 35px;"></div>
-                        <div style="font-weight: bold; text-decoration: underline;"><?= e($school['principal_name']) ?></div>
-                        <div>NIP. <?= e($school['principal_nip'] ?? '-') ?></div>
+                        <div style="font-weight: bold; text-decoration: underline;"><?= e($committeeSignerName ?: 'Ketua Panitia') ?></div>
+                        <div>NIP. <?= !empty($committeeSignerNip) ? e($committeeSignerNip) : '-' ?></div>
                     </div>
                 </div>
             </div>

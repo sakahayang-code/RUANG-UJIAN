@@ -135,6 +135,26 @@ function school_setting(): array
             'logo_path' => null,
             'letterhead_image_path' => null,
         ];
+
+        // Otomatis siapkan logo_url (Base64 Data URI jika berkas ada di penyimpanan, atau URL file)
+        $settings['logo_url'] = '';
+        if (!empty($settings['logo_path'])) {
+            $diskPath = dirname(__DIR__, 2) . '/storage/uploads/' . $settings['logo_path'];
+            if (file_exists($diskPath) && is_file($diskPath)) {
+                $ext = strtolower(pathinfo($diskPath, PATHINFO_EXTENSION));
+                $mime = match($ext) {
+                    'png' => 'image/png',
+                    'jpg', 'jpeg' => 'image/jpeg',
+                    'svg' => 'image/svg+xml',
+                    'webp' => 'image/webp',
+                    'gif' => 'image/gif',
+                    default => 'image/png'
+                };
+                $settings['logo_url'] = 'data:' . $mime . ';base64,' . base64_encode((string)file_get_contents($diskPath));
+            } else {
+                $settings['logo_url'] = url('/file/view?path=' . urlencode($settings['logo_path']));
+            }
+        }
     }
     return $settings;
 }

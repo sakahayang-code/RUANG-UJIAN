@@ -94,17 +94,61 @@ class PrintController
         $sql .= " ORDER BY er.room_number ASC, era.seat_number ASC, ep.participant_number ASC";
         $participants = Database::fetchAll($sql, $params);
 
-        // Generate QR Code for each participant
+        // Generate QR Code for each participant & resolve photo URL
         foreach ($participants as &$p) {
             $qrText = "NO:" . ($p['participant_number'] ?? '-') .
                       "|NISN:" . ($p['nisn'] ?? '-') .
                       "|NAMA:" . ($p['name'] ?? '-') .
                       "|RUANG:" . ($p['room_number'] ?? '-');
             $p['qr_svg'] = QrGenerator::svg($qrText, 85);
+
+            // Resolve student photo
+            if (!empty($p['photo'])) {
+                $photoDisk = dirname(__DIR__, 2) . '/storage/uploads/' . $p['photo'];
+                if (file_exists($photoDisk) && is_file($photoDisk)) {
+                    $ext = strtolower(pathinfo($photoDisk, PATHINFO_EXTENSION));
+                    $mime = match($ext) {
+                        'png' => 'image/png',
+                        'jpg', 'jpeg' => 'image/jpeg',
+                        'webp' => 'image/webp',
+                        default => 'image/jpeg'
+                    };
+                    $p['photo_url'] = 'data:' . $mime . ';base64,' . base64_encode((string)file_get_contents($photoDisk));
+                } else {
+                    $p['photo_url'] = url('/file/view?path=' . urlencode($p['photo']));
+                }
+            } else {
+                $p['photo_url'] = null;
+            }
         }
         unset($p);
 
         $school = school_setting();
+
+        // Penanda tangan kartu peserta: Ketua Panitia Ujian
+        // 1. Prioritaskan data Ketua Panitia dari struktur panitia kegiatan aktif
+        $committeeHead = Database::fetch("
+            SELECT cm.*, 
+                   COALESCE(NULLIF(cm.custom_name, ''), t.name) as name, 
+                   COALESCE(NULLIF(cm.custom_nip, ''), t.nip) as nip
+            FROM committee_members cm
+            JOIN committees c ON cm.committee_id = c.id
+            LEFT JOIN teachers t ON cm.teacher_id = t.id
+            WHERE c.exam_event_id = ? AND (cm.role_title LIKE '%Ketua Panitia%' OR cm.role_title LIKE '%Ketua%')
+            ORDER BY CASE WHEN cm.role_title = 'Ketua Panitia' THEN 1 WHEN cm.role_title LIKE '%Ketua%' THEN 2 ELSE 3 END, cm.order_index ASC, cm.id ASC
+            LIMIT 1
+        ", [$event['id']]);
+
+        $committeeSignerName = !empty($committeeHead['name']) ? $committeeHead['name'] : (!empty($school['committee_head']) ? $school['committee_head'] : 'Ketua Panitia');
+        $committeeSignerNip = !empty($committeeHead['nip']) ? $committeeHead['nip'] : '';
+
+        // 2. Jika NIP masih kosong namun nama cocok dengan data guru, cari NIP guru terkait
+        if (empty($committeeSignerNip) && !empty($committeeSignerName) && $committeeSignerName !== 'Ketua Panitia') {
+            $t = Database::fetch("SELECT nip FROM teachers WHERE name = ? LIMIT 1", [$committeeSignerName]);
+            if ($t && !empty($t['nip'])) {
+                $committeeSignerNip = $t['nip'];
+            }
+        }
 
         // Use print layout
         View::layout('layouts/print');
@@ -112,7 +156,10 @@ class PrintController
             'title' => 'Cetak Kartu Peserta Ujian',
             'event' => $event,
             'school' => $school,
-            'participants' => $participants
+            'participants' => $participants,
+            'committeeSignerName' => $committeeSignerName,
+            'committeeSignerNip' => $committeeSignerNip,
+            'hideKop' => true,
         ]);
     }
 
@@ -179,7 +226,8 @@ class PrintController
             'event' => $event,
             'school' => $school,
             'type' => $type,
-            'tags' => $tags
+            'tags' => $tags,
+            'hideKop' => true,
         ]);
     }
 
@@ -241,7 +289,8 @@ class PrintController
             'title' => 'Cetak Label Pintu Ruang Ujian',
             'event' => $event,
             'school' => $school,
-            'rooms' => $rooms
+            'rooms' => $rooms,
+            'hideKop' => true,
         ]);
     }
 
@@ -395,7 +444,8 @@ class PrintController
             'event' => $event,
             'school' => $school,
             'labels' => $labels,
-            'reservePerSubject' => $reservePerSubject
+            'reservePerSubject' => $reservePerSubject,
+            'hideKop' => true,
         ]);
     }
 
@@ -451,7 +501,8 @@ class PrintController
             'title' => 'Cetak Label Amplop Lembar Jawaban',
             'event' => $event,
             'school' => $school,
-            'labels' => $labels
+            'labels' => $labels,
+            'hideKop' => true,
         ]);
     }
 }
