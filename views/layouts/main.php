@@ -22,10 +22,13 @@ $allEvents = \App\Core\Database::fetchAll("SELECT * FROM exam_events ORDER BY id
     <meta name="application-name" content="RUANG UJIAN">
     <meta name="format-detection" content="telephone=no">
     
-    <!-- App Icons -->
+    <!-- App Icons & PWA Logos (Android & iOS) -->
     <link rel="icon" type="image/svg+xml" href="<?= asset('images/icons/icon.svg') ?>">
-    <link rel="alternate icon" type="image/png" href="<?= asset('images/icons/icon-192.png') ?>">
-    <link rel="apple-touch-icon" href="<?= asset('images/icons/icon-192.png') ?>">
+    <link rel="icon" type="image/png" sizes="192x192" href="<?= asset('images/icons/icon-192.png') ?>">
+    <link rel="icon" type="image/png" sizes="512x512" href="<?= asset('images/icons/icon-512.png') ?>">
+    <link rel="apple-touch-icon" sizes="180x180" href="<?= asset('images/icons/apple-touch-icon.png') ?>">
+    <link rel="apple-touch-icon-precomposed" sizes="180x180" href="<?= asset('images/icons/apple-touch-icon.png') ?>">
+    <link rel="shortcut icon" href="<?= asset('images/icons/icon-192.png') ?>">
     
     <!-- Google Fonts: Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">

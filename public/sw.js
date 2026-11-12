@@ -3,13 +3,15 @@
  * Version: 1.0.0
  */
 
-const CACHE_NAME = 'ruang-ujian-pwa-v1.0.0';
+const CACHE_NAME = 'ruang-ujian-pwa-v1.1.0';
 const STATIC_ASSETS = [
     './assets/css/app.css',
     './assets/js/app.js',
     './assets/images/icons/icon-192.png',
     './assets/images/icons/icon-512.png',
     './assets/images/icons/icon-maskable.png',
+    './assets/images/icons/icon-maskable-192.png',
+    './assets/images/icons/apple-touch-icon.png',
     './assets/images/icons/icon.svg',
     './manifest.json',
     './offline.html'

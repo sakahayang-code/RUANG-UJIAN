@@ -108,6 +108,47 @@ try {
 $request = new Request();
 $currentPath = '/' . trim($request->getPath(), '/');
 
+// Static Assets Direct Delivery (Ensuring PWA icons, CSS, and JS never return 404 HTML)
+if (str_starts_with($currentPath, '/assets/') || str_starts_with($currentPath, '/public/assets/')) {
+    $subPath = preg_replace('#^/(public/)?assets/#', '', $currentPath);
+    $filePath = dirname(__DIR__) . '/public/assets/' . $subPath;
+    if (file_exists($filePath) && is_file($filePath)) {
+        $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+        $mimes = [
+            'png' => 'image/png',
+            'jpg' => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'svg' => 'image/svg+xml',
+            'webp' => 'image/webp',
+            'ico' => 'image/x-icon',
+            'css' => 'text/css; charset=utf-8',
+            'js' => 'application/javascript; charset=utf-8',
+            'json' => 'application/json; charset=utf-8',
+            'woff' => 'font/woff',
+            'woff2' => 'font/woff2',
+            'ttf' => 'font/ttf',
+        ];
+        $contentType = $mimes[$ext] ?? 'application/octet-stream';
+        header('Content-Type: ' . $contentType);
+        header('Cache-Control: public, max-age=604800');
+        readfile($filePath);
+        exit;
+    }
+}
+
+if (in_array($currentPath, ['/apple-touch-icon.png', '/apple-touch-icon-precomposed.png', '/favicon.ico', '/favicon.png'])) {
+    $fileName = ltrim($currentPath, '/');
+    $filePath = dirname(__DIR__) . '/public/' . $fileName;
+    if (file_exists($filePath) && is_file($filePath)) {
+        $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+        $contentType = $ext === 'ico' ? 'image/x-icon' : 'image/png';
+        header('Content-Type: ' . $contentType);
+        header('Cache-Control: public, max-age=604800');
+        readfile($filePath);
+        exit;
+    }
+}
+
 // Auto-redirect to installer if database is not initialized yet
 $isPwaStatic = in_array($currentPath, ['/manifest.json', '/sw.js', '/offline']) || str_starts_with($currentPath, '/assets');
 if (!$isDatabaseReady && !str_starts_with($currentPath, '/install') && !$isPwaStatic) {
@@ -118,10 +159,53 @@ if (!$isDatabaseReady && !str_starts_with($currentPath, '/install') && !$isPwaSt
 // ROUTE DEFINITIONS
 // ==========================================
 
-// PWA Assets Fallback Routing
+// PWA Assets Fallback Routing (Dynamic Manifest with current Base URL & Full App Logo Icons)
 Router::get('/manifest.json', function() {
     header('Content-Type: application/manifest+json; charset=utf-8');
-    readfile(dirname(__DIR__) . '/public/manifest.json');
+    header('Cache-Control: public, max-age=86400');
+    $manifestPath = dirname(__DIR__) . '/public/manifest.json';
+    if (file_exists($manifestPath)) {
+        $data = json_decode(file_get_contents($manifestPath), true);
+        if (is_array($data)) {
+            $data['start_url'] = url('/dashboard');
+            $data['scope'] = url('/');
+            $data['icons'] = [
+                [
+                    'src' => asset('images/icons/icon-192.png'),
+                    'sizes' => '192x192',
+                    'type' => 'image/png',
+                    'purpose' => 'any'
+                ],
+                [
+                    'src' => asset('images/icons/icon-512.png'),
+                    'sizes' => '512x512',
+                    'type' => 'image/png',
+                    'purpose' => 'any'
+                ],
+                [
+                    'src' => asset('images/icons/icon-maskable-192.png'),
+                    'sizes' => '192x192',
+                    'type' => 'image/png',
+                    'purpose' => 'maskable'
+                ],
+                [
+                    'src' => asset('images/icons/icon-maskable.png'),
+                    'sizes' => '512x512',
+                    'type' => 'image/png',
+                    'purpose' => 'maskable'
+                ],
+                [
+                    'src' => asset('images/icons/icon.svg'),
+                    'sizes' => '512x512',
+                    'type' => 'image/svg+xml',
+                    'purpose' => 'any'
+                ]
+            ];
+            echo json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+    }
+    readfile($manifestPath);
     exit;
 });
 Router::get('/sw.js', function() {
