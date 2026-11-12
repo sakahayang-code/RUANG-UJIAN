@@ -10,11 +10,71 @@
         <button type="button" class="btn btn-success" data-modal-open="distributeModal">
             🔀 Distribusikan Peserta Otomatis
         </button>
+        <?php if (!empty($masterStudentCount) && $masterStudentCount > 0): ?>
+            <form action="<?= url('/written-exam/rooms/sync-participants') ?>" method="POST" style="display: inline;">
+                <?= csrf_field() ?>
+                <button type="submit" class="btn btn-secondary" title="Tarik atau sinkronkan seluruh siswa aktif dari Master Data Siswa">
+                    🔄 Tarik Siswa
+                </button>
+            </form>
+        <?php endif; ?>
+        <?php if (!empty($totalAssigned) && $totalAssigned > 0): ?>
+            <form action="<?= url('/written-exam/rooms/reset-assignments') ?>" method="POST" style="display: inline;" onsubmit="return confirm('PERINGATAN: Apakah Anda yakin ingin mengosongkan seluruh penempatan peserta di ruangan ujian? Tindakan ini dapat dibagikan ulang kapan saja.');">
+                <?= csrf_field() ?>
+                <button type="submit" class="btn btn-outline text-danger" title="Kosongkan penempatan ruang">
+                    🗑️ Reset Penempatan
+                </button>
+            </form>
+        <?php endif; ?>
         <a href="<?= url('/written-exam/seating') ?>" class="btn btn-outline">
             🪑 Lihat Denah Tempat Duduk
         </a>
     </div>
 </div>
+
+<?php if ($totalParticipants === 0): ?>
+    <?php if (!empty($masterStudentCount) && $masterStudentCount > 0): ?>
+        <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; padding: 14px 18px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 26px;">👥</span>
+                <div>
+                    <div style="font-weight: 700; color: #1e40af; font-size: 14px;">Belum Ada Peserta Terdaftar di Kegiatan Ini</div>
+                    <div style="font-size: 12px; color: #2563eb; margin-top: 2px;">
+                        Ditemukan <strong><?= number_format($masterStudentCount) ?> siswa aktif</strong> di Master Data Siswa. Klik tombol <strong>Tarik Siswa Sekarang</strong> atau langsung tekan <strong>Distribusikan Peserta Otomatis</strong> untuk menempatkan mereka ke dalam ruang ujian.
+                    </div>
+                </div>
+            </div>
+            <form action="<?= url('/written-exam/rooms/sync-participants') ?>" method="POST" style="margin: 0;">
+                <?= csrf_field() ?>
+                <button type="submit" class="btn btn-primary btn-sm" style="font-weight: 600;">
+                    📥 Tarik <?= number_format($masterStudentCount) ?> Siswa Sekarang
+                </button>
+            </form>
+        </div>
+    <?php else: ?>
+        <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 14px 18px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 26px;">⚠️</span>
+                <div>
+                    <div style="font-weight: 700; color: #991b1b; font-size: 14px;">Master Data Siswa Masih Kosong</div>
+                    <div style="font-size: 12px; color: #dc2626; margin-top: 2px;">
+                        Peserta tidak dapat didistribusikan karena belum ada data siswa yang diimpor atau ditambahkan ke sistem.
+                    </div>
+                </div>
+            </div>
+            <a href="<?= url('/master/students') ?>" class="btn btn-primary btn-sm" style="font-weight: 600;">
+                📥 Buka Master Data Siswa
+            </a>
+        </div>
+    <?php endif; ?>
+<?php elseif ($unassigned > 0 && !empty($totalCapacity) && $totalCapacity < ($unassigned + $totalAssigned)): ?>
+    <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 12px 16px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 22px;">⚠️</span>
+        <div style="font-size: 12px; color: #92400e;">
+            <strong>Perhatian Kapasitas:</strong> Total kapasitas kursi ruang ujian saat ini (<strong><?= number_format($totalCapacity) ?> kursi</strong>) lebih sedikit dibandingkan total peserta (<strong><?= number_format($totalParticipants) ?> siswa</strong>). Tambahkan ruang baru atau perbesar kapasitas agar seluruh siswa tertampung.
+        </div>
+    </div>
+<?php endif; ?>
 
 <!-- Stats Bar -->
 <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 20px;">
@@ -179,9 +239,19 @@
         <form action="<?= url('/written-exam/rooms/auto-distribute') ?>" method="POST">
             <?= csrf_field() ?>
             <div class="modal-body">
-                <div class="alert alert-info" style="font-size: 13px;">
-                    Sistem dapat mendistribusikan peserta secara seimbang ke seluruh ruang yang ada. Satu ruang dapat menampung campuran dari berbagai kelas dan tingkatan.
-                </div>
+                <?php if ($totalParticipants === 0 && !empty($masterStudentCount) && $masterStudentCount > 0): ?>
+                    <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px 14px; margin-bottom: 16px; font-size: 13px; color: #166534; line-height: 1.5;">
+                        💡 <strong>Sinkronisasi Otomatis:</strong> Kegiatan ini belum memiliki peserta terdaftar. Saat Anda menekan <strong>Mulai Distribusi Peserta</strong>, sistem akan <strong>otomatis menarik <?= number_format($masterStudentCount) ?> siswa aktif</strong> dari Master Data Siswa dan langsung menempatkannya ke dalam ruang ujian.
+                    </div>
+                <?php elseif ($totalParticipants === 0 && (empty($masterStudentCount) || $masterStudentCount === 0)): ?>
+                    <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 12px 14px; margin-bottom: 16px; font-size: 13px; color: #991b1b; line-height: 1.5;">
+                        ⚠️ <strong>Data Siswa Kosong:</strong> Belum ada data siswa di Master Data Siswa. Silakan impor atau tambahkan siswa terlebih dahulu di menu Siswa sebelum menjalankan distribusi ruangan.
+                    </div>
+                <?php else: ?>
+                    <div class="alert alert-info" style="font-size: 13px;">
+                        Sistem dapat mendistribusikan peserta secara seimbang ke seluruh ruang yang ada. Satu ruang dapat menampung campuran dari berbagai kelas dan tingkatan.
+                    </div>
+                <?php endif; ?>
 
                 <div class="form-group">
                     <label class="form-label required">Metode Pembagian Peserta</label>
@@ -201,7 +271,11 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-modal-close="distributeModal">Batal</button>
-                <button type="submit" class="btn btn-success">Mulai Distribusi Peserta</button>
+                <?php if ($totalParticipants === 0 && (empty($masterStudentCount) || $masterStudentCount === 0)): ?>
+                    <a href="<?= url('/master/students') ?>" class="btn btn-primary">Buka Master Data Siswa</a>
+                <?php else: ?>
+                    <button type="submit" class="btn btn-success">Mulai Distribusi Peserta</button>
+                <?php endif; ?>
             </div>
         </form>
     </div>

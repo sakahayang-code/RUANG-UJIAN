@@ -360,6 +360,8 @@ Router::post('/written-exam/rooms/store', [WrittenExamController::class, 'storeR
 Router::post('/written-exam/rooms/delete', [WrittenExamController::class, 'deleteRoom'], ['auth', 'csrf']);
 Router::post('/written-exam/rooms/auto-assign', [WrittenExamController::class, 'autoDistribute'], ['auth', 'csrf']);
 Router::post('/written-exam/rooms/auto-distribute', [WrittenExamController::class, 'autoDistribute'], ['auth', 'csrf']);
+Router::post('/written-exam/rooms/sync-participants', [WrittenExamController::class, 'syncParticipants'], ['auth', 'csrf']);
+Router::post('/written-exam/rooms/reset-assignments', [WrittenExamController::class, 'resetAssignments'], ['auth', 'csrf']);
 Router::post('/written-exam/rooms/manual-assign', [WrittenExamController::class, 'manualAssign'], ['auth', 'csrf']);
 
 Router::get('/written-exam/seating', [WrittenExamController::class, 'seating'], ['auth']);

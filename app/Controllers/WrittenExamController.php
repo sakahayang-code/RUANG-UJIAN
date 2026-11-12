@@ -112,6 +112,8 @@ class WrittenExamController
         $totalParticipants = (int)Database::fetchColumn("SELECT COUNT(*) FROM exam_participants WHERE exam_event_id = ?", [$event['id']]);
         $totalAssigned = (int)Database::fetchColumn("SELECT COUNT(*) FROM exam_room_assignments WHERE exam_event_id = ?", [$event['id']]);
         $unassigned = max(0, $totalParticipants - $totalAssigned);
+        $masterStudentCount = (int)Database::fetchColumn("SELECT COUNT(*) FROM students WHERE deleted_at IS NULL AND (status IS NULL OR LOWER(status) = 'aktif' OR status = '')");
+        $totalCapacity = (int)Database::fetchColumn("SELECT SUM(capacity) FROM exam_rooms WHERE exam_event_id = ?", [$event['id']]) ?: 0;
 
         View::render('written_exam/rooms', [
             'title' => 'Pengaturan Ruang & Pembagian Peserta',
@@ -119,7 +121,9 @@ class WrittenExamController
             'rooms' => $rooms,
             'totalParticipants' => $totalParticipants,
             'totalAssigned' => $totalAssigned,
-            'unassigned' => $unassigned
+            'unassigned' => $unassigned,
+            'masterStudentCount' => $masterStudentCount,
+            'totalCapacity' => $totalCapacity
         ]);
     }
 
@@ -177,26 +181,143 @@ class WrittenExamController
     }
 
     /**
+     * Sinkronkan seluruh data siswa aktif dari Master Data Siswa ke daftar peserta kegiatan ujian aktif.
+     */
+    public function syncParticipants(Request $request): void
+    {
+        $event = active_event();
+        if (!$event) {
+            flash('warning', 'Pilih kegiatan ujian aktif terlebih dahulu.');
+            Response::redirect(url('/events'));
+        }
+
+        $students = Database::fetchAll("
+            SELECT s.*, COALESCE(c.name, s.grade, 'Kelas') as class_name
+            FROM students s
+            LEFT JOIN classes c ON s.class_id = c.id
+            WHERE s.deleted_at IS NULL AND (s.status IS NULL OR LOWER(s.status) = 'aktif' OR s.status = '')
+            ORDER BY s.grade ASC, c.name ASC, s.name ASC
+        ");
+
+        if (empty($students)) {
+            flash('warning', 'Master Data Siswa masih kosong. Silakan tambahkan atau impor data siswa terlebih dahulu di menu Siswa.');
+            Response::redirect(url('/written-exam/rooms'));
+        }
+
+        $yearShort = substr(preg_replace('/[^0-9]/', '', (string)$event['academic_year']), 0, 2) ?: date('y');
+        $num = (int)Database::fetchColumn("SELECT COUNT(*) FROM exam_participants WHERE exam_event_id = ?", [$event['id']]);
+        $added = 0;
+
+        foreach ($students as $s) {
+            $exists = Database::fetch("SELECT id FROM exam_participants WHERE exam_event_id = ? AND student_id = ?", [$event['id'], $s['id']]);
+            if ($exists) continue;
+
+            $num++;
+            $partNumber = sprintf("%s-%s-%04d", $yearShort, $s['grade'] ?: 'U', $num);
+
+            Database::insert('exam_participants', [
+                'exam_event_id' => $event['id'],
+                'student_id' => $s['id'],
+                'participant_number' => $partNumber,
+                'student_name_snapshot' => $s['name'],
+                'nis_snapshot' => $s['nis'],
+                'nisn_snapshot' => $s['nisn'],
+                'class_name_snapshot' => $s['class_name'],
+                'grade_snapshot' => $s['grade'] ?: 'VII',
+                'gender_snapshot' => $s['gender'] ?: 'L',
+                'created_at' => date('Y-m-d H:i:s')
+            ]);
+            $added++;
+        }
+
+        if ($added > 0) {
+            flash('success', "Berhasil menyinkronkan {$added} siswa aktif menjadi peserta kegiatan ujian.");
+        } else {
+            flash('info', 'Semua siswa aktif sudah terdaftar sebagai peserta pada kegiatan ujian ini.');
+        }
+
+        Response::redirect(url('/written-exam/rooms'));
+    }
+
+    /**
+     * Kosongkan seluruh penempatan peserta di ruangan ujian.
+     */
+    public function resetAssignments(Request $request): void
+    {
+        $event = active_event();
+        if (!$event) {
+            flash('warning', 'Pilih kegiatan ujian aktif terlebih dahulu.');
+            Response::redirect(url('/events'));
+        }
+
+        Database::delete('exam_room_assignments', 'exam_event_id = ?', [$event['id']]);
+        flash('success', 'Seluruh penempatan peserta di ruangan ujian berhasil dikosongkan.');
+        Response::redirect(url('/written-exam/rooms'));
+    }
+
+    /**
      * Automatic balanced & randomized participant distribution into rooms.
      * Supports combining multiple classes/grades into a single room!
      */
     public function autoDistribute(Request $request): void
     {
         $event = active_event();
+        if (!$event) {
+            flash('warning', 'Pilih kegiatan ujian aktif terlebih dahulu.');
+            Response::redirect(url('/events'));
+        }
+
         $mode = (string)$request->input('mode', 'mix_grades'); // 'mix_grades', 'sequential', 'random'
         $clearExisting = (bool)$request->input('clear_existing', true);
+
+        $rooms = Database::fetchAll("SELECT * FROM exam_rooms WHERE exam_event_id = ? ORDER BY room_number ASC", [$event['id']]);
+        if (empty($rooms)) {
+            flash('error', 'Belum ada ruang ujian yang dibuat. Silakan tambahkan ruang ujian terlebih dahulu.');
+            Response::redirect(url('/written-exam/rooms'));
+        }
+
+        // Periksa apakah kegiatan saat ini sudah memiliki peserta terdaftar
+        $totalParticipantsInEvent = (int)Database::fetchColumn("SELECT COUNT(*) FROM exam_participants WHERE exam_event_id = ?", [$event['id']]);
+        if ($totalParticipantsInEvent === 0) {
+            // Otomatis tarik seluruh siswa aktif dari master data siswa
+            $masterStudents = Database::fetchAll("
+                SELECT s.*, COALESCE(c.name, s.grade, 'Kelas') as class_name
+                FROM students s
+                LEFT JOIN classes c ON s.class_id = c.id
+                WHERE s.deleted_at IS NULL AND (s.status IS NULL OR LOWER(s.status) = 'aktif' OR s.status = '')
+                ORDER BY s.grade ASC, c.name ASC, s.name ASC
+            ");
+
+            if (empty($masterStudents)) {
+                flash('error', 'Tidak ada data peserta untuk didistribusikan. Master Data Siswa masih kosong, silakan tambahkan atau impor data siswa terlebih dahulu di menu Siswa.');
+                Response::redirect(url('/written-exam/rooms'));
+            }
+
+            $yearShort = substr(preg_replace('/[^0-9]/', '', (string)$event['academic_year']), 0, 2) ?: date('y');
+            $num = 0;
+            foreach ($masterStudents as $s) {
+                $num++;
+                $partNumber = sprintf("%s-%s-%04d", $yearShort, $s['grade'] ?: 'U', $num);
+                Database::insert('exam_participants', [
+                    'exam_event_id' => $event['id'],
+                    'student_id' => $s['id'],
+                    'participant_number' => $partNumber,
+                    'student_name_snapshot' => $s['name'],
+                    'nis_snapshot' => $s['nis'],
+                    'nisn_snapshot' => $s['nisn'],
+                    'class_name_snapshot' => $s['class_name'],
+                    'grade_snapshot' => $s['grade'] ?: 'VII',
+                    'gender_snapshot' => $s['gender'] ?: 'L',
+                    'created_at' => date('Y-m-d H:i:s')
+                ]);
+            }
+        }
 
         if ($clearExisting) {
             Database::delete('exam_room_assignments', 'exam_event_id = ?', [$event['id']]);
         }
 
-        $rooms = Database::fetchAll("SELECT * FROM exam_rooms WHERE exam_event_id = ? ORDER BY room_number ASC", [$event['id']]);
-        if (empty($rooms)) {
-            flash('error', 'Belum ada ruang ujian yang dibuat. Silakan tambahkan ruang terlebih dahulu.');
-            Response::back();
-        }
-
-        // Get unassigned participants
+        // Ambil peserta yang belum ditempatkan ke dalam ruang ujian
         $participants = Database::fetchAll("
             SELECT * FROM exam_participants
             WHERE exam_event_id = ?
@@ -205,51 +326,78 @@ class WrittenExamController
         ", [$event['id'], $event['id']]);
 
         if (empty($participants)) {
-            flash('info', 'Semua peserta sudah memiliki penempatan ruang.');
+            flash('info', 'Semua peserta sudah memiliki penempatan ruang ujian.');
             Response::redirect(url('/written-exam/rooms'));
         }
 
         if ($mode === 'random') {
             shuffle($participants);
         } elseif ($mode === 'mix_grades') {
-            // Group by grade
+            // Kelompokkan berdasarkan tingkat
             $byGrade = [];
             foreach ($participants as $p) {
                 $byGrade[$p['grade_snapshot']][] = $p;
             }
 
-            // Interleave grades: VII, VIII, IX alternately to mix rooms
-            $interleaved = [];
-            $maxCount = 0;
-            foreach ($byGrade as $gList) {
-                $maxCount = max($maxCount, count($gList));
-            }
-            for ($i = 0; $i < $maxCount; $i++) {
-                foreach ($byGrade as $gKey => &$gList) {
-                    if (isset($gList[$i])) {
-                        $interleaved[] = $gList[$i];
+            // Jika hanya 1 tingkat, acak silang berdasarkan kelas rombel asal
+            if (count($byGrade) <= 1) {
+                $byClass = [];
+                foreach ($participants as $p) {
+                    $byClass[$p['class_name_snapshot']][] = $p;
+                }
+                $interleaved = [];
+                $maxCount = 0;
+                foreach ($byClass as $cList) {
+                    $maxCount = max($maxCount, count($cList));
+                }
+                for ($i = 0; $i < $maxCount; $i++) {
+                    foreach ($byClass as &$cList) {
+                        if (isset($cList[$i])) {
+                            $interleaved[] = $cList[$i];
+                        }
                     }
                 }
+                $participants = $interleaved;
+            } else {
+                // Silang bergantian antar tingkat (VII, VIII, IX...)
+                $interleaved = [];
+                $maxCount = 0;
+                foreach ($byGrade as $gList) {
+                    $maxCount = max($maxCount, count($gList));
+                }
+                for ($i = 0; $i < $maxCount; $i++) {
+                    foreach ($byGrade as $gKey => &$gList) {
+                        if (isset($gList[$i])) {
+                            $interleaved[] = $gList[$i];
+                        }
+                    }
+                }
+                $participants = $interleaved;
             }
-            $participants = $interleaved;
         }
 
-        // Distribute into rooms respecting capacity
+        // Distribusikan ke setiap ruang ujian sesuai kapasitas meja
         Database::beginTransaction();
         try {
             $pIdx = 0;
             $totalP = count($participants);
 
             foreach ($rooms as $room) {
-                $currentAssigned = (int)Database::fetchColumn(
-                    "SELECT COUNT(*) FROM exam_room_assignments WHERE exam_room_id = ?",
+                $existingAssignments = Database::fetchAll(
+                    "SELECT seat_number FROM exam_room_assignments WHERE exam_room_id = ?",
                     [$room['id']]
                 );
-                $remainingCap = $room['capacity'] - $currentAssigned;
+                $occupiedSeats = array_column($existingAssignments, 'seat_number');
+                $occupiedMap = array_fill_keys($occupiedSeats, true);
 
                 $cols = (int)$room['cols_count'] ?: 4;
+                $capacity = (int)$room['capacity'];
 
-                for ($seat = $currentAssigned + 1; $seat <= $room['capacity'] && $pIdx < $totalP; $seat++) {
+                for ($seat = 1; $seat <= $capacity && $pIdx < $totalP; $seat++) {
+                    if (isset($occupiedMap[$seat])) {
+                        continue; // Meja sudah terisi
+                    }
+
                     $p = $participants[$pIdx];
                     $rowNum = (int)ceil($seat / $cols);
                     $colNum = ($seat % $cols === 0) ? $cols : ($seat % $cols);
@@ -267,7 +415,13 @@ class WrittenExamController
                 }
             }
             Database::commit();
-            flash('success', "Berhasil mendistribusikan {$pIdx} peserta ke dalam ruang ujian secara otomatis.");
+
+            if ($pIdx < $totalP) {
+                $sisa = $totalP - $pIdx;
+                flash('warning', "Berhasil mendistribusikan {$pIdx} peserta. Perhatian: {$sisa} peserta belum mendapatkan ruang karena kapasitas seluruh ruangan telah penuh. Silakan tambah ruangan baru.");
+            } else {
+                flash('success', "Berhasil mendistribusikan {$pIdx} peserta ke dalam " . count($rooms) . " ruang ujian secara otomatis.");
+            }
         } catch (\Throwable $e) {
             Database::rollBack();
             flash('error', 'Gagal mendistribusikan peserta: ' . $e->getMessage());
