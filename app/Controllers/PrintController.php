@@ -100,7 +100,7 @@ class PrintController
                       "|NISN:" . ($p['nisn'] ?? '-') .
                       "|NAMA:" . ($p['name'] ?? '-') .
                       "|RUANG:" . ($p['room_number'] ?? '-');
-            $p['qr_svg'] = QrGenerator::svg($qrText, 85);
+            $p['qr_svg'] = QrGenerator::svg($qrText, 70);
 
             // Resolve student photo
             if (!empty($p['photo'])) {
