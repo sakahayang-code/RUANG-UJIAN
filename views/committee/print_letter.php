@@ -1,23 +1,29 @@
 <div style="font-size: 11pt; line-height: 1.5; font-family: 'Times New Roman', serif;">
-    <!-- Meta Surat -->
-    <table style="width: 100%; margin-bottom: 20px; font-size: 11pt;">
+    <!-- Meta Surat & Tanggal Surat -->
+    <table style="width: 100%; margin-bottom: 20px; font-size: 11pt; border-collapse: collapse;">
         <tr>
-            <td style="width: 100px;">Nomor</td>
-            <td style="width: 15px;">:</td>
-            <td><?= e($letter['letter_number']) ?></td>
-            <td style="text-align: right;"><?= e($school['signature_city']) ?>, <?= format_date_id($letter['letter_date']) ?></td>
-        </tr>
-        <tr>
-            <td>Lampiran</td>
-            <td>:</td>
-            <td>-</td>
-            <td></td>
-        </tr>
-        <tr>
-            <td>Perihal</td>
-            <td>:</td>
-            <td><strong><?= e($letter['subject']) ?></strong></td>
-            <td></td>
+            <td style="vertical-align: top; width: 62%;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 11pt;">
+                    <tr>
+                        <td style="width: 80px; vertical-align: top; padding: 1px 0;">Nomor</td>
+                        <td style="width: 15px; vertical-align: top; text-align: center; padding: 1px 0;">:</td>
+                        <td style="vertical-align: top; padding: 1px 0;"><?= e($letter['letter_number']) ?></td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: top; padding: 1px 0;">Lampiran</td>
+                        <td style="vertical-align: top; text-align: center; padding: 1px 0;">:</td>
+                        <td style="vertical-align: top; padding: 1px 0;">-</td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: top; padding: 1px 0;">Perihal</td>
+                        <td style="vertical-align: top; text-align: center; padding: 1px 0;">:</td>
+                        <td style="vertical-align: top; padding: 1px 0;"><strong><?= e($letter['subject']) ?></strong></td>
+                    </tr>
+                </table>
+            </td>
+            <td style="vertical-align: top; text-align: right; width: 38%; white-space: nowrap; font-size: 11pt; padding: 1px 0;">
+                <?= e(!empty($school['signature_city']) ? $school['signature_city'] : ($school['district'] ?? ($school['regency'] ?? 'Tempat'))) ?>, <?= format_date_id($letter['letter_date'] ?? date('Y-m-d')) ?>
+            </td>
         </tr>
     </table>
 
@@ -66,8 +72,8 @@
     <!-- Tanda Tangan -->
     <div class="signature-block">
         <div></div>
-        <div class="signature-box">
-            <?= e($school['signature_city'] ?? 'Bogor') ?>, <?= format_date_id($letter['letter_date'] ?? date('Y-m-d')) ?><br>
+        <div class="signature-box" style="text-align: center; min-width: 220px;">
+            <div style="white-space: nowrap;"><?= e(!empty($school['signature_city']) ? $school['signature_city'] : ($school['district'] ?? ($school['regency'] ?? 'Tempat'))) ?>, <?= format_date_id($letter['letter_date'] ?? date('Y-m-d')) ?></div>
             <?= e($letter['signer_title'] ?? 'Ketua Panitia') ?>,
             <div class="signature-space"></div>
             <div class="signature-name"><?= e($letter['signer_name'] ?? ($school['committee_head'] ?? 'Panitia Ujian')) ?></div>

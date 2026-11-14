@@ -19,7 +19,7 @@
                     <th>Nomor Surat</th>
                     <th>Jenis Surat</th>
                     <th>Perihal</th>
-                    <th>Tanggal Surat</th>
+                    <th style="width: 140px; white-space: nowrap;">Tanggal Surat</th>
                     <th>Agenda / Rincian</th>
                     <th>Penandatangan</th>
                     <th style="width: 220px;" class="text-center">Aksi</th>
@@ -43,7 +43,7 @@
                                 </span>
                             </td>
                             <td><strong><?= e($l['subject']) ?></strong></td>
-                            <td><?= format_date_id($l['letter_date']) ?></td>
+                            <td style="white-space: nowrap;"><?= format_date_id($l['letter_date']) ?></td>
                             <td style="font-size: 12px; color: #475569;">
                                 <?php if (!empty($l['meeting_date'])): ?>
                                     Rapat: <?= format_day_id($l['meeting_date']) ?>, <?= format_date_id($l['meeting_date']) ?><br>
