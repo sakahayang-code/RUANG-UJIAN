@@ -22,7 +22,7 @@
                     <th>Tanggal Surat</th>
                     <th>Agenda / Rincian</th>
                     <th>Penandatangan</th>
-                    <th style="width: 180px;" class="text-center">Aksi</th>
+                    <th style="width: 220px;" class="text-center">Aksi</th>
                 </tr>
             </thead>
             <tbody>
@@ -56,7 +56,10 @@
                                 <strong><?= e($l['signer_name']) ?></strong><br>
                                 <span style="color: #64748b;"><?= e($l['signer_title']) ?></span>
                             </td>
-                            <td class="text-center">
+                            <td class="text-center" style="white-space: nowrap;">
+                                <button type="button" class="btn btn-outline btn-sm" data-letter="<?= htmlspecialchars(json_encode($l), ENT_QUOTES, 'UTF-8') ?>" onclick="editLetter(JSON.parse(this.getAttribute('data-letter')))" title="Edit Surat">
+                                    ✏️ Edit
+                                </button>
                                 <a href="<?= url('/committee/letters/print?id=' . $l['id']) ?>" target="_blank" class="btn btn-outline btn-sm" title="Cetak / Pratinjau">
                                     🖨️
                                 </a>
@@ -191,6 +194,118 @@ Mengingat pentingnya agenda tersebut, kami mengharapkan kehadiran Bapak/Ibu tepa
     </div>
 </div>
 
+<!-- Modal Edit Surat -->
+<div class="modal-overlay" id="editLetterModal">
+    <div class="modal-container modal-lg">
+        <div class="modal-header">
+            <div class="modal-title">Edit Surat Panitia Ujian</div>
+            <button type="button" class="modal-close" data-modal-close="editLetterModal">&times;</button>
+        </div>
+        <form action="<?= url('/committee/letters/update') ?>" method="POST">
+            <?= csrf_field() ?>
+            <input type="hidden" name="id" id="editLetterId">
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label required">Jenis Surat</label>
+                            <select name="letter_type" id="editLetterType" class="form-control" onchange="toggleEditMeetingBox(this.value)" required>
+                                <option value="undangan_rapat">Undangan Rapat Panitia</option>
+                                <option value="tugas_kisi_kisi">Surat Tugas Penyusun Kisi-kisi</option>
+                                <option value="tugas_soal">Surat Tugas Penyusun Naskah Soal</option>
+                                <option value="tugas_pengawas">Surat Tugas Pengawas Ruang</option>
+                                <option value="tugas_penguji">Surat Tugas Penguji Ujian Praktik</option>
+                                <option value="tugas_panitia">Surat Tugas Kepanitiaan Lainnya</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label required">Nomor Surat</label>
+                            <input type="text" name="letter_number" id="editLetterNumber" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label required">Tanggal Surat</label>
+                            <input type="date" name="letter_date" id="editLetterDate" class="form-control" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label required">Perihal / Hal Surat</label>
+                    <input type="text" name="subject" id="editLetterSubject" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Tujuan Penerima Surat (Yth.)</label>
+                    <input type="text" name="target_recipients" id="editLetterTargetRecipients" class="form-control">
+                </div>
+
+                <!-- Bagian Khusus Rapat -->
+                <div id="editMeetingDetailsBox" style="background: #f8fafc; padding: 14px; border: 1px solid #e2e8f0; border-radius: var(--radius-sm); margin-bottom: 16px;">
+                    <div style="font-weight: 600; font-size: 13px; margin-bottom: 8px; color: #1e3a8a;">📅 Rincian Pelaksanaan Rapat (Khusus Undangan)</div>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label class="form-label">Tanggal Rapat</label>
+                                <input type="date" name="meeting_date" id="editMeetingDate" class="form-control">
+                            </div>
+                        </div>
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label class="form-label">Waktu Rapat</label>
+                                <input type="text" name="meeting_time" id="editMeetingTime" class="form-control">
+                            </div>
+                        </div>
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label class="form-label">Tempat Rapat</label>
+                                <input type="text" name="meeting_place" id="editMeetingPlace" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Agenda Rapat</label>
+                        <input type="text" name="meeting_agenda" id="editMeetingAgenda" class="form-control">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label required">Isi Dokumen / Surat</label>
+                    <textarea name="content" id="editLetterContent" class="form-control" rows="5" required></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label required">Nama Penandatangan</label>
+                            <input type="text" name="signer_name" id="editSignerName" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label">NIP Penandatangan</label>
+                            <input type="text" name="signer_nip" id="editSignerNip" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label required">Jabatan Penandatangan</label>
+                            <input type="text" name="signer_title" id="editSignerTitle" class="form-control" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-modal-close="editLetterModal">Batal</button>
+                <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
 const templates = <?= json_encode($templates) ?>;
 const eventName = <?= json_encode($event['name']) ?>;
@@ -221,5 +336,35 @@ function applyLetterTemplate(select) {
             contentArea.value = `Kepala Sekolah dengan ini memberikan tugas kepada nama-nama terlampir untuk melaksanakan tugas pada kegiatan ${eventName} Tahun Pelajaran ${academicYear} dengan penuh tanggung jawab.`;
         }
     }
+}
+
+function toggleEditMeetingBox(val) {
+    const meetingBox = document.getElementById('editMeetingDetailsBox');
+    if (meetingBox) {
+        meetingBox.style.display = (val === 'undangan_rapat') ? 'block' : 'none';
+    }
+}
+
+function editLetter(l) {
+    document.getElementById('editLetterId').value = l.id;
+    document.getElementById('editLetterType').value = l.letter_type;
+    document.getElementById('editLetterNumber').value = l.letter_number || '';
+    document.getElementById('editLetterDate').value = l.letter_date || '';
+    document.getElementById('editLetterSubject').value = l.subject || '';
+    document.getElementById('editLetterTargetRecipients').value = l.target_recipients || '';
+
+    document.getElementById('editMeetingDate').value = l.meeting_date || '';
+    document.getElementById('editMeetingTime').value = l.meeting_time || '';
+    document.getElementById('editMeetingPlace').value = l.meeting_place || '';
+    document.getElementById('editMeetingAgenda').value = l.meeting_agenda || '';
+
+    toggleEditMeetingBox(l.letter_type);
+
+    document.getElementById('editLetterContent').value = l.content || '';
+    document.getElementById('editSignerName').value = l.signer_name || '';
+    document.getElementById('editSignerNip').value = l.signer_nip || '';
+    document.getElementById('editSignerTitle').value = l.signer_title || '';
+
+    openModal('editLetterModal');
 }
 </script>

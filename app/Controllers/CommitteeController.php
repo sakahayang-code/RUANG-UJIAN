@@ -302,6 +302,54 @@ class CommitteeController
         Response::redirect(url('/committee/letters'));
     }
 
+    public function updateLetter(Request $request): void
+    {
+        $id = (int)$request->input('id');
+        $letter = Database::fetch("SELECT * FROM committee_letters WHERE id = ?", [$id]);
+        if (!$letter) {
+            flash('error', 'Surat tidak ditemukan.');
+            Response::back();
+        }
+
+        $letterType = (string)$request->input('letter_type', 'undangan_rapat');
+        $letterNumber = trim((string)$request->input('letter_number'));
+        $letterDate = (string)$request->input('letter_date');
+        $subject = trim((string)$request->input('subject'));
+        $meetingDate = $request->input('meeting_date') ?: null;
+        $meetingTime = $request->input('meeting_time') ?: null;
+        $meetingPlace = $request->input('meeting_place') ?: null;
+        $meetingAgenda = $request->input('meeting_agenda') ?: null;
+        $signerName = trim((string)$request->input('signer_name'));
+        $signerNip = trim((string)$request->input('signer_nip'));
+        $signerTitle = trim((string)$request->input('signer_title'));
+        $targetRecipients = trim((string)$request->input('target_recipients', ''));
+        $content = trim((string)$request->input('content', ''));
+
+        if (empty($letterNumber) || empty($subject) || empty($content)) {
+            flash('error', 'Nomor surat, perihal, dan isi surat wajib diisi.');
+            Response::back();
+        }
+
+        Database::update('committee_letters', [
+            'letter_type' => $letterType,
+            'letter_number' => $letterNumber,
+            'letter_date' => $letterDate,
+            'subject' => $subject,
+            'meeting_date' => $meetingDate,
+            'meeting_time' => $meetingTime,
+            'meeting_place' => $meetingPlace,
+            'meeting_agenda' => $meetingAgenda,
+            'signer_name' => $signerName,
+            'signer_nip' => $signerNip,
+            'signer_title' => $signerTitle,
+            'target_recipients' => $targetRecipients,
+            'content' => $content,
+        ], 'id = ?', [$id]);
+
+        flash('success', 'Perubahan surat berhasil disimpan.');
+        Response::redirect(url('/committee/letters'));
+    }
+
     public function printLetter(Request $request): void
     {
         $id = (int)$request->input('id');

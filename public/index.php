@@ -314,6 +314,7 @@ Router::post('/committee/upload-sk', [CommitteeController::class, 'uploadSk'], [
 Router::get('/committee/letters', [CommitteeController::class, 'letters'], ['auth']);
 Router::post('/committee/letters/create', [CommitteeController::class, 'storeLetter'], ['auth', 'csrf']);
 Router::post('/committee/letters/store', [CommitteeController::class, 'storeLetter'], ['auth', 'csrf']);
+Router::post('/committee/letters/update', [CommitteeController::class, 'updateLetter'], ['auth', 'csrf']);
 Router::get('/committee/letters/print', [CommitteeController::class, 'printLetter'], ['auth']);
 Router::get('/committee/letters/export-docx', [CommitteeController::class, 'exportDocxLetter'], ['auth']);
 Router::post('/committee/letters/delete', [CommitteeController::class, 'deleteLetter'], ['auth', 'csrf']);
