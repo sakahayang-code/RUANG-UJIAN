@@ -344,7 +344,7 @@ class CommitteeController
             'signer_title' => $signerTitle,
             'target_recipients' => $targetRecipients,
             'content' => $content,
-        ], 'id = ?', [$id]);
+        ], 'id = :where_id', ['where_id' => $id]);
 
         flash('success', 'Perubahan surat berhasil disimpan.');
         Response::redirect(url('/committee/letters'));

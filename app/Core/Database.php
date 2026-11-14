@@ -101,7 +101,29 @@ class Database
             $params["set_{$col}"] = $val;
         }
 
-        $params = array_merge($params, $whereParams);
+        // Support both named (:where_id) and positional (?) parameters in $where
+        if (!empty($whereParams)) {
+            $isPositional = false;
+            foreach ($whereParams as $k => $v) {
+                if (is_int($k)) {
+                    $isPositional = true;
+                    break;
+                }
+            }
+
+            if ($isPositional) {
+                $idx = 0;
+                $where = preg_replace_callback('/\?/', function () use (&$idx, $whereParams, &$params) {
+                    $paramName = "where_pos_{$idx}";
+                    $params[$paramName] = $whereParams[$idx] ?? null;
+                    $idx++;
+                    return ":{$paramName}";
+                }, $where);
+            } else {
+                $params = array_merge($params, $whereParams);
+            }
+        }
+
         $setStr = implode(', ', $setClauses);
 
         $sql = "UPDATE {$table} SET {$setStr} WHERE {$where}";

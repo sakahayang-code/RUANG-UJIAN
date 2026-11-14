@@ -213,7 +213,7 @@ class WrittenExamController
             'rows_count' => $rowsCount,
             'cols_count' => $colsCount,
             'notes' => $notes
-        ], 'id = ?', [$id]);
+        ], 'id = :where_id', ['where_id' => $id]);
 
         flash('success', "Data ruang ujian [{$roomNumber} - {$name}] berhasil diperbarui.");
         Response::redirect(url('/written-exam/rooms'));
