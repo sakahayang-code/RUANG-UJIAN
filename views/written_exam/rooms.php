@@ -121,7 +121,7 @@
                     <th class="text-center">Peserta Terisi</th>
                     <th class="text-center">Status Keterisian</th>
                     <th>Keterangan</th>
-                    <th style="width: 140px;" class="text-center">Aksi</th>
+                    <th style="width: 180px;" class="text-center">Aksi</th>
                 </tr>
             </thead>
             <tbody>
@@ -153,14 +153,17 @@
                                 <?php endif; ?>
                             </td>
                             <td style="font-size: 12px;"><?= e($r['notes'] ?: '-') ?></td>
-                            <td class="text-center">
+                            <td class="text-center" style="white-space: nowrap;">
                                 <a href="<?= url('/written-exam/seating?room_id=' . $r['id']) ?>" class="btn btn-outline btn-sm" title="Lihat Denah">
                                     🪑 Denah
                                 </a>
+                                <button type="button" class="btn btn-outline btn-sm" onclick='editRoom(<?= json_encode($r) ?>)' title="Edit Ruang">
+                                    ✏️ Edit
+                                </button>
                                 <form action="<?= url('/written-exam/rooms/delete') ?>" method="POST" style="display: inline;" onsubmit="return confirmAction('Hapus ruang <?= e($r['name']) ?>?', this)">
                                     <?= csrf_field() ?>
                                     <input type="hidden" name="id" value="<?= $r['id'] ?>">
-                                    <button type="submit" class="btn btn-danger btn-sm">🗑️</button>
+                                    <button type="submit" class="btn btn-danger btn-sm" title="Hapus Ruang">🗑️</button>
                                 </form>
                             </td>
                         </tr>
@@ -281,3 +284,94 @@
         </form>
     </div>
 </div>
+
+<!-- Modal Edit Ruang -->
+<div class="modal-overlay" id="editRoomModal">
+    <div class="modal-container">
+        <div class="modal-header">
+            <div class="modal-title">✏️ Edit Ruang Ujian</div>
+            <button type="button" class="modal-close" data-modal-close="editRoomModal">&times;</button>
+        </div>
+        <form action="<?= url('/written-exam/rooms/update') ?>" method="POST">
+            <?= csrf_field() ?>
+            <input type="hidden" name="id" id="editRoomId">
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label required">Nomor Ruang (Kode)</label>
+                            <input type="text" name="room_number" id="editRoomNumber" class="form-control" placeholder="Contoh: R-01, Ruang 01" required>
+                        </div>
+                    </div>
+                    <div class="form-col" style="flex: 2;">
+                        <div class="form-group">
+                            <label class="form-label required">Nama Ruang / Lokasi</label>
+                            <input type="text" name="name" id="editRoomName" class="form-control" placeholder="Contoh: Ruang Kelas VII A / Lab Bahasa" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label required">Kapasitas Kursi</label>
+                            <input type="number" name="capacity" id="editRoomCapacity" class="form-control" min="1" max="100" required>
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label required">Jumlah Baris Meja</label>
+                            <input type="number" name="rows_count" id="editRoomRows" class="form-control" min="1" max="20" required>
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label required">Jumlah Kolom Meja</label>
+                            <input type="number" name="cols_count" id="editRoomCols" class="form-control" min="1" max="20" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Keterangan Tambahan</label>
+                    <input type="text" name="notes" id="editRoomNotes" class="form-control" placeholder="Lantai 1, Sayap Timur...">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-modal-close="editRoomModal">Batal</button>
+                <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function editRoom(r) {
+    document.getElementById('editRoomId').value = r.id;
+    document.getElementById('editRoomNumber').value = r.room_number || '';
+    document.getElementById('editRoomName').value = r.name || '';
+    document.getElementById('editRoomCapacity').value = r.capacity || 20;
+    document.getElementById('editRoomRows').value = r.rows_count || 5;
+    document.getElementById('editRoomCols').value = r.cols_count || 4;
+    document.getElementById('editRoomNotes').value = r.notes || '';
+    openModal('editRoomModal');
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto kalkulasi kapasitas = baris * kolom pada modal edit
+    const editRows = document.getElementById('editRoomRows');
+    const editCols = document.getElementById('editRoomCols');
+    const editCap = document.getElementById('editRoomCapacity');
+    if (editRows && editCols && editCap) {
+        function updateEditCapacity() {
+            const rows = parseInt(editRows.value) || 0;
+            const cols = parseInt(editCols.value) || 0;
+            if (rows > 0 && cols > 0) {
+                editCap.value = rows * cols;
+            }
+        }
+        editRows.addEventListener('input', updateEditCapacity);
+        editCols.addEventListener('input', updateEditCapacity);
+    }
+});
+</script>

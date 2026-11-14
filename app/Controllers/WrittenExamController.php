@@ -172,6 +172,53 @@ class WrittenExamController
         Response::redirect(url('/written-exam/rooms'));
     }
 
+    public function updateRoom(Request $request): void
+    {
+        $event = active_event();
+        if (!$event) {
+            flash('warning', 'Pilih kegiatan ujian aktif terlebih dahulu.');
+            Response::redirect(url('/events'));
+        }
+
+        $id = (int)$request->input('id');
+        $room = Database::fetch("SELECT * FROM exam_rooms WHERE id = ? AND exam_event_id = ?", [$id, $event['id']]);
+        if (!$room) {
+            flash('error', 'Data ruang ujian tidak ditemukan.');
+            Response::back();
+        }
+
+        $roomNumber = trim((string)$request->input('room_number'));
+        $name = trim((string)$request->input('name'));
+        $capacity = (int)$request->input('capacity', 20);
+        $rowsCount = (int)$request->input('rows_count', 5);
+        $colsCount = (int)$request->input('cols_count', 4);
+        $notes = trim((string)$request->input('notes', ''));
+
+        if (empty($roomNumber) || empty($name)) {
+            flash('error', 'Nomor ruang dan nama ruang wajib diisi.');
+            Response::back();
+        }
+
+        // Pastikan nomor ruang tidak duplikat dengan ruang lain dalam kegiatan yang sama
+        $exists = Database::fetch("SELECT id FROM exam_rooms WHERE exam_event_id = ? AND room_number = ? AND id != ?", [$event['id'], $roomNumber, $id]);
+        if ($exists) {
+            flash('error', "Ruang dengan nomor [{$roomNumber}] sudah digunakan oleh ruang lain.");
+            Response::back();
+        }
+
+        Database::update('exam_rooms', [
+            'room_number' => $roomNumber,
+            'name' => $name,
+            'capacity' => $capacity,
+            'rows_count' => $rowsCount,
+            'cols_count' => $colsCount,
+            'notes' => $notes
+        ], 'id = ?', [$id]);
+
+        flash('success', "Data ruang ujian [{$roomNumber} - {$name}] berhasil diperbarui.");
+        Response::redirect(url('/written-exam/rooms'));
+    }
+
     public function deleteRoom(Request $request): void
     {
         $id = (int)$request->input('id');

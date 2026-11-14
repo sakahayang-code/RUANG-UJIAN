@@ -358,6 +358,7 @@ Router::post('/written-exam/schedules/delete', [WrittenExamController::class, 'd
 Router::get('/written-exam/rooms', [WrittenExamController::class, 'rooms'], ['auth']);
 Router::post('/written-exam/rooms', [WrittenExamController::class, 'storeRoom'], ['auth', 'csrf']);
 Router::post('/written-exam/rooms/store', [WrittenExamController::class, 'storeRoom'], ['auth', 'csrf']);
+Router::post('/written-exam/rooms/update', [WrittenExamController::class, 'updateRoom'], ['auth', 'csrf']);
 Router::post('/written-exam/rooms/delete', [WrittenExamController::class, 'deleteRoom'], ['auth', 'csrf']);
 Router::post('/written-exam/rooms/auto-assign', [WrittenExamController::class, 'autoDistribute'], ['auth', 'csrf']);
 Router::post('/written-exam/rooms/auto-distribute', [WrittenExamController::class, 'autoDistribute'], ['auth', 'csrf']);
