@@ -43,11 +43,11 @@ class ReportController
 
         // 3. Practical Exam Minutes summary
         $practicalMinutes = Database::fetchAll("
-            SELECT pem.*, ps.exam_date, ps.session, s.name as subject_name
+            SELECT pem.*, ps.exam_date, ps.start_time, ps.end_time, ps.location, s.name as subject_name
             FROM practical_exam_minutes pem
-            JOIN practical_exam_schedules ps ON pem.schedule_id = ps.id
+            JOIN practical_exam_schedules ps ON pem.practical_schedule_id = ps.id
             JOIN subjects s ON ps.subject_id = s.id
-            WHERE pem.exam_event_id = ?
+            WHERE ps.exam_event_id = ?
             ORDER BY ps.exam_date DESC
         ", [$event['id']]);
 
@@ -91,6 +91,52 @@ class ReportController
         ]);
 
         flash('success', 'Catatan kejadian khusus ujian berhasil disimpan.');
+        Response::redirect(url('/reports/minutes'));
+    }
+
+    public function updateIncident(Request $request): void
+    {
+        $event = active_event();
+        if (!$event) {
+            Response::redirect(url('/events'));
+        }
+
+        $id = (int)$request->input('id');
+        $existing = Database::fetch("SELECT * FROM exam_incidents WHERE id = ? AND exam_event_id = ?", [$id, $event['id']]);
+        if (!$existing) {
+            flash('error', 'Catatan kejadian khusus tidak ditemukan.');
+            Response::redirect(url('/reports/minutes'));
+        }
+
+        $date = trim((string)$request->input('incident_date', $existing['incident_date'] ?? date('Y-m-d')));
+        $time = trim((string)$request->input('incident_time', $existing['incident_time'] ?? date('H:i')));
+        $category = trim((string)$request->input('category', $existing['category'] ?? 'tertulis'));
+        $location = trim((string)$request->input('location', ''));
+        $description = trim((string)$request->input('description', ''));
+        $followUp = trim((string)$request->input('follow_up', ''));
+        $reporter = trim((string)$request->input('reporter_name', $existing['reporter_name'] ?? 'Petugas Panitia'));
+        $status = trim((string)$request->input('status', $existing['status'] ?? 'Selesai'));
+
+        if (empty($description)) {
+            flash('error', 'Deskripsi kejadian khusus wajib diisi.');
+            Response::redirect(url('/reports/minutes'));
+        }
+
+        Database::update('exam_incidents', [
+            'category' => $category,
+            'incident_date' => $date,
+            'incident_time' => $time,
+            'location' => $location,
+            'description' => $description,
+            'follow_up' => $followUp,
+            'reporter_name' => $reporter,
+            'status' => $status
+        ], 'id = :where_id AND exam_event_id = :where_event_id', [
+            'where_id' => $id,
+            'where_event_id' => $event['id']
+        ]);
+
+        flash('success', 'Catatan kejadian khusus berhasil diperbarui.');
         Response::redirect(url('/reports/minutes'));
     }
 
@@ -263,7 +309,8 @@ class ReportController
             'schedules' => $schedules,
             'incidents' => $incidents,
             'batches' => $batches,
-            'budgets' => $budgets
+            'budgets' => $budgets,
+            'hideKop' => true
         ]);
     }
 

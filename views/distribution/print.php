@@ -71,11 +71,11 @@
         </div>
 
         <div class="signature-box">
-            <?= e($school['signature_city']) ?>, <?= format_date_id($dateFilter ?: $event['start_date']) ?><br>
+            <span style="white-space: nowrap;"><?= e($school['signature_city']) ?>, <?= format_date_id($dateFilter ?: $event['start_date']) ?></span><br>
             Koordinator Seksi Naskah & Distribusi,
             <div class="signature-space"></div>
             <div class="signature-name"><?= e($school['committee_secretary'] ?: 'Panitia Ujian') ?></div>
-            <div>NIP. -</div>
+            <div>NIP. <?= e($school['committee_secretary_nip'] ?: '-') ?></div>
         </div>
     </div>
 </div>

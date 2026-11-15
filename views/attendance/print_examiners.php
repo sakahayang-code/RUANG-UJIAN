@@ -58,15 +58,15 @@
             Mengetahui,<br>
             Kepala <?= e($school['name']) ?>
             <div class="signature-space"></div>
-            <strong><u><?= e($school['principal_name']) ?></u></strong><br>
-            NIP. <?= e($school['principal_nip'] ?: '-') ?>
+            <div class="signature-name"><?= e($school['principal_name']) ?></div>
+            <div>NIP. <?= e($school['principal_nip'] ?: '-') ?></div>
         </div>
         <div class="signature-box">
-            <?= e($school['district'] ?? 'Ditetapkan') ?>, <?= format_date_id(date('Y-m-d')) ?><br>
-            Ketua Panitia Ujian
+            <span style="white-space: nowrap;"><?= e($school['signature_city'] ?? 'Tempat') ?>, <?= format_date_id(date('Y-m-d')) ?></span><br>
+            Ketua Panitia Ujian,
             <div class="signature-space"></div>
-            <strong><u><?= e($school['committee_head'] ?: 'Ketua Panitia') ?></u></strong><br>
-            NIP. -
+            <div class="signature-name"><?= e($school['committee_head'] ?: 'Ketua Panitia') ?></div>
+            <div>NIP. <?= e($school['committee_head_nip'] ?: '-') ?></div>
         </div>
     </div>
 </div>

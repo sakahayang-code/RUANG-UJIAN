@@ -94,7 +94,7 @@
                     <th>Tindak Lanjut</th>
                     <th>Pelapor</th>
                     <th class="text-center">Status</th>
-                    <th class="text-center" style="width: 80px;">Aksi</th>
+                    <th class="text-center" style="width: 140px;">Aksi</th>
                 </tr>
             </thead>
             <tbody>
@@ -131,11 +131,29 @@
                                 <?php endif; ?>
                             </td>
                             <td class="text-center">
-                                <form method="POST" action="<?= url('/reports/incidents/delete') ?>" onsubmit="return confirm('Hapus catatan kejadian ini?');">
-                                    <?= csrf_field() ?>
-                                    <input type="hidden" name="id" value="<?= $inc['id'] ?>">
-                                    <button type="submit" class="btn btn-sm btn-outline text-danger">Hapus</button>
-                                </form>
+                                <div style="display: inline-flex; gap: 4px; align-items: center;">
+                                    <button type="button"
+                                        class="btn btn-sm btn-secondary"
+                                        data-inc="<?= e(json_encode([
+                                            'id' => $inc['id'],
+                                            'incident_date' => $inc['incident_date'] ?? '',
+                                            'incident_time' => $inc['incident_time'] ?? '',
+                                            'category' => $inc['category'] ?? 'tertulis',
+                                            'location' => $inc['location'] ?? '',
+                                            'description' => $inc['description'] ?? '',
+                                            'follow_up' => $inc['follow_up'] ?? '',
+                                            'reporter_name' => $inc['reporter_name'] ?? '',
+                                            'status' => $inc['status'] ?? 'Selesai',
+                                        ], JSON_HEX_APOS | JSON_HEX_QUOT)) ?>"
+                                        onclick="openEditIncidentModal(this)">
+                                        ✏️ Edit
+                                    </button>
+                                    <form method="POST" action="<?= url('/reports/incidents/delete') ?>" style="display: inline;" onsubmit="return confirm('Hapus catatan kejadian ini?');">
+                                        <?= csrf_field() ?>
+                                        <input type="hidden" name="id" value="<?= $inc['id'] ?>">
+                                        <button type="submit" class="btn btn-sm btn-danger" title="Hapus">🗑️</button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -144,6 +162,95 @@
         </table>
     </div>
 </div>
+
+<!-- Modal Edit Insiden -->
+<div class="modal-overlay" id="editIncidentModal">
+    <div class="modal-container" style="max-width: 600px;">
+        <form method="POST" action="<?= url('/reports/incidents/update') ?>">
+            <?= csrf_field() ?>
+            <input type="hidden" name="id" id="edit_inc_id">
+            <div class="modal-header">
+                <h3 class="modal-title">✏️ Edit Catatan Kejadian Khusus / Insiden</h3>
+                <button type="button" class="modal-close" data-modal-close="editIncidentModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col" style="flex: 1;">
+                        <label class="form-label required">Tanggal</label>
+                        <input type="date" name="incident_date" id="edit_inc_date" class="form-control" required>
+                    </div>
+                    <div class="col" style="flex: 1;">
+                        <label class="form-label required">Waktu (Jam)</label>
+                        <input type="text" name="incident_time" id="edit_inc_time" class="form-control" required>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col" style="flex: 1;">
+                        <label class="form-label required">Kategori</label>
+                        <select name="category" id="edit_inc_category" class="form-control" required>
+                            <option value="tertulis">Ujian Tertulis</option>
+                            <option value="praktik">Ujian Praktik</option>
+                            <option value="naskah">Naskah Soal & Lembar Jawaban</option>
+                            <option value="kepanitiaan">Kepanitiaan / Sarana</option>
+                            <option value="kesehatan">Kesehatan Peserta</option>
+                            <option value="lainnya">Lainnya</option>
+                        </select>
+                    </div>
+                    <div class="col" style="flex: 1;">
+                        <label class="form-label">Lokasi / Ruang</label>
+                        <input type="text" name="location" id="edit_inc_location" class="form-control" placeholder="Misal: Ruang 03 / Lab IPA">
+                    </div>
+                </div>
+                <div class="form-group mb-3">
+                    <label class="form-label required">Uraian Kejadian</label>
+                    <textarea name="description" id="edit_inc_description" class="form-control" rows="3" required></textarea>
+                </div>
+                <div class="form-group mb-3">
+                    <label class="form-label">Tindak Lanjut / Solusi yang Diambil</label>
+                    <textarea name="follow_up" id="edit_inc_follow_up" class="form-control" rows="2"></textarea>
+                </div>
+                <div class="row">
+                    <div class="col" style="flex: 1;">
+                        <label class="form-label">Nama Pelapor</label>
+                        <input type="text" name="reporter_name" id="edit_inc_reporter" class="form-control">
+                    </div>
+                    <div class="col" style="flex: 1;">
+                        <label class="form-label">Status Penyelesaian</label>
+                        <select name="status" id="edit_inc_status" class="form-control">
+                            <option value="Selesai">Selesai (Tertangani)</option>
+                            <option value="Dalam Proses">Dalam Proses</option>
+                            <option value="Perlu Perhatian">Perlu Perhatian Khusus</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-modal-close="editIncidentModal">Batal</button>
+                <button type="submit" class="btn btn-primary">💾 Simpan Perubahan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openEditIncidentModal(btn) {
+    try {
+        const d = JSON.parse(btn.getAttribute('data-inc'));
+        document.getElementById('edit_inc_id').value = d.id || '';
+        document.getElementById('edit_inc_date').value = d.incident_date || '';
+        document.getElementById('edit_inc_time').value = d.incident_time || '';
+        document.getElementById('edit_inc_category').value = d.category || 'tertulis';
+        document.getElementById('edit_inc_location').value = d.location || '';
+        document.getElementById('edit_inc_description').value = d.description || '';
+        document.getElementById('edit_inc_follow_up').value = d.follow_up || '';
+        document.getElementById('edit_inc_reporter').value = d.reporter_name || '';
+        document.getElementById('edit_inc_status').value = d.status || 'Selesai';
+        openModal('editIncidentModal');
+    } catch (e) {
+        console.error('Gagal membuka modal edit insiden:', e);
+    }
+}
+</script>
 
 <!-- 2. Hub Berita Acara Ujian Tertulis & Praktik -->
 <div class="row" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px;">

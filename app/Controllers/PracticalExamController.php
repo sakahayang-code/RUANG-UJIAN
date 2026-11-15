@@ -89,6 +89,54 @@ class PracticalExamController
         Response::redirect(url('/practical-exam'));
     }
 
+    public function updateSchedule(Request $request): void
+    {
+        $event = active_event();
+        if (!$event) {
+            Response::redirect(url('/events'));
+        }
+
+        $id = (int)$request->input('id');
+        $existing = Database::fetch("SELECT * FROM practical_exam_schedules WHERE id = ? AND exam_event_id = ?", [$id, $event['id']]);
+        if (!$existing) {
+            flash('error', 'Jadwal sesi ujian praktik tidak ditemukan.');
+            Response::redirect(url('/practical-exam'));
+        }
+
+        $subjectId = (int)$request->input('subject_id');
+        $grade = trim((string)$request->input('grade', 'IX'));
+        $examDate = trim((string)$request->input('exam_date'));
+        $startTime = trim((string)$request->input('start_time'));
+        $endTime = trim((string)$request->input('end_time'));
+        $location = trim((string)$request->input('location'));
+        $station = trim((string)$request->input('station', ''));
+        $method = trim((string)$request->input('method', 'kelompok'));
+        $notes = trim((string)$request->input('notes', ''));
+
+        if (empty($subjectId) || empty($examDate) || empty($location)) {
+            flash('error', 'Mata pelajaran, tanggal, dan lokasi wajib diisi.');
+            Response::redirect(url('/practical-exam'));
+        }
+
+        Database::update('practical_exam_schedules', [
+            'subject_id' => $subjectId,
+            'grade' => $grade,
+            'exam_date' => $examDate,
+            'start_time' => $startTime,
+            'end_time' => $endTime,
+            'location' => $location,
+            'station' => $station ?: 'Pos 1',
+            'method' => $method,
+            'notes' => $notes
+        ], 'id = :where_id AND exam_event_id = :where_event_id', [
+            'where_id' => $id,
+            'where_event_id' => $event['id']
+        ]);
+
+        flash('success', 'Jadwal sesi ujian praktik berhasil diperbarui.');
+        Response::redirect(url('/practical-exam'));
+    }
+
     public function deleteSchedule(Request $request): void
     {
         $id = (int)$request->input('id');

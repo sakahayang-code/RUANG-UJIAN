@@ -145,6 +145,69 @@ class AnswerSheetController
         Response::redirect(url('/answer-sheets/receipts'));
     }
 
+    public function updateReceipt(Request $request): void
+    {
+        $event = active_event();
+        if (!$event) {
+            Response::redirect(url('/events'));
+        }
+
+        $id = (int)$request->input('id');
+        $existing = Database::fetch("SELECT * FROM answer_sheet_receipts WHERE id = ? AND exam_event_id = ?", [$id, $event['id']]);
+        if (!$existing) {
+            flash('error', 'Data tanda terima lembar jawaban tidak ditemukan.');
+            Response::redirect(url('/answer-sheets/receipts'));
+        }
+
+        $roomId = (int)$request->input('room_id', $existing['room_id']);
+        $className = trim((string)$request->input('class_name', $existing['class_name']));
+        $presentCount = (int)$request->input('present_count', $existing['present_count']);
+        $receivedCount = (int)$request->input('received_count', $existing['received_count']);
+        $unusedCount = (int)$request->input('unused_count', $existing['unused_count']);
+        $damagedCount = (int)$request->input('damaged_count', $existing['damaged_count']);
+        $handoverOfficer = trim((string)$request->input('handover_officer', ''));
+        $receivingOfficer = trim((string)$request->input('receiving_officer', $existing['receiving_officer']));
+        $notes = trim((string)$request->input('notes', ''));
+
+        $discrepancy = $presentCount - $receivedCount;
+        $status = 'diterima_lengkap';
+        if ($discrepancy > 0) {
+            $status = 'ada_selisih';
+        } elseif ($receivedCount === 0) {
+            $status = 'belum_diterima';
+        }
+
+        Database::update('answer_sheet_receipts', [
+            'room_id' => $roomId,
+            'class_name' => $className,
+            'present_count' => $presentCount,
+            'received_count' => $receivedCount,
+            'unused_count' => $unusedCount,
+            'damaged_count' => $damagedCount,
+            'discrepancy' => $discrepancy,
+            'handover_officer' => $handoverOfficer,
+            'receiving_officer' => $receivingOfficer,
+            'status' => $status,
+            'notes' => $notes,
+            'updated_at' => date('Y-m-d H:i:s')
+        ], 'id = :where_id AND exam_event_id = :where_event_id', [
+            'where_id' => $id,
+            'where_event_id' => $event['id']
+        ]);
+
+        flash('success', 'Data tanda terima lembar jawaban berhasil diperbarui.');
+        Response::redirect(url('/answer-sheets/receipts'));
+    }
+
+    public function deleteReceipt(Request $request): void
+    {
+        $event = active_event();
+        $id = (int)$request->input('id');
+        Database::delete('answer_sheet_receipts', 'id = ? AND exam_event_id = ?', [$id, $event['id']]);
+        flash('success', 'Catatan penerimaan lembar jawaban berhasil dihapus.');
+        Response::redirect(url('/answer-sheets/receipts'));
+    }
+
     // 2. Packing Workflow & 3 Modes
     public function packing(Request $request): void
     {

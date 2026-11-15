@@ -108,16 +108,6 @@
 }
 </style>
 
-<div class="no-print" style="background: #f8fafc; border-bottom: 1px solid #cbd5e1; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center;">
-    <div>
-        <strong>Dokumen Cetak Laporan Akhir Panitia Ujian</strong>
-    </div>
-    <div>
-        <button onclick="window.print()" class="btn btn-primary">🖨️ Cetak Dokumen Lengkap</button>
-        <button onclick="window.close()" class="btn btn-secondary">Tutup</button>
-    </div>
-</div>
-
 <div class="report-document">
     <!-- 1. HALAMAN COVER -->
     <div class="cover-page page-break">
@@ -156,7 +146,7 @@
             <tr>
                 <td style="width: 150px;">Hari / Tanggal</td>
                 <td style="width: 15px;">:</td>
-                <td><strong><?= e(indo_day($report['approval_date'] ?? date('Y-m-d'))) ?>, <?= e(indo_date($report['approval_date'] ?? date('Y-m-d'), true)) ?></strong></td>
+                <td><strong><?= e(indo_day($report['approval_date'] ?? date('Y-m-d'))) ?>, <?= e(indo_date($report['approval_date'] ?? date('Y-m-d'))) ?></strong></td>
             </tr>
             <tr>
                 <td>Tempat</td>
@@ -171,14 +161,14 @@
                 <div>Kepala <?= e($school['name']) ?></div>
                 <div style="height: 75px;"></div>
                 <div style="font-weight: bold; text-decoration: underline;"><?= e($school['principal_name']) ?></div>
-                <div>NIP. <?= e($school['principal_nip'] ?? '-') ?></div>
+                <div>NIP. <?= e($school['principal_nip'] ?: '-') ?></div>
             </div>
             <div class="sig-block">
-                <div><?= e($school['district'] ?? 'Ditetapkan') ?>, <?= e(indo_date($report['approval_date'] ?? date('Y-m-d'))) ?></div>
+                <div style="white-space: nowrap;"><?= e($school['signature_city'] ?? 'Tempat') ?>, <?= e(indo_date($report['approval_date'] ?? date('Y-m-d'))) ?></div>
                 <div>Ketua Panitia Ujian,</div>
                 <div style="height: 75px;"></div>
-                <div style="font-weight: bold; text-decoration: underline;"><?= e($school['committee_chairman'] ?? 'Ketua Panitia') ?></div>
-                <div>NIP. -</div>
+                <div style="font-weight: bold; text-decoration: underline;"><?= e($school['committee_head'] ?: 'Ketua Panitia') ?></div>
+                <div>NIP. <?= e($school['committee_head_nip'] ?: '-') ?></div>
             </div>
         </div>
     </div>
@@ -190,7 +180,7 @@
             <?= nl2br(e($report['foreword'])) ?>
         </div>
         <div style="margin-top: 40px; text-align: right; padding-right: 30px;">
-            <div><?= e($school['district'] ?? 'Panitia') ?>, <?= e(indo_date(date('Y-m-d'))) ?></div>
+            <div style="white-space: nowrap;"><?= e($school['signature_city'] ?? 'Tempat') ?>, <?= e(indo_date($report['approval_date'] ?? date('Y-m-d'))) ?></div>
             <div style="margin-top: 5px; font-weight: bold;">Panitia Penyelenggara Ujian</div>
         </div>
     </div>
@@ -365,14 +355,14 @@
                 <div>Kepala <?= e($school['name']) ?></div>
                 <div style="height: 75px;"></div>
                 <div style="font-weight: bold; text-decoration: underline;"><?= e($school['principal_name']) ?></div>
-                <div>NIP. <?= e($school['principal_nip'] ?? '-') ?></div>
+                <div>NIP. <?= e($school['principal_nip'] ?: '-') ?></div>
             </div>
             <div class="sig-block">
-                <div><?= e($school['district'] ?? 'Ditetapkan') ?>, <?= e(indo_date($report['approval_date'] ?? date('Y-m-d'))) ?></div>
+                <div style="white-space: nowrap;"><?= e($school['signature_city'] ?? 'Tempat') ?>, <?= e(indo_date($report['approval_date'] ?? date('Y-m-d'))) ?></div>
                 <div>Ketua Panitia Ujian,</div>
                 <div style="height: 75px;"></div>
-                <div style="font-weight: bold; text-decoration: underline;"><?= e($school['committee_chairman'] ?? 'Ketua Panitia') ?></div>
-                <div>NIP. -</div>
+                <div style="font-weight: bold; text-decoration: underline;"><?= e($school['committee_head'] ?: 'Ketua Panitia') ?></div>
+                <div>NIP. <?= e($school['committee_head_nip'] ?: '-') ?></div>
             </div>
         </div>
     </div>

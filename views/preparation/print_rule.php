@@ -11,7 +11,7 @@
     <div class="signature-block">
         <div></div>
         <div class="signature-box">
-            <?= e($school['signature_city']) ?>, <?= format_date_id($event['start_date']) ?><br>
+            <span style="white-space: nowrap;"><?= e($school['signature_city']) ?>, <?= format_date_id($event['start_date']) ?></span><br>
             Kepala Sekolah,
             <div class="signature-space"></div>
             <div class="signature-name"><?= e($school['principal_name']) ?></div>

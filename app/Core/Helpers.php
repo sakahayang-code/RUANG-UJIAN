@@ -136,7 +136,68 @@ function school_setting(): array
             'letterhead_image_path' => null,
         ];
 
-        // Otomatis siapkan logo_url (Base64 Data URI jika berkas ada di penyimpanan, atau URL file)
+        // Pastikan kota tanda tangan memiliki fallback yang rapi
+        $settings['signature_city'] = !empty($settings['signature_city'])
+            ? $settings['signature_city']
+            : (!empty($settings['district']) ? $settings['district'] : (!empty($settings['regency']) ? $settings['regency'] : 'Tempat'));
+
+        // Otomatis lengkapi nama & NIP Ketua Panitia serta Sekretaris dari Struktur Panitia / Master Guru
+        $settings['committee_head_nip'] = $settings['committee_head_nip'] ?? '';
+        $settings['committee_secretary_nip'] = $settings['committee_secretary_nip'] ?? '';
+        try {
+            $headMember = Database::fetch("
+                SELECT COALESCE(cm.custom_name, t.name) as member_name,
+                       COALESCE(cm.custom_nip, t.nip) as member_nip
+                FROM committee_members cm
+                LEFT JOIN teachers t ON cm.teacher_id = t.id
+                WHERE LOWER(cm.role_title) LIKE '%ketua panitia%' OR LOWER(cm.role_title) = 'ketua'
+                ORDER BY cm.id DESC LIMIT 1
+            ");
+            if ($headMember) {
+                if (empty($settings['committee_head']) && !empty($headMember['member_name'])) {
+                    $settings['committee_head'] = $headMember['member_name'];
+                }
+                if (empty($settings['committee_head_nip']) && !empty($headMember['member_nip'])) {
+                    $settings['committee_head_nip'] = $headMember['member_nip'];
+                }
+            }
+            if (empty($settings['committee_head_nip']) && !empty($settings['committee_head'])) {
+                $tNip = Database::fetchColumn("SELECT nip FROM teachers WHERE name = ? LIMIT 1", [$settings['committee_head']]);
+                if ($tNip) {
+                    $settings['committee_head_nip'] = (string)$tNip;
+                }
+            }
+
+            $secMember = Database::fetch("
+                SELECT COALESCE(cm.custom_name, t.name) as member_name,
+                       COALESCE(cm.custom_nip, t.nip) as member_nip
+                FROM committee_members cm
+                LEFT JOIN teachers t ON cm.teacher_id = t.id
+                WHERE LOWER(cm.role_title) LIKE '%sekretaris%'
+                ORDER BY cm.id DESC LIMIT 1
+            ");
+            if ($secMember) {
+                if (empty($settings['committee_secretary']) && !empty($secMember['member_name'])) {
+                    $settings['committee_secretary'] = $secMember['member_name'];
+                }
+                if (empty($settings['committee_secretary_nip']) && !empty($secMember['member_nip'])) {
+                    $settings['committee_secretary_nip'] = $secMember['member_nip'];
+                }
+            }
+            if (empty($settings['committee_secretary_nip']) && !empty($settings['committee_secretary'])) {
+                $sNip = Database::fetchColumn("SELECT nip FROM teachers WHERE name = ? LIMIT 1", [$settings['committee_secretary']]);
+                if ($sNip) {
+                    $settings['committee_secretary_nip'] = (string)$sNip;
+                }
+            }
+        } catch (\Throwable $e) {
+            // Abaikan bila tabel belum tersedia
+        }
+
+        // Alias untuk kompatibilitas laporan akhir
+        $settings['committee_chairman'] = $settings['committee_head'] ?? 'Ketua Panitia';
+
+        // Otomatis siapkan logo_url & letterhead_url (Base64 Data URI jika berkas ada di penyimpanan, atau URL file)
         $settings['logo_url'] = '';
         if (!empty($settings['logo_path'])) {
             $diskPath = dirname(__DIR__, 2) . '/storage/uploads/' . $settings['logo_path'];
@@ -153,6 +214,25 @@ function school_setting(): array
                 $settings['logo_url'] = 'data:' . $mime . ';base64,' . base64_encode((string)file_get_contents($diskPath));
             } else {
                 $settings['logo_url'] = url('/file/view?path=' . urlencode($settings['logo_path']));
+            }
+        }
+
+        $settings['letterhead_url'] = '';
+        if (!empty($settings['letterhead_image_path'])) {
+            $diskPath = dirname(__DIR__, 2) . '/storage/uploads/' . $settings['letterhead_image_path'];
+            if (file_exists($diskPath) && is_file($diskPath)) {
+                $ext = strtolower(pathinfo($diskPath, PATHINFO_EXTENSION));
+                $mime = match($ext) {
+                    'png' => 'image/png',
+                    'jpg', 'jpeg' => 'image/jpeg',
+                    'svg' => 'image/svg+xml',
+                    'webp' => 'image/webp',
+                    'gif' => 'image/gif',
+                    default => 'image/png'
+                };
+                $settings['letterhead_url'] = 'data:' . $mime . ';base64,' . base64_encode((string)file_get_contents($diskPath));
+            } else {
+                $settings['letterhead_url'] = url('/file/view?path=' . urlencode($settings['letterhead_image_path']));
             }
         }
     }

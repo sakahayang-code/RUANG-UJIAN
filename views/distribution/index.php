@@ -45,12 +45,13 @@
                     <th>Pengawas</th>
                     <th>Petugas Panitia</th>
                     <th>Kondisi & Catatan</th>
+                    <th style="width: 130px;" class="text-center">Aksi</th>
                 </tr>
             </thead>
             <tbody>
                 <?php if (empty($records)): ?>
                     <tr>
-                        <td colspan="12" class="text-center" style="padding: 30px; color: #94a3b8;">
+                        <td colspan="13" class="text-center" style="padding: 30px; color: #94a3b8;">
                             Belum ada catatan <?= $handoverType ?> naskah soal.
                         </td>
                     </tr>
@@ -83,6 +84,31 @@
                                 <?php if (!empty($r['notes'])): ?>
                                     <div style="color: #64748b; margin-top: 2px;"><?= e($r['notes']) ?></div>
                                 <?php endif; ?>
+                            </td>
+                            <td class="text-center">
+                                <div style="display: inline-flex; gap: 4px; align-items: center;">
+                                    <button type="button"
+                                        class="btn btn-secondary btn-sm"
+                                        data-handover="<?= e(json_encode([
+                                            'id' => $r['id'],
+                                            'handover_type' => $r['handover_type'] ?? $handoverType,
+                                            'room_id' => $r['room_id'] ?? '',
+                                            'taken_or_returned_count' => $r['taken_or_returned_count'] ?? 0,
+                                            'handover_time' => $r['handover_time'] ?? '',
+                                            'supervisor_name' => $r['supervisor_name'] ?? '',
+                                            'officer_name' => $r['officer_name'] ?? '',
+                                            'condition_status' => $r['condition_status'] ?? 'Baik / Lengkap',
+                                            'notes' => $r['notes'] ?? '',
+                                        ], JSON_HEX_APOS | JSON_HEX_QUOT)) ?>"
+                                        onclick="openEditHandoverModal(this)">
+                                        ✏️ Edit
+                                    </button>
+                                    <form action="<?= url('/distribution/handover/delete') ?>" method="POST" style="display: inline;" onsubmit="return confirmAction('Hapus catatan distribusi naskah ini?', this)">
+                                        <?= csrf_field() ?>
+                                        <input type="hidden" name="id" value="<?= $r['id'] ?>">
+                                        <button type="submit" class="btn btn-danger btn-sm" title="Hapus">🗑️</button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -178,3 +204,103 @@
         </form>
     </div>
 </div>
+
+<!-- Modal Edit Distribusi Naskah -->
+<div class="modal-overlay" id="editHandoverModal">
+    <div class="modal-container">
+        <div class="modal-header">
+            <div class="modal-title">✏️ Edit Pencatatan Distribusi Naskah</div>
+            <button type="button" class="modal-close" data-modal-close="editHandoverModal">&times;</button>
+        </div>
+        <form action="<?= url('/distribution/handover/update') ?>" method="POST">
+            <?= csrf_field() ?>
+            <input type="hidden" name="id" id="edit_ho_id">
+            <input type="hidden" name="handover_type" id="edit_ho_type" value="<?= e($handoverType) ?>">
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label required">Ruang Ujian</label>
+                            <select name="room_id" id="edit_ho_room_id" class="form-control" required>
+                                <?php foreach ($rooms as $rm): ?>
+                                    <option value="<?= $rm['id'] ?>"><?= e($rm['room_number']) ?> - <?= e($rm['name']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label required">Jumlah Fisik Naskah</label>
+                            <input type="number" name="taken_or_returned_count" id="edit_ho_count" class="form-control" min="0" required>
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label required">Jam Pelaksanaan</label>
+                            <input type="text" name="handover_time" id="edit_ho_time" class="form-control" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label required">Nama Pengawas</label>
+                            <input type="text" name="supervisor_name" id="edit_ho_supervisor" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label">Petugas Panitia</label>
+                            <input type="text" name="officer_name" id="edit_ho_officer" class="form-control">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label required">Kondisi Fisik Naskah</label>
+                            <select name="condition_status" id="edit_ho_condition" class="form-control" required>
+                                <option value="Baik / Lengkap">Baik / Lengkap</option>
+                                <option value="Amplop Rusak / Terbuka">Amplop Rusak / Terbuka</option>
+                                <option value="Terdapat Halaman Cacat">Terdapat Halaman Cacat</option>
+                                <option value="Kurang dari Kebutuhan">Kurang dari Kebutuhan</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label">Catatan / Tindak Lanjut</label>
+                            <input type="text" name="notes" id="edit_ho_notes" class="form-control">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-modal-close="editHandoverModal">Batal</button>
+                <button type="submit" class="btn btn-primary">💾 Simpan Perubahan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openEditHandoverModal(btn) {
+    try {
+        const d = JSON.parse(btn.getAttribute('data-handover'));
+        document.getElementById('edit_ho_id').value = d.id || '';
+        document.getElementById('edit_ho_type').value = d.handover_type || 'pengambilan';
+        document.getElementById('edit_ho_room_id').value = d.room_id || '';
+        document.getElementById('edit_ho_count').value = d.taken_or_returned_count ?? 0;
+        document.getElementById('edit_ho_time').value = d.handover_time || '';
+        document.getElementById('edit_ho_supervisor').value = d.supervisor_name || '';
+        document.getElementById('edit_ho_officer').value = d.officer_name || '';
+        document.getElementById('edit_ho_condition').value = d.condition_status || 'Baik / Lengkap';
+        document.getElementById('edit_ho_notes').value = d.notes || '';
+        openModal('editHandoverModal');
+    } catch (e) {
+        console.error('Gagal membuka modal edit distribusi:', e);
+    }
+}
+</script>

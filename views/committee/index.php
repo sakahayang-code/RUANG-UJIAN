@@ -82,7 +82,7 @@
                     <th>Nama Pejabat / Guru</th>
                     <th>NIP</th>
                     <th>No. Kontak / WA</th>
-                    <th style="width: 100px;" class="text-center">Aksi</th>
+                    <th style="width: 140px;" class="text-center">Aksi</th>
                 </tr>
             </thead>
             <tbody>
@@ -102,11 +102,28 @@
                             <td><?= e($m['teacher_nip'] ?: $m['custom_nip'] ?: '-') ?></td>
                             <td><?= e($m['phone'] ?: $m['teacher_phone'] ?: '-') ?></td>
                             <td class="text-center">
-                                <form action="<?= url('/committee/delete-member') ?>" method="POST" style="display: inline;" onsubmit="return confirmAction('Hapus anggota ini dari kepanitiaan?', this)">
-                                    <?= csrf_field() ?>
-                                    <input type="hidden" name="id" value="<?= $m['id'] ?>">
-                                    <button type="submit" class="btn btn-danger btn-sm">🗑️</button>
-                                </form>
+                                <div style="display: inline-flex; gap: 4px; align-items: center;">
+                                    <button type="button"
+                                        class="btn btn-secondary btn-sm"
+                                        data-member="<?= e(json_encode([
+                                            'id' => $m['id'],
+                                            'role_title' => $m['role_title'] ?? 'Anggota',
+                                            'section_name' => $m['section_name'] ?? '',
+                                            'teacher_id' => $m['teacher_id'] ?? '',
+                                            'custom_name' => $m['custom_name'] ?? '',
+                                            'custom_nip' => $m['custom_nip'] ?? '',
+                                            'phone' => $m['phone'] ?? '',
+                                            'order_index' => $m['order_index'] ?? 10,
+                                        ], JSON_HEX_APOS | JSON_HEX_QUOT)) ?>"
+                                        onclick="openEditMemberModal(this)">
+                                        ✏️ Edit
+                                    </button>
+                                    <form action="<?= url('/committee/delete-member') ?>" method="POST" style="display: inline;" onsubmit="return confirmAction('Hapus anggota ini dari kepanitiaan?', this)">
+                                        <?= csrf_field() ?>
+                                        <input type="hidden" name="id" value="<?= $m['id'] ?>">
+                                        <button type="submit" class="btn btn-danger btn-sm" title="Hapus">🗑️</button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -202,6 +219,92 @@
     </div>
 </div>
 
+<!-- Modal Edit Anggota Panitia -->
+<div class="modal-overlay" id="editMemberModal">
+    <div class="modal-container">
+        <div class="modal-header">
+            <div class="modal-title">✏️ Edit Anggota Panitia Ujian</div>
+            <button type="button" class="modal-close" data-modal-close="editMemberModal">&times;</button>
+        </div>
+        <form action="<?= url('/committee/update-member') ?>" method="POST">
+            <?= csrf_field() ?>
+            <input type="hidden" name="id" id="edit_member_id">
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label required">Jabatan Kepanitiaan</label>
+                            <select name="role_title" id="edit_member_role_title" class="form-control" required>
+                                <option value="Penanggung Jawab">Penanggung Jawab</option>
+                                <option value="Pelindung">Pelindung</option>
+                                <option value="Ketua Panitia">Ketua Panitia</option>
+                                <option value="Wakil Ketua">Wakil Ketua</option>
+                                <option value="Sekretaris">Sekretaris</option>
+                                <option value="Bendahara">Bendahara</option>
+                                <option value="Koordinator Seksi">Koordinator Seksi</option>
+                                <option value="Anggota Seksi">Anggota Seksi</option>
+                                <option value="Anggota">Anggota</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label">Nama Seksi / Bidang (Opsional)</label>
+                            <input type="text" name="section_name" id="edit_member_section_name" class="form-control" placeholder="Contoh: Seksi Penggandaan, Seksi Distribusi">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Pilih dari Master Data Guru</label>
+                    <select name="teacher_id" class="form-control" id="edit_member_teacher_id" onchange="toggleEditCustomMemberInput(this)">
+                        <option value="">-- Atau Ketik Nama Manual di Bawah --</option>
+                        <?php foreach ($teachers as $t): ?>
+                            <option value="<?= $t['id'] ?>"><?= e($t['name']) ?> (NIP: <?= e($t['nip'] ?: '-') ?>)</option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <div id="editCustomMemberBox">
+                    <div class="form-row">
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label class="form-label">Nama Anggota (Manual)</label>
+                                <input type="text" name="custom_name" id="edit_member_custom_name" class="form-control" placeholder="Nama lengkap & gelar">
+                            </div>
+                        </div>
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label class="form-label">NIP (Manual)</label>
+                                <input type="text" name="custom_nip" id="edit_member_custom_nip" class="form-control" placeholder="NIP jika ada">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label">No. Telepon / WhatsApp</label>
+                            <input type="text" name="phone" id="edit_member_phone" class="form-control" placeholder="08xxxxxxxxxx">
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label">Urutan Tampilan</label>
+                            <input type="number" name="order_index" id="edit_member_order_index" class="form-control" value="10">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-modal-close="editMemberModal">Batal</button>
+                <button type="submit" class="btn btn-primary">💾 Simpan Perubahan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- Modal Unggah SK Panitia -->
 <div class="modal-overlay" id="uploadSkModal">
     <div class="modal-container">
@@ -255,6 +358,34 @@ function toggleCustomMemberInput(select) {
         box.style.display = 'none';
     } else {
         box.style.display = 'block';
+    }
+}
+
+function toggleEditCustomMemberInput(select) {
+    const box = document.getElementById('editCustomMemberBox');
+    if (select.value) {
+        box.style.display = 'none';
+    } else {
+        box.style.display = 'block';
+    }
+}
+
+function openEditMemberModal(btn) {
+    try {
+        const d = JSON.parse(btn.getAttribute('data-member'));
+        document.getElementById('edit_member_id').value = d.id || '';
+        document.getElementById('edit_member_role_title').value = d.role_title || 'Anggota';
+        document.getElementById('edit_member_section_name').value = d.section_name || '';
+        const teacherSelect = document.getElementById('edit_member_teacher_id');
+        teacherSelect.value = d.teacher_id || '';
+        document.getElementById('edit_member_custom_name').value = d.custom_name || '';
+        document.getElementById('edit_member_custom_nip').value = d.custom_nip || '';
+        document.getElementById('edit_member_phone').value = d.phone || '';
+        document.getElementById('edit_member_order_index').value = d.order_index ?? 10;
+        toggleEditCustomMemberInput(teacherSelect);
+        openModal('editMemberModal');
+    } catch (e) {
+        console.error('Gagal membuka modal edit anggota:', e);
     }
 }
 </script>

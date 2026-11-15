@@ -26,7 +26,7 @@
                     <th>Lokasi & Stasiun</th>
                     <th>Metode Uji</th>
                     <th class="text-center">Penguji Ditugaskan</th>
-                    <th style="width: 150px;" class="text-center">Aksi</th>
+                    <th style="width: 210px;" class="text-center">Aksi</th>
                 </tr>
             </thead>
             <tbody>
@@ -60,17 +60,36 @@
                                 </span>
                             </td>
                             <td class="text-center">
-                                <button type="button" class="btn btn-outline btn-sm" onclick="openAssignExaminerModal(<?= $s['id'] ?>, '<?= e(addslashes($s['subject_name'])) ?>', '<?= e(addslashes($s['location'])) ?>')">
-                                    ➕ Penguji
-                                </button>
-                                <a href="<?= url('/practical-exam/execution/manage?schedule_id=' . $s['id']) ?>" class="btn btn-primary btn-sm">
-                                    Presensi
-                                </a>
-                                <form action="<?= url('/practical-exam/schedules/delete') ?>" method="POST" style="display: inline;" onsubmit="return confirmAction('Hapus jadwal ujian praktik ini?', this)">
-                                    <?= csrf_field() ?>
-                                    <input type="hidden" name="id" value="<?= $s['id'] ?>">
-                                    <button type="submit" class="btn btn-danger btn-sm" title="Hapus Jadwal">🗑️</button>
-                                </form>
+                                <div style="display: inline-flex; gap: 4px; align-items: center; flex-wrap: wrap; justify-content: center;">
+                                    <button type="button"
+                                        class="btn btn-secondary btn-sm"
+                                        data-practical="<?= e(json_encode([
+                                            'id' => $s['id'],
+                                            'subject_id' => $s['subject_id'] ?? '',
+                                            'grade' => $s['grade'] ?? 'IX',
+                                            'exam_date' => $s['exam_date'] ?? '',
+                                            'start_time' => $s['start_time'] ?? '',
+                                            'end_time' => $s['end_time'] ?? '',
+                                            'location' => $s['location'] ?? '',
+                                            'station' => $s['station'] ?? '',
+                                            'method' => $s['method'] ?? 'kelompok',
+                                            'notes' => $s['notes'] ?? '',
+                                        ], JSON_HEX_APOS | JSON_HEX_QUOT)) ?>"
+                                        onclick="openEditPracticalModal(this)">
+                                        ✏️ Edit
+                                    </button>
+                                    <button type="button" class="btn btn-outline btn-sm" onclick="openAssignExaminerModal(<?= $s['id'] ?>, '<?= e(addslashes($s['subject_name'])) ?>', '<?= e(addslashes($s['location'])) ?>')">
+                                        ➕ Penguji
+                                    </button>
+                                    <a href="<?= url('/practical-exam/execution/manage?schedule_id=' . $s['id']) ?>" class="btn btn-primary btn-sm">
+                                        Presensi
+                                    </a>
+                                    <form action="<?= url('/practical-exam/schedules/delete') ?>" method="POST" style="display: inline;" onsubmit="return confirmAction('Hapus jadwal ujian praktik ini?', this)">
+                                        <?= csrf_field() ?>
+                                        <input type="hidden" name="id" value="<?= $s['id'] ?>">
+                                        <button type="submit" class="btn btn-danger btn-sm" title="Hapus Jadwal">🗑️</button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -180,6 +199,107 @@
     </div>
 </div>
 
+<!-- Modal Edit Sesi Praktik -->
+<div class="modal-overlay" id="editPracticalModal">
+    <div class="modal-container">
+        <div class="modal-header">
+            <div class="modal-title">✏️ Edit Sesi Ujian Praktik</div>
+            <button type="button" class="modal-close" data-modal-close="editPracticalModal">&times;</button>
+        </div>
+        <form action="<?= url('/practical-exam/schedules/update') ?>" method="POST">
+            <?= csrf_field() ?>
+            <input type="hidden" name="id" id="edit_prac_id">
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-col" style="flex: 2;">
+                        <div class="form-group">
+                            <label class="form-label required">Mata Pelajaran Praktik</label>
+                            <select name="subject_id" id="edit_prac_subject_id" class="form-control" required>
+                                <option value="">Pilih Mata Pelajaran</option>
+                                <?php foreach ($subjects as $sub): ?>
+                                    <option value="<?= $sub['id'] ?>"><?= e($sub['code']) ?> - <?= e($sub['name']) ?> (<?= e($sub['grade']) ?>)</option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label required">Tingkat</label>
+                            <select name="grade" id="edit_prac_grade" class="form-control" required>
+                                <option value="VII">VII</option>
+                                <option value="VIII">VIII</option>
+                                <option value="IX">IX</option>
+                                <option value="X">X</option>
+                                <option value="XI">XI</option>
+                                <option value="XII">XII</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label required">Tanggal Praktik</label>
+                            <input type="date" name="exam_date" id="edit_prac_date" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label required">Jam Mulai</label>
+                            <input type="text" name="start_time" id="edit_prac_start" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label required">Jam Selesai</label>
+                            <input type="text" name="end_time" id="edit_prac_end" class="form-control" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-col" style="flex: 2;">
+                        <div class="form-group">
+                            <label class="form-label required">Lokasi / Tempat Uji</label>
+                            <input type="text" name="location" id="edit_prac_location" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label">Stasiun / Pos</label>
+                            <input type="text" name="station" id="edit_prac_station" class="form-control" placeholder="Pos 1 / Stasiun A">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label required">Metode Ujian</label>
+                            <select name="method" id="edit_prac_method" class="form-control" required>
+                                <option value="kelompok">Kelompok</option>
+                                <option value="individu">Individu</option>
+                                <option value="rotasi">Rotasi Stasiun</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-col" style="flex: 2;">
+                        <div class="form-group">
+                            <label class="form-label">Keterangan Tambahan</label>
+                            <input type="text" name="notes" id="edit_prac_notes" class="form-control" placeholder="Kebutuhan alat & bahan khusus...">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-modal-close="editPracticalModal">Batal</button>
+                <button type="submit" class="btn btn-primary">💾 Simpan Perubahan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- Modal Tugaskan Penguji -->
 <div class="modal-overlay" id="assignExaminerModal">
     <div class="modal-container">
@@ -229,5 +349,24 @@ function openAssignExaminerModal(schedId, subName, loc) {
     document.getElementById('assignSubjectInfo').textContent = subName;
     document.getElementById('assignLocationInfo').textContent = loc;
     openModal('assignExaminerModal');
+}
+
+function openEditPracticalModal(btn) {
+    try {
+        const d = JSON.parse(btn.getAttribute('data-practical'));
+        document.getElementById('edit_prac_id').value = d.id || '';
+        document.getElementById('edit_prac_subject_id').value = d.subject_id || '';
+        document.getElementById('edit_prac_grade').value = d.grade || 'IX';
+        document.getElementById('edit_prac_date').value = d.exam_date || '';
+        document.getElementById('edit_prac_start').value = d.start_time || '';
+        document.getElementById('edit_prac_end').value = d.end_time || '';
+        document.getElementById('edit_prac_location').value = d.location || '';
+        document.getElementById('edit_prac_station').value = d.station || '';
+        document.getElementById('edit_prac_method').value = d.method || 'kelompok';
+        document.getElementById('edit_prac_notes').value = d.notes || '';
+        openModal('editPracticalModal');
+    } catch (e) {
+        console.error('Gagal membuka modal edit praktik:', e);
+    }
 }
 </script>

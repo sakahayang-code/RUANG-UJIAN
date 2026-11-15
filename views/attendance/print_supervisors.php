@@ -70,11 +70,11 @@
         </div>
 
         <div class="signature-box">
-            <?= e($school['signature_city']) ?>, <?= format_date_id($dateFilter ?: $event['start_date']) ?><br>
+            <span style="white-space: nowrap;"><?= e($school['signature_city']) ?>, <?= format_date_id($dateFilter ?: $event['start_date']) ?></span><br>
             Ketua Panitia Ujian,
             <div class="signature-space"></div>
             <div class="signature-name"><?= e($school['committee_head'] ?: 'Ketua Panitia') ?></div>
-            <div>NIP. -</div>
+            <div>NIP. <?= e($school['committee_head_nip'] ?: '-') ?></div>
         </div>
     </div>
 </div>

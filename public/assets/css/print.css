@@ -14,10 +14,6 @@ body.print-body {
     padding: 0;
 }
 
-.no-print {
-    display: none !important;
-}
-
 .print-toolbar {
     background: #1e293b;
     color: #fff;

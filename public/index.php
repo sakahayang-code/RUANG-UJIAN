@@ -306,6 +306,7 @@ Router::get('/committee', [CommitteeController::class, 'index'], ['auth']);
 Router::post('/committee/store', [CommitteeController::class, 'storeMember'], ['auth', 'csrf']);
 Router::post('/committee/store-member', [CommitteeController::class, 'storeMember'], ['auth', 'csrf']);
 Router::post('/committee/update', [CommitteeController::class, 'updateMember'], ['auth', 'csrf']);
+Router::post('/committee/update-member', [CommitteeController::class, 'updateMember'], ['auth', 'csrf']);
 Router::post('/committee/delete', [CommitteeController::class, 'deleteMember'], ['auth', 'csrf']);
 Router::post('/committee/delete-member', [CommitteeController::class, 'deleteMember'], ['auth', 'csrf']);
 Router::post('/committee/upload-sk', [CommitteeController::class, 'uploadSk'], ['auth', 'csrf']);
@@ -354,6 +355,7 @@ Router::post('/preparation/printing/delete', [PreparationController::class, 'del
 Router::get('/written-exam/schedules', [WrittenExamController::class, 'schedules'], ['auth']);
 Router::post('/written-exam/schedules', [WrittenExamController::class, 'storeSchedule'], ['auth', 'csrf']);
 Router::post('/written-exam/schedules/store', [WrittenExamController::class, 'storeSchedule'], ['auth', 'csrf']);
+Router::post('/written-exam/schedules/update', [WrittenExamController::class, 'updateSchedule'], ['auth', 'csrf']);
 Router::post('/written-exam/schedules/delete', [WrittenExamController::class, 'deleteSchedule'], ['auth', 'csrf']);
 
 Router::get('/written-exam/rooms', [WrittenExamController::class, 'rooms'], ['auth']);
@@ -390,6 +392,8 @@ Router::get('/written-exam/minutes/print', [WrittenExamController::class, 'print
 Router::get('/practical-exam', [PracticalExamController::class, 'index'], ['auth']);
 Router::post('/practical-exam/schedules', [PracticalExamController::class, 'storeSchedule'], ['auth', 'csrf']);
 Router::post('/practical-exam/store', [PracticalExamController::class, 'storeSchedule'], ['auth', 'csrf']);
+Router::post('/practical-exam/schedules/update', [PracticalExamController::class, 'updateSchedule'], ['auth', 'csrf']);
+Router::post('/practical-exam/update', [PracticalExamController::class, 'updateSchedule'], ['auth', 'csrf']);
 Router::post('/practical-exam/schedules/delete', [PracticalExamController::class, 'deleteSchedule'], ['auth', 'csrf']);
 Router::post('/practical-exam/assign-examiner', [PracticalExamController::class, 'assignExaminer'], ['auth', 'csrf']);
 Router::post('/practical-exam/delete-examiner', [PracticalExamController::class, 'deleteAssignment'], ['auth', 'csrf']);
@@ -424,6 +428,8 @@ Router::get('/distribution', [DistributionController::class, 'index'], ['auth'])
 Router::get('/distribution/handover', [DistributionController::class, 'index'], ['auth']);
 Router::post('/distribution/handover', [DistributionController::class, 'store'], ['auth', 'csrf']);
 Router::post('/distribution/handover/store', [DistributionController::class, 'store'], ['auth', 'csrf']);
+Router::post('/distribution/handover/update', [DistributionController::class, 'update'], ['auth', 'csrf']);
+Router::post('/distribution/handover/delete', [DistributionController::class, 'delete'], ['auth', 'csrf']);
 Router::post('/distribution/handover-out', [DistributionController::class, 'store'], ['auth', 'csrf']);
 Router::post('/distribution/handover-in', [DistributionController::class, 'store'], ['auth', 'csrf']);
 Router::get('/distribution/print', [DistributionController::class, 'print'], ['auth']);
@@ -435,6 +441,8 @@ Router::get('/distribution/handover/export-excel', [DistributionController::clas
 Router::get('/answer-sheets/receipts', [AnswerSheetController::class, 'receipts'], ['auth']);
 Router::post('/answer-sheets/receipts', [AnswerSheetController::class, 'storeReceipt'], ['auth', 'csrf']);
 Router::post('/answer-sheets/receipts/store', [AnswerSheetController::class, 'storeReceipt'], ['auth', 'csrf']);
+Router::post('/answer-sheets/receipts/update', [AnswerSheetController::class, 'updateReceipt'], ['auth', 'csrf']);
+Router::post('/answer-sheets/receipts/delete', [AnswerSheetController::class, 'deleteReceipt'], ['auth', 'csrf']);
 Router::get('/answer-sheets/packing', [AnswerSheetController::class, 'packing'], ['auth']);
 Router::post('/answer-sheets/packing', [AnswerSheetController::class, 'createPackingBatch'], ['auth', 'csrf']);
 Router::get('/answer-sheets/recap', [AnswerSheetController::class, 'handoverRecap'], ['auth']);
@@ -451,6 +459,7 @@ Router::get('/print/answer-sheet-labels', [PrintController::class, 'answerSheetE
 // 17. Reports & Minutes
 Router::get('/reports/minutes', [ReportController::class, 'minutes'], ['auth']);
 Router::post('/reports/incidents', [ReportController::class, 'storeIncident'], ['auth', 'csrf']);
+Router::post('/reports/incidents/update', [ReportController::class, 'updateIncident'], ['auth', 'csrf']);
 Router::post('/reports/incidents/delete', [ReportController::class, 'deleteIncident'], ['auth', 'csrf']);
 Router::get('/reports/final', [ReportController::class, 'final'], ['auth']);
 Router::post('/reports/final', [ReportController::class, 'updateFinal'], ['auth', 'csrf']);

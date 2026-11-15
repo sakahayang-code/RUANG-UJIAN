@@ -98,34 +98,27 @@ class CommitteeController
         }
 
         $teacherId = $request->input('teacher_id') ? (int)$request->input('teacher_id') : null;
+        $customName = trim((string)$request->input('custom_name', $request->input('name', '')));
+        $customNip = trim((string)$request->input('custom_nip', $request->input('nip', '')));
         $roleTitle = trim((string)$request->input('role_title'));
         $sectionName = trim((string)$request->input('section_name', ''));
         $phone = trim((string)$request->input('phone', ''));
-        $orderIndex = (int)$request->input('order_index', 0);
+        $orderIndex = (int)$request->input('order_index', 10);
 
         if (empty($roleTitle)) {
             flash('error', 'Jabatan kepanitiaan wajib diisi.');
             Response::back();
         }
 
-        $nameSnapshot = $member['name_snapshot'];
-        $nipSnapshot = $member['nip_snapshot'];
-        if ($teacherId) {
-            $t = Database::fetch("SELECT name, nip_nuptk, phone FROM teachers WHERE id = ?", [$teacherId]);
-            if ($t) {
-                $nameSnapshot = $t['name'];
-                $nipSnapshot = $t['nip_nuptk'];
-                if (empty($phone)) $phone = $t['phone'];
-            }
-        } elseif ($request->input('name')) {
-            $nameSnapshot = trim((string)$request->input('name'));
-            $nipSnapshot = trim((string)$request->input('nip', ''));
+        if (!$teacherId && empty($customName)) {
+            flash('error', 'Silakan pilih guru atau tuliskan nama anggota.');
+            Response::back();
         }
 
         Database::update('committee_members', [
             'teacher_id' => $teacherId,
-            'name_snapshot' => $nameSnapshot,
-            'nip_snapshot' => $nipSnapshot,
+            'custom_name' => $teacherId ? null : ($customName ?: null),
+            'custom_nip' => $teacherId ? null : ($customNip ?: null),
             'role_title' => $roleTitle,
             'section_name' => $sectionName ?: null,
             'phone' => $phone ?: null,

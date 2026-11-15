@@ -83,6 +83,53 @@ class WrittenExamController
         Response::redirect(url('/written-exam/schedules'));
     }
 
+    public function updateSchedule(Request $request): void
+    {
+        $event = active_event();
+        if (!$event) {
+            Response::redirect(url('/events'));
+        }
+
+        $id = (int)$request->input('id');
+        $existing = Database::fetch("SELECT * FROM written_exam_schedules WHERE id = ? AND exam_event_id = ?", [$id, $event['id']]);
+        if (!$existing) {
+            flash('error', 'Jadwal ujian tertulis tidak ditemukan.');
+            Response::redirect(url('/written-exam/schedules'));
+        }
+
+        $examDate = trim((string)$request->input('exam_date'));
+        $session = trim((string)$request->input('session', '1'));
+        $startTime = trim((string)$request->input('start_time'));
+        $endTime = trim((string)$request->input('end_time'));
+        $subjectId = (int)$request->input('subject_id');
+        $grade = trim((string)$request->input('grade', 'VII'));
+        $notes = trim((string)$request->input('notes', ''));
+
+        if (empty($examDate) || empty($startTime) || empty($endTime) || empty($subjectId)) {
+            flash('error', 'Semua kolom jadwal wajib diisi.');
+            Response::redirect(url('/written-exam/schedules'));
+        }
+
+        $dayName = format_day_id($examDate);
+
+        Database::update('written_exam_schedules', [
+            'exam_date' => $examDate,
+            'day_name' => $dayName,
+            'session' => $session,
+            'start_time' => $startTime,
+            'end_time' => $endTime,
+            'subject_id' => $subjectId,
+            'grade' => $grade,
+            'notes' => $notes
+        ], 'id = :where_id AND exam_event_id = :where_event_id', [
+            'where_id' => $id,
+            'where_event_id' => $event['id']
+        ]);
+
+        flash('success', 'Jadwal ujian tertulis berhasil diperbarui.');
+        Response::redirect(url('/written-exam/schedules'));
+    }
+
     public function deleteSchedule(Request $request): void
     {
         $id = (int)$request->input('id');

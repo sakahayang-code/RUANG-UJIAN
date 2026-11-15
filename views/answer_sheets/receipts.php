@@ -53,12 +53,13 @@
                     <th class="text-center">Selisih</th>
                     <th class="text-center">Status</th>
                     <th>Petugas Penerima</th>
+                    <th style="width: 130px;" class="text-center">Aksi</th>
                 </tr>
             </thead>
             <tbody>
                 <?php if (empty($receipts)): ?>
                     <tr>
-                        <td colspan="12" class="text-center" style="padding: 30px; color: #94a3b8;">
+                        <td colspan="13" class="text-center" style="padding: 30px; color: #94a3b8;">
                             Belum ada catatan penerimaan lembar jawaban. Klik tombol di atas untuk mencatat.
                         </td>
                     </tr>
@@ -96,6 +97,32 @@
                                 <?php if (!empty($r['handover_officer'])): ?>
                                     <div style="color: #64748b;">Dari: <?= e($r['handover_officer']) ?></div>
                                 <?php endif; ?>
+                            </td>
+                            <td class="text-center">
+                                <div style="display: inline-flex; gap: 4px; align-items: center;">
+                                    <button type="button"
+                                        class="btn btn-secondary btn-sm"
+                                        data-receipt="<?= e(json_encode([
+                                            'id' => $r['id'],
+                                            'room_id' => $r['room_id'] ?? '',
+                                            'class_name' => $r['class_name'] ?? '',
+                                            'present_count' => $r['present_count'] ?? 0,
+                                            'received_count' => $r['received_count'] ?? 0,
+                                            'unused_count' => $r['unused_count'] ?? 0,
+                                            'damaged_count' => $r['damaged_count'] ?? 0,
+                                            'handover_officer' => $r['handover_officer'] ?? '',
+                                            'receiving_officer' => $r['receiving_officer'] ?? '',
+                                            'notes' => $r['notes'] ?? '',
+                                        ], JSON_HEX_APOS | JSON_HEX_QUOT)) ?>"
+                                        onclick="openEditReceiptModal(this)">
+                                        ✏️ Edit
+                                    </button>
+                                    <form action="<?= url('/answer-sheets/receipts/delete') ?>" method="POST" style="display: inline;" onsubmit="return confirmAction('Hapus catatan penerimaan lembar jawaban ini?', this)">
+                                        <?= csrf_field() ?>
+                                        <input type="hidden" name="id" value="<?= $r['id'] ?>">
+                                        <button type="submit" class="btn btn-danger btn-sm" title="Hapus">🗑️</button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -199,3 +226,116 @@
         </form>
     </div>
 </div>
+
+<!-- Modal Edit Penerimaan Lembar Jawaban -->
+<div class="modal-overlay" id="editReceiptModal">
+    <div class="modal-container">
+        <div class="modal-header">
+            <div class="modal-title">✏️ Edit Tanda Terima Lembar Jawaban</div>
+            <button type="button" class="modal-close" data-modal-close="editReceiptModal">&times;</button>
+        </div>
+        <form action="<?= url('/answer-sheets/receipts/update') ?>" method="POST">
+            <?= csrf_field() ?>
+            <input type="hidden" name="id" id="edit_rec_id">
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label required">Ruang Asal</label>
+                            <select name="room_id" id="edit_rec_room_id" class="form-control" required>
+                                <?php foreach ($rooms as $rm): ?>
+                                    <option value="<?= $rm['id'] ?>"><?= e($rm['room_number']) ?> - <?= e($rm['name']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label required">Kelas Asal Siswa</label>
+                            <select name="class_name" id="edit_rec_class_name" class="form-control" required>
+                                <?php foreach ($classes as $c): ?>
+                                    <option value="<?= e($c['name']) ?>"><?= e($c['name']) ?> (<?= e($c['grade']) ?>)</option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label required">Peserta Hadir (Siswa)</label>
+                            <input type="number" name="present_count" id="edit_rec_present" class="form-control" min="0" required>
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label required">Lembar Diterima</label>
+                            <input type="number" name="received_count" id="edit_rec_received" class="form-control" min="0" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label">Lembar Tidak Terpakai</label>
+                            <input type="number" name="unused_count" id="edit_rec_unused" class="form-control" min="0">
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label">Lembar Rusak</label>
+                            <input type="number" name="damaged_count" id="edit_rec_damaged" class="form-control" min="0">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label">Pengawas Penyerah</label>
+                            <input type="text" name="handover_officer" id="edit_rec_handover" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label">Petugas Penerima</label>
+                            <input type="text" name="receiving_officer" id="edit_rec_receiving" class="form-control">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Catatan Tambahan</label>
+                    <input type="text" name="notes" id="edit_rec_notes" class="form-control">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-modal-close="editReceiptModal">Batal</button>
+                <button type="submit" class="btn btn-primary">💾 Simpan Perubahan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openEditReceiptModal(btn) {
+    try {
+        const d = JSON.parse(btn.getAttribute('data-receipt'));
+        document.getElementById('edit_rec_id').value = d.id || '';
+        document.getElementById('edit_rec_room_id').value = d.room_id || '';
+        document.getElementById('edit_rec_class_name').value = d.class_name || '';
+        document.getElementById('edit_rec_present').value = d.present_count ?? 0;
+        document.getElementById('edit_rec_received').value = d.received_count ?? 0;
+        document.getElementById('edit_rec_unused').value = d.unused_count ?? 0;
+        document.getElementById('edit_rec_damaged').value = d.damaged_count ?? 0;
+        document.getElementById('edit_rec_handover').value = d.handover_officer || '';
+        document.getElementById('edit_rec_receiving').value = d.receiving_officer || '';
+        document.getElementById('edit_rec_notes').value = d.notes || '';
+        openModal('editReceiptModal');
+    } catch (e) {
+        console.error('Gagal membuka modal edit penerimaan lembar jawaban:', e);
+    }
+}
+</script>

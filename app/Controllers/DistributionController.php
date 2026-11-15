@@ -146,6 +146,61 @@ class DistributionController
         $this->store($request);
     }
 
+    public function update(Request $request): void
+    {
+        $event = active_event();
+        if (!$event) {
+            Response::redirect(url('/events'));
+        }
+
+        $id = (int)$request->input('id');
+        $existing = Database::fetch("SELECT * FROM exam_paper_handover_records WHERE id = ? AND exam_event_id = ?", [$id, $event['id']]);
+        if (!$existing) {
+            flash('error', 'Data catatan distribusi naskah tidak ditemukan.');
+            Response::back();
+        }
+
+        $handoverType = (string)$request->input('handover_type', $existing['handover_type'] ?? 'pengambilan');
+        $roomId = (int)$request->input('room_id', $existing['room_id']);
+        $takenOrReturned = (int)$request->input('taken_or_returned_count', $existing['taken_or_returned_count']);
+        $handoverTime = trim((string)$request->input('handover_time', $existing['handover_time']));
+        $supervisorName = trim((string)$request->input('supervisor_name', $existing['supervisor_name']));
+        $officerName = trim((string)$request->input('officer_name', $existing['officer_name']));
+        $conditionStatus = trim((string)$request->input('condition_status', $existing['condition_status']));
+        $notes = trim((string)$request->input('notes', ''));
+
+        $requiredCount = (int)$existing['required_count'];
+        $discrepancy = $requiredCount - $takenOrReturned;
+
+        Database::update('exam_paper_handover_records', [
+            'room_id' => $roomId,
+            'taken_or_returned_count' => $takenOrReturned,
+            'discrepancy' => $discrepancy,
+            'handover_time' => $handoverTime,
+            'supervisor_name' => $supervisorName,
+            'officer_name' => $officerName,
+            'condition_status' => $conditionStatus,
+            'notes' => $notes
+        ], 'id = :where_id AND exam_event_id = :where_event_id', [
+            'where_id' => $id,
+            'where_event_id' => $event['id']
+        ]);
+
+        flash('success', 'Data pencatatan distribusi naskah berhasil diperbarui.');
+        Response::redirect(url('/distribution/handover?type=' . $handoverType));
+    }
+
+    public function delete(Request $request): void
+    {
+        $event = active_event();
+        $id = (int)$request->input('id');
+        $existing = Database::fetch("SELECT handover_type FROM exam_paper_handover_records WHERE id = ? AND exam_event_id = ?", [$id, $event['id']]);
+        $type = $existing['handover_type'] ?? 'pengambilan';
+        Database::delete('exam_paper_handover_records', 'id = ? AND exam_event_id = ?', [$id, $event['id']]);
+        flash('success', 'Data pencatatan distribusi naskah berhasil dihapus.');
+        Response::redirect(url('/distribution/handover?type=' . $type));
+    }
+
     public function print(Request $request): void
     {
         $event = active_event();

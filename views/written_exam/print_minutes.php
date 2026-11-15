@@ -90,7 +90,7 @@
         </div>
 
         <div class="signature-box">
-            <?= e($school['signature_city']) ?>, <?= format_date_id($schedule['exam_date']) ?><br>
+            <span style="white-space: nowrap;"><?= e($school['signature_city']) ?>, <?= format_date_id($schedule['exam_date']) ?></span><br>
             Pengawas Ruang 1 (Utama),
             <div class="signature-space"></div>
             <div class="signature-name"><?= e($supervisors['sup1_name'] ?: '..........................................') ?></div>

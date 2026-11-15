@@ -36,16 +36,16 @@ $activeEvent = active_event();
 
 <div class="print-container">
     <?php if (empty($hideKop)): ?>
-        <?php if (!empty($school['letterhead_image_path']) && file_exists(dirname(__DIR__, 2) . '/storage/uploads/' . $school['letterhead_image_path'])): ?>
+        <?php if (!empty($school['letterhead_url'])): ?>
             <!-- Official Kop Surat Bergambar -->
             <div class="kop-surat-image" style="width: 100%; text-align: center; margin-bottom: 18px;">
-                <img src="<?= url('/file/view?path=' . urlencode($school['letterhead_image_path'])) ?>" alt="Kop Surat <?= e($school['name']) ?>" style="width: 100%; max-height: 180px; object-fit: contain; display: block; margin: 0 auto;">
+                <img src="<?= e($school['letterhead_url']) ?>" alt="Kop Surat <?= e($school['name']) ?>" style="width: 100%; max-height: 180px; object-fit: contain; display: block; margin: 0 auto;">
             </div>
         <?php else: ?>
             <!-- Official Kop Surat Teks & Logo -->
             <div class="kop-surat">
-                <?php if (!empty($school['logo_path']) && file_exists(dirname(__DIR__, 2) . '/storage/uploads/' . $school['logo_path'])): ?>
-                    <img src="<?= url('/file/view?path=' . urlencode($school['logo_path'])) ?>" alt="Logo" class="kop-logo">
+                <?php if (!empty($school['logo_url'])): ?>
+                    <img src="<?= e($school['logo_url']) ?>" alt="Logo" class="kop-logo">
                 <?php else: ?>
                     <div style="width: 75px; height: 75px; border: 2px solid #000; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16pt;">
                         RU

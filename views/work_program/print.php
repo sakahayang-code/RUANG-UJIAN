@@ -17,8 +17,8 @@
 
     <div style="margin: 60px 0;">
         <div style="width: 140px; height: 140px; margin: 0 auto 30px; display: flex; align-items: center; justify-content: center; border: 3px double #1e3a8a; border-radius: 50%;">
-            <?php if (!empty($school['logo_path']) && file_exists(dirname(__DIR__, 2) . '/storage/uploads/' . $school['logo_path'])): ?>
-                <img src="<?= url('/file/view?path=' . urlencode($school['logo_path'])) ?>" alt="Logo" style="max-width: 110px; max-height: 110px; object-fit: contain;">
+            <?php if (!empty($school['logo_url'])): ?>
+                <img src="<?= e($school['logo_url']) ?>" alt="Logo" style="max-width: 110px; max-height: 110px; object-fit: contain;">
             <?php else: ?>
                 <span style="font-size: 32pt; font-weight: 900; color: #1e3a8a;">RU</span>
             <?php endif; ?>
@@ -56,11 +56,11 @@
     <div class="signature-block">
         <div></div>
         <div class="signature-box">
-            <?= e($school['signature_city']) ?>, <?= format_date_id($program['approval_date']) ?><br>
+            <span style="white-space: nowrap;"><?= e($school['signature_city']) ?>, <?= format_date_id($program['approval_date']) ?></span><br>
             Ketua Panitia Ujian,
             <div class="signature-space"></div>
             <div class="signature-name"><?= e($school['committee_head'] ?: 'Ketua Panitia') ?></div>
-            <div>NIP. -</div>
+            <div>NIP. <?= e($school['committee_head_nip'] ?: '-') ?></div>
         </div>
     </div>
 </div>
@@ -350,7 +350,7 @@
             <?= e($event['name']) ?>
             <div class="signature-space"></div>
             <div class="signature-name"><?= e($school['committee_head'] ?: 'Ketua Panitia') ?></div>
-            <div>NIP. -</div>
+            <div>NIP. <?= e($school['committee_head_nip'] ?: '-') ?></div>
         </div>
     </div>
 </div>
