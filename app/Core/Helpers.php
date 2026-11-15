@@ -134,6 +134,7 @@ function school_setting(): array
             'signature_city' => 'Bogor',
             'logo_path' => null,
             'letterhead_image_path' => null,
+            'committee_signature_path' => null,
         ];
 
         // Pastikan kota tanda tangan memiliki fallback yang rapi
@@ -233,6 +234,26 @@ function school_setting(): array
                 $settings['letterhead_url'] = 'data:' . $mime . ';base64,' . base64_encode((string)file_get_contents($diskPath));
             } else {
                 $settings['letterhead_url'] = url('/file/view?path=' . urlencode($settings['letterhead_image_path']));
+            }
+        }
+
+        // Otomatis siapkan committee_signature_url (Tanda Tangan Digital Ketua Panitia)
+        $settings['committee_signature_url'] = '';
+        if (!empty($settings['committee_signature_path'])) {
+            $diskPath = dirname(__DIR__, 2) . '/storage/uploads/' . $settings['committee_signature_path'];
+            if (file_exists($diskPath) && is_file($diskPath)) {
+                $ext = strtolower(pathinfo($diskPath, PATHINFO_EXTENSION));
+                $mime = match($ext) {
+                    'png' => 'image/png',
+                    'jpg', 'jpeg' => 'image/jpeg',
+                    'svg' => 'image/svg+xml',
+                    'webp' => 'image/webp',
+                    'gif' => 'image/gif',
+                    default => 'image/png'
+                };
+                $settings['committee_signature_url'] = 'data:' . $mime . ';base64,' . base64_encode((string)file_get_contents($diskPath));
+            } else {
+                $settings['committee_signature_url'] = url('/file/view?path=' . urlencode($settings['committee_signature_path']));
             }
         }
     }

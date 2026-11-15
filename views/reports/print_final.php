@@ -166,7 +166,11 @@
             <div class="sig-block">
                 <div style="white-space: nowrap;"><?= e($school['signature_city'] ?? 'Tempat') ?>, <?= e(indo_date($report['approval_date'] ?? date('Y-m-d'))) ?></div>
                 <div>Ketua Panitia Ujian,</div>
-                <div style="height: 75px;"></div>
+                <div style="height: 75px; display: flex; align-items: center; justify-content: center;">
+                    <?php if (!empty($school['committee_signature_url'])): ?>
+                        <img src="<?= $school['committee_signature_url'] ?>" alt="Tanda Tangan" style="max-height: 70px; max-width: 140px; object-fit: contain;">
+                    <?php endif; ?>
+                </div>
                 <div style="font-weight: bold; text-decoration: underline;"><?= e($school['committee_head'] ?: 'Ketua Panitia') ?></div>
                 <div>NIP. <?= e($school['committee_head_nip'] ?: '-') ?></div>
             </div>
@@ -360,7 +364,11 @@
             <div class="sig-block">
                 <div style="white-space: nowrap;"><?= e($school['signature_city'] ?? 'Tempat') ?>, <?= e(indo_date($report['approval_date'] ?? date('Y-m-d'))) ?></div>
                 <div>Ketua Panitia Ujian,</div>
-                <div style="height: 75px;"></div>
+                <div style="height: 75px; display: flex; align-items: center; justify-content: center;">
+                    <?php if (!empty($school['committee_signature_url'])): ?>
+                        <img src="<?= $school['committee_signature_url'] ?>" alt="Tanda Tangan" style="max-height: 70px; max-width: 140px; object-fit: contain;">
+                    <?php endif; ?>
+                </div>
                 <div style="font-weight: bold; text-decoration: underline;"><?= e($school['committee_head'] ?: 'Ketua Panitia') ?></div>
                 <div>NIP. <?= e($school['committee_head_nip'] ?: '-') ?></div>
             </div>

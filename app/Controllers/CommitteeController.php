@@ -52,7 +52,8 @@ class CommitteeController
             'committee' => $committee,
             'members' => $members,
             'documents' => $documents,
-            'teachers' => $teachers
+            'teachers' => $teachers,
+            'school' => school_setting()
         ]);
     }
 
@@ -412,4 +413,72 @@ class CommitteeController
         flash('success', 'Surat berhasil dihapus.');
         Response::redirect(url('/committee/letters'));
     }
+
+    public function uploadSignature(Request $request): void
+    {
+        $school = school_setting();
+        $id = $school['id'] ?? 1;
+        $data = ['updated_at' => date('Y-m-d H:i:s')];
+
+        // Handle Remove Committee Signature
+        if ($request->input('remove_committee_signature') === '1') {
+            if (!empty($school['committee_signature_path'])) {
+                $oldSig = dirname(__DIR__, 2) . '/storage/uploads/' . $school['committee_signature_path'];
+                if (file_exists($oldSig)) {
+                    @unlink($oldSig);
+                }
+            }
+            $data['committee_signature_path'] = null;
+            Database::update('school_settings', $data, 'id = :where_id', ['where_id' => $id]);
+            flash('success', 'Tanda tangan digital ketua panitia berhasil dihapus.');
+            Response::redirect(url('/committee'));
+        }
+
+        // Handle Committee Signature Upload
+        if ($request->hasFile('committee_signature')) {
+            $file = $request->file('committee_signature');
+            $allowedMimes = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml', 'text/plain', 'text/xml'];
+            $allowedExts = ['jpg', 'jpeg', 'png', 'webp', 'svg'];
+            $mime = mime_content_type($file['tmp_name']);
+            $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+
+            if (!in_array($ext, $allowedExts, true) || !in_array($mime, $allowedMimes, true)) {
+                flash('error', 'Format tanda tangan tidak valid. Hanya menerima berkas PNG, JPG, WEBP, atau SVG.');
+                Response::back();
+            }
+
+            if ($file['size'] > 5 * 1024 * 1024) {
+                flash('error', 'Ukuran berkas tanda tangan tidak boleh melebihi 5 MB.');
+                Response::back();
+            }
+
+            // Remove previous signature if exists
+            if (!empty($school['committee_signature_path'])) {
+                $oldSig = dirname(__DIR__, 2) . '/storage/uploads/' . $school['committee_signature_path'];
+                if (file_exists($oldSig)) {
+                    @unlink($oldSig);
+                }
+            }
+
+            $newFileName = 'ttd_ketua_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
+            $targetDir = dirname(__DIR__, 2) . '/storage/uploads/signatures';
+            if (!is_dir($targetDir)) {
+                mkdir($targetDir, 0755, true);
+            }
+
+            $destination = $targetDir . '/' . $newFileName;
+            if (move_uploaded_file($file['tmp_name'], $destination)) {
+                $data['committee_signature_path'] = 'signatures/' . $newFileName;
+                Database::update('school_settings', $data, 'id = :where_id', ['where_id' => $id]);
+                flash('success', 'Tanda tangan digital ketua panitia berhasil diunggah dan disimpan.');
+            } else {
+                flash('error', 'Gagal mengunggah berkas tanda tangan.');
+            }
+        } else {
+            flash('info', 'Tidak ada berkas tanda tangan yang dipilih.');
+        }
+
+        Response::redirect(url('/committee'));
+    }
 }
+

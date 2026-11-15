@@ -79,7 +79,10 @@ $dirs = [
     $baseDir . '/storage/uploads',
     $baseDir . '/storage/uploads/photos',
     $baseDir . '/storage/uploads/sk',
-    $baseDir . '/storage/uploads/docs'
+    $baseDir . '/storage/uploads/docs',
+    $baseDir . '/storage/uploads/signatures',
+    $baseDir . '/storage/uploads/letterheads',
+    $baseDir . '/storage/uploads/logos',
 ];
 foreach ($dirs as $d) {
     if (!is_dir($d)) {
@@ -310,6 +313,7 @@ Router::post('/committee/update-member', [CommitteeController::class, 'updateMem
 Router::post('/committee/delete', [CommitteeController::class, 'deleteMember'], ['auth', 'csrf']);
 Router::post('/committee/delete-member', [CommitteeController::class, 'deleteMember'], ['auth', 'csrf']);
 Router::post('/committee/upload-sk', [CommitteeController::class, 'uploadSk'], ['auth', 'csrf']);
+Router::post('/committee/upload-signature', [CommitteeController::class, 'uploadSignature'], ['auth', 'csrf']);
 
 // Letters (Undangan & Surat Tugas)
 Router::get('/committee/letters', [CommitteeController::class, 'letters'], ['auth']);

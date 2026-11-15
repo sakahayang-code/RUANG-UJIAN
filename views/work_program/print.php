@@ -58,7 +58,11 @@
         <div class="signature-box">
             <span style="white-space: nowrap;"><?= e($school['signature_city']) ?>, <?= format_date_id($program['approval_date']) ?></span><br>
             Ketua Panitia Ujian,
-            <div class="signature-space"></div>
+            <div class="signature-space" style="display: flex; align-items: center; justify-content: center; min-height: 65px;">
+                <?php if (!empty($school['committee_signature_url'])): ?>
+                    <img src="<?= $school['committee_signature_url'] ?>" alt="Tanda Tangan" style="max-height: 65px; max-width: 140px; object-fit: contain;">
+                <?php endif; ?>
+            </div>
             <div class="signature-name"><?= e($school['committee_head'] ?: 'Ketua Panitia') ?></div>
             <div>NIP. <?= e($school['committee_head_nip'] ?: '-') ?></div>
         </div>
@@ -348,7 +352,11 @@
         <div class="signature-box">
             Ketua Panitia Ujian,<br>
             <?= e($event['name']) ?>
-            <div class="signature-space"></div>
+            <div class="signature-space" style="display: flex; align-items: center; justify-content: center; min-height: 65px;">
+                <?php if (!empty($school['committee_signature_url'])): ?>
+                    <img src="<?= $school['committee_signature_url'] ?>" alt="Tanda Tangan" style="max-height: 65px; max-width: 140px; object-fit: contain;">
+                <?php endif; ?>
+            </div>
             <div class="signature-name"><?= e($school['committee_head'] ?: 'Ketua Panitia') ?></div>
             <div>NIP. <?= e($school['committee_head_nip'] ?: '-') ?></div>
         </div>

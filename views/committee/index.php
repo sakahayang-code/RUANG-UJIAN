@@ -4,6 +4,9 @@
         <p class="page-subtitle"><?= e($event['name']) ?> (TP <?= e($event['academic_year']) ?> - <?= e($event['semester']) ?>)</p>
     </div>
     <div class="page-actions">
+        <button type="button" class="btn btn-outline" data-modal-open="uploadSignatureModal" title="Unggah Tanda Tangan Digital Ketua Panitia">
+            ✍️ Tanda Tangan Ketua Panitia
+        </button>
         <button type="button" class="btn btn-primary" data-modal-open="addMemberModal">
             ➕ Tambah Anggota Panitia
         </button>
@@ -346,6 +349,61 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-modal-close="uploadSkModal">Batal</button>
                 <button type="submit" class="btn btn-primary">Unggah & Simpan SK</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Upload Signature Modal -->
+<div class="modal" id="uploadSignatureModal">
+    <div class="modal-dialog">
+        <form action="<?= url('/committee/upload-signature') ?>" method="POST" enctype="multipart/form-data" class="modal-content">
+            <?= csrf_field() ?>
+            <div class="modal-header">
+                <h3 class="modal-title">✍️ Tanda Tangan Digital Ketua Panitia</h3>
+                <button type="button" class="modal-close" data-modal-close="uploadSignatureModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <?php 
+                    $schoolData = $school ?? school_setting();
+                    $hasSig = !empty($schoolData['committee_signature_path']) && file_exists(dirname(__DIR__, 2) . '/storage/uploads/' . $schoolData['committee_signature_path']); 
+                ?>
+                <div style="margin-bottom: 16px;">
+                    <label class="form-label">Nama Ketua Panitia Saat Ini</label>
+                    <input type="text" class="form-control" value="<?= e($schoolData['committee_head'] ?: 'Belum diatur di Pengaturan Sekolah') ?>" readonly style="background: #f1f5f9; color: #334155;">
+                </div>
+
+                <div style="margin-bottom: 16px;">
+                    <label class="form-label">Pratinjau Tanda Tangan</label>
+                    <div style="height: 100px; border: 2px dashed #cbd5e1; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: #ffffff; background-image: linear-gradient(45deg, #f1f5f9 25%, transparent 25%), linear-gradient(-45deg, #f1f5f9 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #f1f5f9 75%), linear-gradient(-45deg, transparent 75%, #f1f5f9 75%); background-size: 16px 16px; background-position: 0 0, 0 8px, 8px -8px, -8px 0px; overflow: hidden;">
+                        <?php if ($hasSig): ?>
+                            <img src="<?= url('/file/view?path=' . urlencode($schoolData['committee_signature_path'])) ?>" alt="Tanda Tangan Ketua Panitia" style="max-height: 90px; max-width: 90%; object-fit: contain;">
+                        <?php else: ?>
+                            <span style="color: #94a3b8; font-size: 13px;">Belum ada berkas tanda tangan yang diunggah</span>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label required">Pilih Berkas Tanda Tangan</label>
+                    <input type="file" name="committee_signature" class="form-control" accept="image/png,image/jpeg,image/webp,image/svg+xml">
+                    <div class="form-text" style="line-height: 1.4; margin-top: 6px;">
+                        Disarankan berkas <strong>PNG transparan</strong> (atau JPG/WEBP/SVG, maks 5MB). Tanda tangan ini otomatis disematkan pada Kartu Peserta Ujian, Surat Undangan/Tugas, Daftar Hadir, dan Dokumen Panitia.
+                    </div>
+                </div>
+
+                <?php if ($hasSig): ?>
+                    <div style="margin-top: 14px; padding-top: 10px; border-top: 1px solid #e2e8f0;">
+                        <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: #dc2626; cursor: pointer; font-weight: 500;">
+                            <input type="checkbox" name="remove_committee_signature" value="1">
+                            Hapus tanda tangan digital ketua panitia saat ini
+                        </label>
+                    </div>
+                <?php endif; ?>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-modal-close="uploadSignatureModal">Tutup</button>
+                <button type="submit" class="btn btn-primary">Simpan Tanda Tangan</button>
             </div>
         </form>
     </div>

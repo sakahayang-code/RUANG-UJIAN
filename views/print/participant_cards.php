@@ -298,6 +298,9 @@
 
 .sig-space {
     height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .sig-name {
@@ -339,6 +342,25 @@ if (empty($schoolLogo) && !empty($school['logo_path'])) {
 $committeeSignerName = $committeeSignerName ?? (!empty($school['committee_head']) ? $school['committee_head'] : 'Ketua Panitia');
 $committeeSignerNip = $committeeSignerNip ?? '';
 $cityName = !empty($school['signature_city']) ? $school['signature_city'] : ($school['district'] ?? 'Tempat');
+
+// Resolve committee signature image
+$committeeSigUrl = $school['committee_signature_url'] ?? '';
+if (empty($committeeSigUrl) && !empty($school['committee_signature_path'])) {
+    $fullSigPath = dirname(__DIR__, 2) . '/storage/uploads/' . $school['committee_signature_path'];
+    if (file_exists($fullSigPath) && is_file($fullSigPath)) {
+        $ext = strtolower(pathinfo($fullSigPath, PATHINFO_EXTENSION));
+        $mime = match($ext) {
+            'png' => 'image/png',
+            'jpg', 'jpeg' => 'image/jpeg',
+            'svg' => 'image/svg+xml',
+            'webp' => 'image/webp',
+            default => 'image/png'
+        };
+        $committeeSigUrl = 'data:' . $mime . ';base64,' . base64_encode((string)file_get_contents($fullSigPath));
+    } else {
+        $committeeSigUrl = url('/file/view?path=' . urlencode($school['committee_signature_path']));
+    }
+}
 ?>
 
 <div class="no-print" style="max-width: 820px; margin: 10px auto 0; padding: 10px 16px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; font-size: 12px; color: #1e40af; display: flex; justify-content: space-between; align-items: center; box-sizing: border-box;">
@@ -452,7 +474,11 @@ $cityName = !empty($school['signature_city']) ? $school['signature_city'] : ($sc
                     <div class="signature-box">
                         <div class="sig-date"><?= e($cityName) ?>, <?= e(indo_date(date('Y-m-d'))) ?></div>
                         <div class="sig-title">Ketua Panitia,</div>
-                        <div class="sig-space"></div>
+                        <div class="sig-space">
+                            <?php if (!empty($committeeSigUrl)): ?>
+                                <img src="<?= $committeeSigUrl ?>" alt="Tanda Tangan" style="max-height: 28px; max-width: 90px; object-fit: contain; display: block; margin: 0 auto;">
+                            <?php endif; ?>
+                        </div>
                         <div class="sig-name"><?= e($committeeSignerName ?: 'Ketua Panitia') ?></div>
                         <div class="sig-nip">NIP. <?= !empty($committeeSignerNip) && $committeeSignerNip !== '-' ? e($committeeSignerNip) : '-' ?></div>
                     </div>

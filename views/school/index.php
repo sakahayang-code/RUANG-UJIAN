@@ -229,6 +229,36 @@
                     </div>
                 </div>
             </div>
+
+            <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #e2e8f0;">
+                <label class="form-label" style="font-weight: 600; font-size: 14px; margin-bottom: 8px;">✍️ Berkas Tanda Tangan Digital Ketua Panitia</label>
+                <?php 
+                    $hasSig = !empty($school['committee_signature_path']) && file_exists(dirname(__DIR__, 2) . '/storage/uploads/' . $school['committee_signature_path']); 
+                ?>
+                <div style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 16px;">
+                    <div style="width: 140px; height: 90px; border: 2px dashed #cbd5e1; border-radius: 6px; display: flex; align-items: center; justify-content: center; background: #ffffff; background-image: linear-gradient(45deg, #f1f5f9 25%, transparent 25%), linear-gradient(-45deg, #f1f5f9 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #f1f5f9 75%), linear-gradient(-45deg, transparent 75%, #f1f5f9 75%); background-size: 16px 16px; background-position: 0 0, 0 8px, 8px -8px, -8px 0px; overflow: hidden; flex-shrink: 0;">
+                        <?php if ($hasSig): ?>
+                            <img src="<?= url('/file/view?path=' . urlencode($school['committee_signature_path'])) ?>" alt="Tanda Tangan Ketua Panitia" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                        <?php else: ?>
+                            <span style="color: #94a3b8; font-size: 11px; text-align: center; padding: 4px;">Belum ada tanda tangan</span>
+                        <?php endif; ?>
+                    </div>
+                    <div style="flex: 1; min-width: 240px;">
+                        <input type="file" name="committee_signature" class="form-control" accept="image/png,image/jpeg,image/webp,image/svg+xml">
+                        <div class="form-text" style="margin-top: 6px; line-height: 1.4;">
+                            Unggah berkas tanda tangan digital ketua panitia (format <strong>PNG transparan disarankan</strong>, JPG, WEBP, atau SVG, maksimal 5MB). Tanda tangan ini otomatis disematkan di atas nama ketua panitia pada Kartu Peserta Ujian, Surat Undangan/Tugas, Daftar Hadir, Denah & Daftar Peserta, serta Program Kerja dan Laporan Akhir.
+                        </div>
+                        <?php if ($hasSig): ?>
+                            <div style="margin-top: 8px;">
+                                <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: #dc2626; cursor: pointer; font-weight: 500;">
+                                    <input type="checkbox" name="remove_committee_signature" value="1">
+                                    Hapus tanda tangan digital ketua panitia
+                                </label>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="card-footer">
             <button type="submit" class="btn btn-primary">

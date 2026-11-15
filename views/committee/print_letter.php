@@ -75,7 +75,11 @@
         <div class="signature-box" style="text-align: center; min-width: 220px;">
             <div style="white-space: nowrap;"><?= e(!empty($school['signature_city']) ? $school['signature_city'] : ($school['district'] ?? ($school['regency'] ?? 'Tempat'))) ?>, <?= format_date_id($letter['letter_date'] ?? date('Y-m-d')) ?></div>
             <?= e($letter['signer_title'] ?? 'Ketua Panitia') ?>,
-            <div class="signature-space"></div>
+            <div class="signature-space" style="display: flex; align-items: center; justify-content: center; min-height: 65px;">
+                <?php if (!empty($school['committee_signature_url']) && (empty($letter['signer_title']) || stripos($letter['signer_title'], 'Ketua') !== false)): ?>
+                    <img src="<?= $school['committee_signature_url'] ?>" alt="Tanda Tangan" style="max-height: 65px; max-width: 140px; object-fit: contain;">
+                <?php endif; ?>
+            </div>
             <div class="signature-name"><?= e($letter['signer_name'] ?? ($school['committee_head'] ?? 'Panitia Ujian')) ?></div>
             <div>NIP. <?= e(!empty($letter['signer_nip']) ? $letter['signer_nip'] : '-') ?></div>
         </div>
