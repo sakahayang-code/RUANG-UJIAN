@@ -16,9 +16,10 @@ class UserController
     public function index(Request $request): void
     {
         $users = Database::fetchAll("
-            SELECT u.*, r.name as role_name, r.display_name as role_display
+            SELECT u.*, r.id as role_id, r.name as role_name, r.display_name as role_display
             FROM users u
-            JOIN roles r ON u.role_id = r.id
+            LEFT JOIN roles r ON u.role = r.name
+            WHERE u.deleted_at IS NULL
             ORDER BY u.id ASC
         ");
 
@@ -52,12 +53,15 @@ class UserController
             Response::back();
         }
 
+        $role = Database::fetch("SELECT * FROM roles WHERE id = ?", [$roleId]);
+        $roleName = $role['name'] ?? 'super_admin';
+
         $userId = Database::insert('users', [
             'username' => $username,
             'password' => password_hash($password, PASSWORD_BCRYPT),
             'full_name' => $fullName,
             'email' => $email,
-            'role_id' => $roleId,
+            'role' => $roleName,
             'is_active' => $isActive,
             'created_at' => date('Y-m-d H:i:s')
         ]);
@@ -65,7 +69,7 @@ class UserController
         Auth::logAudit('create_user', 'users', $userId, null, [
             'username' => $username,
             'full_name' => $fullName,
-            'role_id' => $roleId
+            'role' => $roleName
         ]);
 
         flash('success', "Pengguna '{$fullName}' ({$username}) berhasil ditambahkan.");
@@ -93,10 +97,13 @@ class UserController
             Response::back();
         }
 
+        $role = Database::fetch("SELECT * FROM roles WHERE id = ?", [$roleId]);
+        $roleName = $role['name'] ?? $user['role'];
+
         $data = [
             'full_name' => $fullName,
             'email' => $email,
-            'role_id' => $roleId,
+            'role' => $roleName,
             'is_active' => $isActive,
             'updated_at' => date('Y-m-d H:i:s')
         ];

@@ -93,16 +93,10 @@ class InitialSeeder
             }
         }
 
-        // 4. Seed Default Users
-        $defaultPassword = password_hash('password123', PASSWORD_BCRYPT);
+        // 4. Seed Default Admin User
+        $defaultPassword = password_hash('Muhdir@1200723476', PASSWORD_BCRYPT);
         $users = [
             ['admin', $defaultPassword, 'Administrator Sistem', 'admin@ruangujian.sch.id', '081234567890', 'super_admin'],
-            ['ketua', $defaultPassword, 'Drs. H. Mulyadi, M.Pd.', 'ketua@ruangujian.sch.id', '081234567891', 'ketua_panitia'],
-            ['sekretaris', $defaultPassword, 'Siti Nurhaliza, S.Pd.', 'sekretaris@ruangujian.sch.id', '081234567892', 'sekretaris'],
-            ['operator', $defaultPassword, 'Rian Hidayat, S.Kom.', 'operator@ruangujian.sch.id', '081234567893', 'operator'],
-            ['pengawas1', $defaultPassword, 'Agus Triyono, S.Pd.', 'agus@ruangujian.sch.id', '081234567894', 'pengawas'],
-            ['penguji1', $defaultPassword, 'Dewi Lestari, S.Si.', 'dewi@ruangujian.sch.id', '081234567895', 'penguji'],
-            ['kepsek', $defaultPassword, 'Dr. H. Ahmad Sudrajat, M.Pd.', 'kepsek@ruangujian.sch.id', '081234567896', 'kepala_sekolah'],
         ];
 
         foreach ($users as $u) {

@@ -34,20 +34,20 @@ Aplikasi ini **SECARA TEGAS TIDAK MEMILIKI FITUR**:
 
 ---
 
-## 👥 8 HAK AKSES PERAN (RBAC) & AKUN DEFAULT
+## 👥 8 HAK AKSES PERAN (RBAC) SISTEM
 
-Sistem dilengkapi matriks 8 peran resmi:
+Sistem dilengkapi matriks 8 peran resmi dengan hak akses terkelola:
 
-| No | Peran (Role) | Username Default | Password Default | Tanggung Jawab Utama |
-|---|---|---|---|---|
-| 1 | **Super Admin** | `admin` | `password123` | Akses penuh sistem, manajemen user, backup/restore database |
-| 2 | **Kepala Sekolah** | `kepsek` | `password123` | Monitoring dashboard, persetujuan program, pengesahan laporan |
-| 3 | **Ketua Panitia** | `ketua` | `password123` | Perencanaan ujian, program kerja & RAB, evaluasi pelaksanaan |
-| 4 | **Sekretaris** | `sekretaris` | `password123` | Surat dinas, SK panitia, notula, laporan akhir 18 bab |
-| 5 | **Bendahara** | `bendahara` | `password123` | Rencana Anggaran Biaya (RAB) dan realisasi keuangan panitia |
-| 6 | **Seksi Naskah** | `seksi_naskah` | `password123` | Checklist soal, penggandaan, distribusi, packing lembar jawaban |
-| 7 | **Seksi Tempat** | `seksi_tempat` | `password123` | Pengaturan ruang, denah kursi baris x kolom, label pintu |
-| 8 | **Pengawas Ruang** | `pengawas` | `password123` | Presensi peserta ruang, berita acara, catatan insiden ujian |
+| No | Peran (Role) | Kode Peran | Tanggung Jawab Utama |
+|---|---|---|---|
+| 1 | **Super Admin** | `super_admin` | Akses penuh sistem, manajemen user & hak akses, backup/restore database |
+| 2 | **Kepala Sekolah** | `kepala_sekolah` | Monitoring dashboard, persetujuan program, pengesahan laporan |
+| 3 | **Ketua Panitia** | `ketua_panitia` | Perencanaan ujian, program kerja & RAB, evaluasi pelaksanaan |
+| 4 | **Sekretaris** | `sekretaris` | Surat dinas, SK panitia, notula, laporan akhir 18 bab |
+| 5 | **Bendahara** | `bendahara` | Rencana Anggaran Biaya (RAB) dan realisasi keuangan panitia |
+| 6 | **Seksi Naskah** | `seksi_naskah` | Checklist soal, penggandaan, distribusi, packing lembar jawaban |
+| 7 | **Seksi Tempat** | `seksi_tempat` | Pengaturan ruang, denah kursi baris x kolom, label pintu |
+| 8 | **Pengawas Ruang** | `pengawas` | Presensi peserta ruang, berita acara, catatan insiden ujian |
 
 ---
 
@@ -139,7 +139,7 @@ Sistem dilengkapi matriks 8 peran resmi:
    ```
 4. Jika database belum diinisialisasi, sistem secara otomatis mengarahkan ke halaman pemasangan (`/install`).
 5. Klik **"Pasang & Inisialisasi Database Sekarang"**.
-6. Login menggunakan akun `admin` / `password123`.
+6. Login menggunakan akun `admin`.
 
 ---
 

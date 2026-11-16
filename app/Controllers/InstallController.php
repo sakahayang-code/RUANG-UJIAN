@@ -100,7 +100,7 @@ class InstallController
                 require dirname(__DIR__, 2) . '/database/seeders/initial_seeder.php';
             }
 
-            flash('success', 'Aplikasi RUANG UJIAN berhasil dipasang! Silakan login dengan akun default: username: admin / password: password123');
+            flash('success', 'Aplikasi RUANG UJIAN berhasil dipasang! Silakan login dengan akun administrator.');
             Response::redirect(url('/login'));
         } catch (\Throwable $e) {
             flash('error', 'Gagal memasang aplikasi: ' . $e->getMessage());
