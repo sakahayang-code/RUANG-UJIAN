@@ -67,9 +67,6 @@ use App\Controllers\UserController;
 use App\Controllers\WorkProgramController;
 use App\Controllers\WrittenExamController;
 
-// Start secure session
-Session::start();
-
 // Ensure storage directories exist
 $baseDir = dirname(__DIR__);
 $dirs = [
@@ -89,6 +86,9 @@ foreach ($dirs as $d) {
         @mkdir($d, 0755, true);
     }
 }
+
+// Start secure session
+Session::start();
 
 // Check database connectivity / installation status
 $isDatabaseReady = false;
