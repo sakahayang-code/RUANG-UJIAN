@@ -149,4 +149,25 @@
             </a>
         </div>
     </div>
+
+    <!-- 7. Format Ceklis Penerimaan Dokumen Soal & Kisi-Kisi -->
+    <div class="card p-4" style="border-top: 3px solid #6366f1;">
+        <div style="font-size: 32px; margin-bottom: 10px;">📋</div>
+        <h3 style="margin-top: 0; font-size: 18px;">Format Ceklis Dokumen Soal</h3>
+        <p style="font-size: 13px; color: #64748b; min-height: 40px;">
+            Format rekapitulasi penerimaan naskah soal dan kisi-kisi per guru, mata pelajaran, dan kelas dalam tabel matriks resmi (Landscape).
+        </p>
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 25px;">
+            <a href="<?= url('/preparation/submissions/print') ?>" target="_blank" class="btn btn-primary" style="text-align: center;">
+                🖨️ Cetak Format Rekap Soal (PDF)
+            </a>
+            <a href="<?= url('/preparation/submissions/export') ?>" class="btn btn-outline" style="text-align: center;">
+                📥 Unduh Format Rekap Excel (.xls)
+            </a>
+            <a href="<?= url('/preparation/submissions') ?>" class="btn btn-outline" style="text-align: center;">
+                ⚙️ Buka Manajemen Ceklis
+            </a>
+        </div>
+    </div>
 </div>
+

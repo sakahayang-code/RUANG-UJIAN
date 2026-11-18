@@ -147,6 +147,7 @@ class PreparationController
     }
 
     // 2. Document Submission Checklist (Kisi-kisi, Soal, Kunci Jawaban, Dokumen Nilai Guru)
+    // 2. Document Submission Checklist (Format Rekap Matriks Sesuai Gambar & Detail Telaah)
     public function submissions(Request $request): void
     {
         $event = active_event();
@@ -155,6 +156,9 @@ class PreparationController
             Response::redirect(url('/events'));
         }
 
+        $matrixData = $this->buildSubmissionsMatrixData($event, $request);
+
+        // Detailed submissions list for Log & Telaah Tab
         $typeFilter = (string)$request->input('type', '');
         $statusFilter = (string)$request->input('status', '');
 
@@ -181,16 +185,675 @@ class PreparationController
 
         $teachers = Database::fetchAll("SELECT * FROM teachers WHERE status = 'Aktif' ORDER BY name ASC");
         $subjects = Database::fetchAll("SELECT * FROM subjects ORDER BY code ASC");
+        $classes = Database::fetchAll("SELECT * FROM classes ORDER BY grade ASC, name ASC");
 
         View::render('preparation/submissions', [
             'title' => 'Checklist Persiapan & Penerimaan Dokumen',
             'event' => $event,
+            'matrixData' => $matrixData,
             'submissions' => $submissions,
             'teachers' => $teachers,
             'subjects' => $subjects,
+            'classes' => $classes,
             'typeFilter' => $typeFilter,
-            'statusFilter' => $statusFilter
+            'statusFilter' => $statusFilter,
+            'activeTab' => $request->input('tab', 'matrix')
         ]);
+    }
+
+    public function toggleCheck(Request $request): void
+    {
+        $event = active_event();
+        if (!$event) {
+            if ($request->isAjax()) {
+                Response::json(['success' => false, 'message' => 'Kegiatan ujian tidak aktif.'], 400);
+            }
+            Response::redirect(url('/events'));
+        }
+
+        $teacherId = (int)$request->input('teacher_id');
+        $subjectId = (int)$request->input('subject_id');
+        $grade = trim((string)$request->input('grade'));
+        $docType = trim((string)$request->input('doc_type'));
+
+        // Normalize docType
+        if ($docType === 'soal') {
+            $docType = 'naskah_soal';
+        }
+
+        if (!$teacherId || !$subjectId || empty($grade) || empty($docType)) {
+            if ($request->isAjax()) {
+                Response::json(['success' => false, 'message' => 'Data tidak lengkap.'], 400);
+            }
+            flash('error', 'Parameter tidak lengkap.');
+            Response::back();
+        }
+
+        // Check existing record
+        $existing = Database::fetch(
+            "SELECT * FROM exam_document_submissions WHERE exam_event_id = ? AND teacher_id = ? AND subject_id = ? AND grade = ? AND doc_type = ?",
+            [$event['id'], $teacherId, $subjectId, $grade, $docType]
+        );
+
+        $isChecked = false;
+        $newStatus = 'belum_diserahkan';
+
+        if ($existing) {
+            if (in_array($existing['status'], ['selesai', 'sudah_diserahkan'])) {
+                // Toggle OFF -> uncheck
+                Database::update('exam_document_submissions', [
+                    'status' => 'belum_diserahkan',
+                    'submission_date' => null,
+                    'updated_at' => date('Y-m-d H:i:s')
+                ], 'id = :where_id', ['where_id' => $existing['id']]);
+                $isChecked = false;
+                $newStatus = 'belum_diserahkan';
+            } else {
+                // Toggle ON -> check
+                Database::update('exam_document_submissions', [
+                    'status' => 'selesai',
+                    'submission_date' => date('Y-m-d'),
+                    'reviewer_id' => Auth::id(),
+                    'reviewed_at' => date('Y-m-d H:i:s'),
+                    'updated_at' => date('Y-m-d H:i:s')
+                ], 'id = :where_id', ['where_id' => $existing['id']]);
+                $isChecked = true;
+                $newStatus = 'selesai';
+            }
+        } else {
+            // Insert as completed (checked)
+            Database::insert('exam_document_submissions', [
+                'exam_event_id' => $event['id'],
+                'teacher_id' => $teacherId,
+                'subject_id' => $subjectId,
+                'grade' => $grade,
+                'doc_type' => $docType,
+                'submission_date' => date('Y-m-d'),
+                'status' => 'selesai',
+                'reviewer_id' => Auth::id(),
+                'reviewed_at' => date('Y-m-d H:i:s'),
+                'created_at' => date('Y-m-d H:i:s')
+            ]);
+            $isChecked = true;
+            $newStatus = 'selesai';
+        }
+
+        if ($request->isAjax() || $request->input('format') === 'json') {
+            Response::json([
+                'success' => true,
+                'checked' => $isChecked,
+                'status' => $newStatus,
+                'message' => $isChecked ? 'Ceklis berhasil ditandai selesai (✓).' : 'Ceklis dikosongkan.'
+            ]);
+        }
+
+        flash('success', 'Status checklist dokumen berhasil diperbarui.');
+        Response::redirect(url('/preparation/submissions'));
+    }
+
+    public function syncTeachersAndSubjects(Request $request): void
+    {
+        $event = active_event();
+        if (!$event) {
+            flash('warning', 'Pilih kegiatan ujian aktif terlebih dahulu.');
+            Response::redirect(url('/events'));
+        }
+
+        // Distinct grades from classes or default
+        $grades = Database::fetchAll("SELECT DISTINCT grade FROM classes WHERE grade IS NOT NULL AND grade != '' ORDER BY grade ASC");
+        $gradeList = array_column($grades, 'grade');
+        if (empty($gradeList)) {
+            $gradeList = ['1', '2'];
+        }
+
+        $teachers = Database::fetchAll("SELECT * FROM teachers WHERE status = 'Aktif' ORDER BY name ASC");
+        $subjects = Database::fetchAll("SELECT * FROM subjects ORDER BY code ASC");
+
+        $count = 0;
+        foreach ($teachers as $t) {
+            foreach ($subjects as $s) {
+                $subjGrade = trim((string)($s['grade'] ?? 'Semua'));
+
+                foreach ($gradeList as $g) {
+                    $isApplicable = ($subjGrade === 'Semua' || $subjGrade === 'all' || $subjGrade === '' || strcasecmp($subjGrade, (string)$g) === 0);
+                    if (!$isApplicable) continue;
+
+                    // Ensure Soal & Kisi-Kisi
+                    $types = ['naskah_soal', 'kisi_kisi'];
+                    if (in_array($s['exam_type'], ['practical', 'both'])) {
+                        $types[] = 'lisan';
+                    }
+
+                    foreach ($types as $docType) {
+                        $exists = Database::fetchColumn(
+                            "SELECT COUNT(*) FROM exam_document_submissions WHERE exam_event_id = ? AND teacher_id = ? AND subject_id = ? AND grade = ? AND doc_type = ?",
+                            [$event['id'], $t['id'], $s['id'], $g, $docType]
+                        );
+
+                        if (!$exists) {
+                            Database::insert('exam_document_submissions', [
+                                'exam_event_id' => $event['id'],
+                                'teacher_id' => $t['id'],
+                                'subject_id' => $s['id'],
+                                'grade' => $g,
+                                'doc_type' => $docType,
+                                'status' => 'belum_diserahkan',
+                                'created_at' => date('Y-m-d H:i:s')
+                            ]);
+                            $count++;
+                        }
+                    }
+                }
+            }
+        }
+
+        flash('success', "Sinkronisasi berhasil! Menambahkan/memeriksa {$count} entri data matriks checklist.");
+        Response::redirect(url('/preparation/submissions'));
+    }
+
+    public function addMatrixRow(Request $request): void
+    {
+        $event = active_event();
+        if (!$event) {
+            flash('warning', 'Pilih kegiatan ujian aktif terlebih dahulu.');
+            Response::redirect(url('/events'));
+        }
+
+        $teacherId = (int)$request->input('teacher_id');
+        $subjectId = (int)$request->input('subject_id');
+
+        if (!$teacherId || !$subjectId) {
+            flash('error', 'Pilih Guru dan Mata Pelajaran yang valid.');
+            Response::back();
+        }
+
+        $subject = Database::fetch("SELECT * FROM subjects WHERE id = ?", [$subjectId]);
+        if (!$subject) {
+            flash('error', 'Mata pelajaran tidak ditemukan.');
+            Response::back();
+        }
+
+        // Get grades
+        $grades = Database::fetchAll("SELECT DISTINCT grade FROM classes WHERE grade IS NOT NULL AND grade != '' ORDER BY grade ASC");
+        $gradeList = array_column($grades, 'grade');
+        if (empty($gradeList)) {
+            $gradeList = ['1', '2'];
+        }
+
+        $subjGrade = trim((string)($subject['grade'] ?? 'Semua'));
+        foreach ($gradeList as $g) {
+            $isApplicable = ($subjGrade === 'Semua' || $subjGrade === 'all' || $subjGrade === '' || strcasecmp($subjGrade, (string)$g) === 0);
+            if (!$isApplicable) continue;
+
+            $types = ['naskah_soal', 'kisi_kisi'];
+            if (in_array($subject['exam_type'] ?? 'written', ['practical', 'both'])) {
+                $types[] = 'lisan';
+            }
+
+            foreach ($types as $docType) {
+                $exists = Database::fetchColumn(
+                    "SELECT COUNT(*) FROM exam_document_submissions WHERE exam_event_id = ? AND teacher_id = ? AND subject_id = ? AND grade = ? AND doc_type = ?",
+                    [$event['id'], $teacherId, $subjectId, $g, $docType]
+                );
+
+                if (!$exists) {
+                    Database::insert('exam_document_submissions', [
+                        'exam_event_id' => $event['id'],
+                        'teacher_id' => $teacherId,
+                        'subject_id' => $subjectId,
+                        'grade' => $g,
+                        'doc_type' => $docType,
+                        'status' => 'belum_diserahkan',
+                        'created_at' => date('Y-m-d H:i:s')
+                    ]);
+                }
+            }
+        }
+
+        flash('success', 'Guru dan mata pelajaran berhasil ditambahkan ke format ceklis.');
+        Response::redirect(url('/preparation/submissions'));
+    }
+
+    public function deleteMatrixRow(Request $request): void
+    {
+        $event = active_event();
+        if (!$event) {
+            flash('warning', 'Pilih kegiatan ujian aktif terlebih dahulu.');
+            Response::redirect(url('/events'));
+        }
+
+        $teacherId = (int)$request->input('teacher_id');
+        $subjectId = (int)$request->input('subject_id');
+
+        if ($teacherId && $subjectId) {
+            Database::delete(
+                'exam_document_submissions',
+                'exam_event_id = ? AND teacher_id = ? AND subject_id = ?',
+                [$event['id'], $teacherId, $subjectId]
+            );
+            flash('success', 'Baris guru dan mata pelajaran berhasil dihapus dari format ceklis.');
+        }
+
+        Response::redirect(url('/preparation/submissions'));
+    }
+
+    public function printSubmissions(Request $request): void
+    {
+        $event = active_event();
+        if (!$event) {
+            die("Pilih kegiatan ujian aktif terlebih dahulu.");
+        }
+
+        $school = school_setting();
+        $matrixData = $this->buildSubmissionsMatrixData($event, $request);
+
+        // Fetch committee chair
+        $chair = Database::fetch("
+            SELECT cm.*, t.name as teacher_name, t.nip as teacher_nip
+            FROM committee_members cm
+            LEFT JOIN teachers t ON cm.teacher_id = t.id
+            JOIN committees c ON cm.committee_id = c.id
+            WHERE c.exam_event_id = ? AND (cm.role_title LIKE '%Ketua%' OR cm.role_title = 'Ketua Panitia')
+            ORDER BY cm.order_index ASC LIMIT 1
+        ", [$event['id']]);
+
+        View::render('preparation/print_submissions', [
+            'title' => 'Format Ceklis Dokumen Soal & Kisi-Kisi - ' . $event['name'],
+            'event' => $event,
+            'school' => $school,
+            'matrixData' => $matrixData,
+            'chair' => $chair
+        ], 'layouts/print');
+    }
+
+    public function exportSubmissionsMatrix(Request $request): void
+    {
+        $event = active_event();
+        if (!$event) {
+            die("Pilih kegiatan ujian aktif terlebih dahulu.");
+        }
+
+        $school = school_setting();
+        $matrixData = $this->buildSubmissionsMatrixData($event, $request);
+
+        $filename = 'Format_Ceklis_Dokumen_Soal_' . preg_replace('/[^a-zA-Z0-9_-]/', '_', $event['name']) . '_' . date('Ymd') . '.xls';
+
+        header('Content-Type: application/vnd.ms-excel; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+
+        echo '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">';
+        echo '<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8" />';
+        echo '<style>
+            table { border-collapse: collapse; width: 100%; font-family: Arial, sans-serif; font-size: 11pt; }
+            th, td { border: 1px solid #000000; padding: 6px 8px; text-align: center; }
+            th { background-color: #e2e8f0; font-weight: bold; }
+            .shaded { background-color: #94a3b8; }
+            .text-left { text-align: left; }
+            .title-box { text-align: center; margin-bottom: 20px; }
+            .title { font-size: 14pt; font-weight: bold; }
+            .subtitle { font-size: 11pt; }
+        </style></head><body>';
+
+        echo '<div class="title-box">';
+        echo '<div class="title">FORMAT CEKLIS PENERIMAAN DOKUMEN SOAL &amp; KISI-KISI</div>';
+        echo '<div class="subtitle">' . htmlspecialchars($school['name'], ENT_QUOTES) . ' - ' . htmlspecialchars($event['name'], ENT_QUOTES) . '</div>';
+        echo '</div>';
+
+        $grades = $matrixData['grades'];
+        $hasLisan = $matrixData['hasLisan'];
+        $kelasColspan = ($hasLisan ? count($grades) : 0) + (count($grades) * 2);
+
+        echo '<table>';
+        echo '<thead>';
+        // Header Row 1
+        echo '<tr>';
+        echo '<th rowspan="3" style="width: 40px;">NO</th>';
+        echo '<th rowspan="3" style="width: 260px;">NAMA PENDIDIK/GURU</th>';
+        echo '<th rowspan="3" style="width: 220px;">MATA PELAJARAN</th>';
+        echo '<th colspan="' . $kelasColspan . '">KELAS</th>';
+        echo '<th colspan="3">JUMLAH</th>';
+        echo '</tr>';
+
+        // Header Row 2
+        echo '<tr>';
+        if ($hasLisan) {
+            echo '<th colspan="' . count($grades) . '">LISAN</th>';
+        }
+        foreach ($grades as $g) {
+            echo '<th colspan="2">' . htmlspecialchars((string)$g, ENT_QUOTES) . '</th>';
+        }
+        echo '<th rowspan="2">LISAN</th>';
+        echo '<th colspan="2">TULIS</th>';
+        echo '</tr>';
+
+        // Header Row 3
+        echo '<tr>';
+        if ($hasLisan) {
+            foreach ($grades as $g) {
+                echo '<th>' . htmlspecialchars((string)$g, ENT_QUOTES) . '</th>';
+            }
+        }
+        foreach ($grades as $g) {
+            echo '<th>SOAL</th>';
+            echo '<th>KISI-KISI</th>';
+        }
+        echo '<th>SOAL</th>';
+        echo '<th>KISI-KISI</th>';
+        echo '</tr>';
+        echo '</thead><tbody>';
+
+        foreach ($matrixData['flatRows'] as $row) {
+            echo '<tr>';
+            echo '<td>' . $row['row_no'] . '</td>';
+            if ($row['is_first_subject']) {
+                echo '<td rowspan="' . $row['subject_count'] . '" class="text-left" style="font-weight: 600;">' . htmlspecialchars($row['teacher_name'], ENT_QUOTES) . '</td>';
+            }
+            echo '<td class="text-left">' . htmlspecialchars($row['subject_name'], ENT_QUOTES) . '</td>';
+
+            // Lisan cells
+            if ($hasLisan) {
+                foreach ($grades as $g) {
+                    $cell = $row['lisan_cells'][$g];
+                    if ($cell['shaded']) {
+                        echo '<td class="shaded">&nbsp;</td>';
+                    } else {
+                        echo '<td>' . ($cell['checked'] ? 'v' : '') . '</td>';
+                    }
+                }
+            }
+
+            // Tulis Soal & Kisi cells
+            foreach ($grades as $g) {
+                $cellSoal = $row['tulis_soal_cells'][$g];
+                if ($cellSoal['shaded']) {
+                    echo '<td class="shaded">&nbsp;</td>';
+                } else {
+                    echo '<td>' . ($cellSoal['checked'] ? 'v' : '') . '</td>';
+                }
+
+                $cellKisi = $row['tulis_kisi_cells'][$g];
+                if ($cellKisi['shaded']) {
+                    echo '<td class="shaded">&nbsp;</td>';
+                } else {
+                    echo '<td>' . ($cellKisi['checked'] ? 'v' : '') . '</td>';
+                }
+            }
+
+            // Totals
+            echo '<td>' . $row['row_totals']['lisan'] . '</td>';
+            echo '<td>' . $row['row_totals']['soal'] . '</td>';
+            echo '<td>' . $row['row_totals']['kisi'] . '</td>';
+            echo '</tr>';
+        }
+
+        // Footer Row
+        $colTotals = $matrixData['columnTotals'];
+        echo '<tfoot><tr>';
+        echo '<th colspan="3" style="text-align: right; padding-right: 15px;">JUMLAH</th>';
+        if ($hasLisan) {
+            foreach ($grades as $g) {
+                echo '<th>' . ($colTotals['lisan'][$g] ?? 0) . '</th>';
+            }
+        }
+        foreach ($grades as $g) {
+            echo '<th>' . ($colTotals['tulis_soal'][$g] ?? 0) . '</th>';
+            echo '<th>' . ($colTotals['tulis_kisi'][$g] ?? 0) . '</th>';
+        }
+        echo '<th>' . $colTotals['grand_lisan'] . '</th>';
+        echo '<th>' . $colTotals['grand_soal'] . '</th>';
+        echo '<th>' . $colTotals['grand_kisi'] . '</th>';
+        echo '</tr></tfoot>';
+
+        echo '</table></body></html>';
+        exit;
+    }
+
+    private function buildSubmissionsMatrixData(array $event, Request $request): array
+    {
+        $school = school_setting();
+
+        // 1. Resolve Distinct Grades
+        $submissionGrades = Database::fetchAll("
+            SELECT DISTINCT grade FROM exam_document_submissions 
+            WHERE exam_event_id = ? AND grade IS NOT NULL AND grade != ''
+        ", [$event['id']]);
+
+        $classGrades = Database::fetchAll("
+            SELECT DISTINCT grade FROM classes 
+            WHERE grade IS NOT NULL AND grade != ''
+        ");
+
+        $gradesMap = [];
+        foreach ($submissionGrades as $sg) {
+            if (!empty($sg['grade'])) $gradesMap[$sg['grade']] = true;
+        }
+        foreach ($classGrades as $cg) {
+            if (!empty($cg['grade'])) $gradesMap[$cg['grade']] = true;
+        }
+        $grades = array_keys($gradesMap);
+        if (empty($grades)) {
+            $grades = ['1', '2'];
+        } else {
+            natsort($grades);
+            $grades = array_values($grades);
+        }
+
+        // 2. Exam Types Filtering / Inclusions
+        $typeFilter = (string)$request->input('exam_type', 'all');
+        $showLisan = ($typeFilter === 'all' || $typeFilter === 'practical' || $typeFilter === 'lisan');
+        $showTulis = ($typeFilter === 'all' || $typeFilter === 'written' || $typeFilter === 'tulis');
+
+        // 3. Retrieve Teacher + Subject Pairs
+        $pairs = Database::fetchAll("
+            SELECT DISTINCT t.id as teacher_id, t.name as teacher_name, t.nip as teacher_nip,
+                            s.id as subject_id, s.name as subject_name, s.code as subject_code,
+                            s.grade as subject_grade, s.exam_type as subject_exam_type
+            FROM exam_document_submissions eds
+            JOIN teachers t ON eds.teacher_id = t.id
+            JOIN subjects s ON eds.subject_id = s.id
+            WHERE eds.exam_event_id = ?
+            ORDER BY t.name ASC, s.code ASC, s.name ASC
+        ", [$event['id']]);
+
+        if (empty($pairs)) {
+            // Fallback from schedules or all active teachers & subjects
+            $schedules = Database::fetchAll("
+                SELECT DISTINCT wes.teacher_id, t.name as teacher_name, t.nip as teacher_nip,
+                                wes.subject_id, s.name as subject_name, s.code as subject_code,
+                                s.grade as subject_grade, s.exam_type as subject_exam_type
+                FROM written_exam_schedules wes
+                JOIN teachers t ON wes.teacher_id = t.id
+                JOIN subjects s ON wes.subject_id = s.id
+                WHERE wes.exam_event_id = ?
+                ORDER BY t.name ASC, s.name ASC
+            ", [$event['id']]);
+
+            if (!empty($schedules)) {
+                $pairs = $schedules;
+            }
+        }
+
+        // 4. Load all Submissions into lookup map
+        $allSubs = Database::fetchAll("
+            SELECT * FROM exam_document_submissions 
+            WHERE exam_event_id = ?
+        ", [$event['id']]);
+
+        $subMap = [];
+        foreach ($allSubs as $s) {
+            $key = $s['teacher_id'] . '_' . $s['subject_id'] . '_' . $s['grade'] . '_' . $s['doc_type'];
+            $subMap[$key] = $s;
+        }
+
+        // 5. Group by Teacher
+        $teacherGroups = [];
+        foreach ($pairs as $p) {
+            $tId = (int)$p['teacher_id'];
+            if (!isset($teacherGroups[$tId])) {
+                $teacherGroups[$tId] = [
+                    'teacher_id' => $tId,
+                    'teacher_name' => $p['teacher_name'],
+                    'teacher_nip' => $p['teacher_nip'],
+                    'subjects' => []
+                ];
+            }
+            $teacherGroups[$tId]['subjects'][] = $p;
+        }
+
+        // 6. Build Flat Rows and Calculate Totals
+        $flatRows = [];
+        $rowNo = 1;
+
+        $colTotals = [
+            'lisan' => array_fill_keys($grades, 0),
+            'tulis_soal' => array_fill_keys($grades, 0),
+            'tulis_kisi' => array_fill_keys($grades, 0),
+            'grand_lisan' => 0,
+            'grand_soal' => 0,
+            'grand_kisi' => 0
+        ];
+
+        foreach ($teacherGroups as $group) {
+            $subjCount = count($group['subjects']);
+            foreach ($group['subjects'] as $sIndex => $subj) {
+                $tId = (int)$subj['teacher_id'];
+                $sId = (int)$subj['subject_id'];
+                $subjGrade = trim((string)($subj['subject_grade'] ?? 'Semua'));
+
+                $rowLisan = 0;
+                $rowSoal = 0;
+                $rowKisi = 0;
+
+                $lisanCells = [];
+                $tulisSoalCells = [];
+                $tulisKisiCells = [];
+
+                foreach ($grades as $g) {
+                    $isApplicable = ($subjGrade === 'Semua' || $subjGrade === 'all' || $subjGrade === '' || strcasecmp($subjGrade, (string)$g) === 0);
+
+                    // Lisan
+                    if ($showLisan) {
+                        if (!$isApplicable) {
+                            $lisanCells[$g] = [
+                                'applicable' => false,
+                                'shaded' => true,
+                                'checked' => false,
+                                'status' => 'not_applicable',
+                                'submission_id' => null
+                            ];
+                        } else {
+                            $keyLisan = "{$tId}_{$sId}_{$g}_lisan";
+                            $keyPraktik = "{$tId}_{$sId}_{$g}_praktik";
+                            $subRec = $subMap[$keyLisan] ?? ($subMap[$keyPraktik] ?? null);
+                            $isChecked = $subRec && in_array($subRec['status'], ['selesai', 'sudah_diserahkan']);
+                            if ($isChecked) {
+                                $rowLisan++;
+                                $colTotals['lisan'][$g]++;
+                            }
+                            $lisanCells[$g] = [
+                                'applicable' => true,
+                                'shaded' => false,
+                                'checked' => $isChecked,
+                                'status' => $subRec['status'] ?? 'belum_diserahkan',
+                                'submission_id' => $subRec['id'] ?? null
+                            ];
+                        }
+                    }
+
+                    // Tulis - Soal
+                    if ($showTulis) {
+                        if (!$isApplicable) {
+                            $tulisSoalCells[$g] = [
+                                'applicable' => false,
+                                'shaded' => true,
+                                'checked' => false,
+                                'status' => 'not_applicable',
+                                'submission_id' => null
+                            ];
+                        } else {
+                            $keySoal = "{$tId}_{$sId}_{$g}_naskah_soal";
+                            $subRec = $subMap[$keySoal] ?? null;
+                            $isChecked = $subRec && in_array($subRec['status'], ['selesai', 'sudah_diserahkan']);
+                            if ($isChecked) {
+                                $rowSoal++;
+                                $colTotals['tulis_soal'][$g]++;
+                            }
+                            $tulisSoalCells[$g] = [
+                                'applicable' => true,
+                                'shaded' => false,
+                                'checked' => $isChecked,
+                                'status' => $subRec['status'] ?? 'belum_diserahkan',
+                                'submission_id' => $subRec['id'] ?? null
+                            ];
+                        }
+
+                        // Tulis - Kisi-kisi
+                        if (!$isApplicable) {
+                            $tulisKisiCells[$g] = [
+                                'applicable' => false,
+                                'shaded' => true,
+                                'checked' => false,
+                                'status' => 'not_applicable',
+                                'submission_id' => null
+                            ];
+                        } else {
+                            $keyKisi = "{$tId}_{$sId}_{$g}_kisi_kisi";
+                            $subRec = $subMap[$keyKisi] ?? null;
+                            $isChecked = $subRec && in_array($subRec['status'], ['selesai', 'sudah_diserahkan']);
+                            if ($isChecked) {
+                                $rowKisi++;
+                                $colTotals['tulis_kisi'][$g]++;
+                            }
+                            $tulisKisiCells[$g] = [
+                                'applicable' => true,
+                                'shaded' => false,
+                                'checked' => $isChecked,
+                                'status' => $subRec['status'] ?? 'belum_diserahkan',
+                                'submission_id' => $subRec['id'] ?? null
+                            ];
+                        }
+                    }
+                }
+
+                $colTotals['grand_lisan'] += $rowLisan;
+                $colTotals['grand_soal'] += $rowSoal;
+                $colTotals['grand_kisi'] += $rowKisi;
+
+                $flatRows[] = [
+                    'row_no' => $rowNo++,
+                    'teacher_id' => $tId,
+                    'teacher_name' => $group['teacher_name'],
+                    'teacher_nip' => $group['teacher_nip'],
+                    'is_first_subject' => ($sIndex === 0),
+                    'subject_count' => $subjCount,
+                    'subject_id' => $sId,
+                    'subject_name' => $subj['subject_name'],
+                    'subject_code' => $subj['subject_code'],
+                    'subject_grade' => $subjGrade,
+                    'lisan_cells' => $lisanCells,
+                    'tulis_soal_cells' => $tulisSoalCells,
+                    'tulis_kisi_cells' => $tulisKisiCells,
+                    'row_totals' => [
+                        'lisan' => $rowLisan,
+                        'soal' => $rowSoal,
+                        'kisi' => $rowKisi
+                    ]
+                ];
+            }
+        }
+
+        return [
+            'event' => $event,
+            'school' => $school,
+            'grades' => $grades,
+            'hasLisan' => $showLisan,
+            'hasTulis' => $showTulis,
+            'flatRows' => $flatRows,
+            'teacherGroups' => $teacherGroups,
+            'columnTotals' => $colTotals
+        ];
     }
 
     public function storeSubmission(Request $request): void
@@ -198,7 +861,7 @@ class PreparationController
         $event = active_event();
         $teacherId = (int)$request->input('teacher_id');
         $subjectId = (int)$request->input('subject_id');
-        $grade = (string)$request->input('grade', 'VII');
+        $grade = (string)$request->input('grade', '1');
         $docType = (string)$request->input('doc_type', 'naskah_soal');
         $submissionDate = $request->input('submission_date') ?: date('Y-m-d');
         $status = (string)$request->input('status', 'belum_diserahkan');
@@ -242,7 +905,7 @@ class PreparationController
 
         Database::update('exam_document_submissions', $data, 'id = :where_id', ['where_id' => $id]);
         flash('success', 'Status checklist dokumen berhasil diperbarui.');
-        Response::redirect(url('/preparation/submissions'));
+        Response::redirect(url('/preparation/submissions?tab=details'));
     }
 
     public function updateSubmission(Request $request): void
@@ -255,7 +918,7 @@ class PreparationController
         $id = (int)$request->input('id');
         Database::delete('exam_document_submissions', 'id = ?', [$id]);
         flash('success', 'Catatan checklist dokumen berhasil dihapus.');
-        Response::redirect(url('/preparation/submissions'));
+        Response::redirect(url('/preparation/submissions?tab=details'));
     }
 
     // 3. Question Printing Records & Replication Preparation

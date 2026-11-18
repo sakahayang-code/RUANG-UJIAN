@@ -343,6 +343,12 @@ Router::get('/preparation/rules/print', [PreparationController::class, 'printRul
 Router::post('/preparation/rules/delete', [PreparationController::class, 'deleteRule'], ['auth', 'csrf']);
 
 Router::get('/preparation/submissions', [PreparationController::class, 'submissions'], ['auth']);
+Router::get('/preparation/submissions/print', [PreparationController::class, 'printSubmissions'], ['auth']);
+Router::get('/preparation/submissions/export', [PreparationController::class, 'exportSubmissionsMatrix'], ['auth']);
+Router::post('/preparation/submissions/toggle-check', [PreparationController::class, 'toggleCheck'], ['auth']);
+Router::post('/preparation/submissions/sync', [PreparationController::class, 'syncTeachersAndSubjects'], ['auth', 'csrf']);
+Router::post('/preparation/submissions/add-row', [PreparationController::class, 'addMatrixRow'], ['auth', 'csrf']);
+Router::post('/preparation/submissions/delete-row', [PreparationController::class, 'deleteMatrixRow'], ['auth', 'csrf']);
 Router::post('/preparation/submissions', [PreparationController::class, 'storeSubmission'], ['auth', 'csrf']);
 Router::post('/preparation/submissions/store', [PreparationController::class, 'storeSubmission'], ['auth', 'csrf']);
 Router::post('/preparation/submissions/update', [PreparationController::class, 'updateSubmissionStatus'], ['auth', 'csrf']);
