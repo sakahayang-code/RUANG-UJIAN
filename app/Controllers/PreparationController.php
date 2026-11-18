@@ -306,14 +306,24 @@ class PreparationController
             $gradeList = ['1', '2'];
         }
 
-        // Check if there are known teacher-subject pairings from existing submissions
+        // Check if there are known teacher-subject pairings from teacher_subjects or submissions
         $knownPairs = Database::fetchAll("
-            SELECT DISTINCT eds.teacher_id, eds.subject_id, s.grade as subject_grade, s.exam_type as subject_exam_type
-            FROM exam_document_submissions eds
-            JOIN teachers t ON eds.teacher_id = t.id
-            JOIN subjects s ON eds.subject_id = s.id
+            SELECT DISTINCT ts.teacher_id, ts.subject_id, s.grade as subject_grade, s.exam_type as subject_exam_type
+            FROM teacher_subjects ts
+            JOIN teachers t ON ts.teacher_id = t.id
+            JOIN subjects s ON ts.subject_id = s.id
             WHERE t.status = 'Aktif'
         ");
+
+        if (empty($knownPairs)) {
+            $knownPairs = Database::fetchAll("
+                SELECT DISTINCT eds.teacher_id, eds.subject_id, s.grade as subject_grade, s.exam_type as subject_exam_type
+                FROM exam_document_submissions eds
+                JOIN teachers t ON eds.teacher_id = t.id
+                JOIN subjects s ON eds.subject_id = s.id
+                WHERE t.status = 'Aktif'
+            ");
+        }
 
         $count = 0;
         if (!empty($knownPairs)) {
@@ -704,19 +714,35 @@ class PreparationController
         ", [$event['id']]);
 
         if (empty($pairs)) {
-            // Check if there are teacher-subject pairs from any prior event in the school
-            $previousPairs = Database::fetchAll("
+            // First check authoritative teacher-subject assignments from teacher_subjects table
+            $authoritativePairs = Database::fetchAll("
                 SELECT DISTINCT t.id as teacher_id, t.name as teacher_name, t.nip as teacher_nip,
                                 s.id as subject_id, s.name as subject_name, s.code as subject_code,
                                 s.grade as subject_grade, s.exam_type as subject_exam_type
-                FROM exam_document_submissions eds
-                JOIN teachers t ON eds.teacher_id = t.id
-                JOIN subjects s ON eds.subject_id = s.id
+                FROM teacher_subjects ts
+                JOIN teachers t ON ts.teacher_id = t.id
+                JOIN subjects s ON ts.subject_id = s.id
+                WHERE t.status = 'Aktif'
                 ORDER BY t.name ASC, s.code ASC, s.name ASC
             ");
 
-            if (!empty($previousPairs)) {
-                $pairs = $previousPairs;
+            if (!empty($authoritativePairs)) {
+                $pairs = $authoritativePairs;
+            } else {
+                // Check if there are teacher-subject pairs from any prior event in the school
+                $previousPairs = Database::fetchAll("
+                    SELECT DISTINCT t.id as teacher_id, t.name as teacher_name, t.nip as teacher_nip,
+                                    s.id as subject_id, s.name as subject_name, s.code as subject_code,
+                                    s.grade as subject_grade, s.exam_type as subject_exam_type
+                    FROM exam_document_submissions eds
+                    JOIN teachers t ON eds.teacher_id = t.id
+                    JOIN subjects s ON eds.subject_id = s.id
+                    ORDER BY t.name ASC, s.code ASC, s.name ASC
+                ");
+
+                if (!empty($previousPairs)) {
+                    $pairs = $previousPairs;
+                }
             }
         }
 
