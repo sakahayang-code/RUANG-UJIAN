@@ -52,8 +52,11 @@ $allEvents = \App\Core\Database::fetchAll("SELECT * FROM exam_events ORDER BY id
             <div class="brand-icon">
                 <img src="<?= asset('images/icons/icon.svg') ?>" alt="Logo RUANG UJIAN" style="width: 38px; height: 38px; object-fit: contain; border-radius: 10px;">
             </div>
-            <div>
-                <div class="brand-title">RUANG UJIAN</div>
+            <div style="flex-grow: 1;">
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
+                    <span class="brand-title">RUANG UJIAN</span>
+                    <span class="badge-saas-pro">PRO</span>
+                </div>
                 <div class="brand-sub">Sistem Administrasi</div>
             </div>
         </div>
@@ -199,8 +202,25 @@ $allEvents = \App\Core\Database::fetchAll("SELECT * FROM exam_events ORDER BY id
             </a>
             <?php endif; ?>
 
-            <div style="height: 40px;"></div>
+            <div style="height: 20px;"></div>
         </nav>
+
+        <!-- Sidebar User Profile Footer Card -->
+        <div class="sidebar-user-footer">
+            <div class="sidebar-user-card">
+                <div class="sidebar-user-avatar">
+                    <?= strtoupper(substr($currentUser['full_name'] ?? 'U', 0, 1)) ?>
+                    <span class="user-status-dot" title="Online"></span>
+                </div>
+                <div class="sidebar-user-details">
+                    <div class="sidebar-user-name" title="<?= e($currentUser['full_name'] ?? 'Pengguna') ?>"><?= e($currentUser['full_name'] ?? 'Pengguna') ?></div>
+                    <div class="sidebar-user-role"><?= e($currentUser['role_display'] ?? $currentUser['role'] ?? 'User') ?></div>
+                </div>
+                <a href="<?= url('/logout') ?>" class="sidebar-user-logout" title="Keluar / Logout">
+                    🚪
+                </a>
+            </div>
+        </div>
     </aside>
 
     <!-- Main Container -->
@@ -225,9 +245,18 @@ $allEvents = \App\Core\Database::fetchAll("SELECT * FROM exam_events ORDER BY id
                         <?php endif; ?>
                     </select>
                 </div>
+                <div class="topbar-status-chip">
+                    <span class="pulse-indicator"></span>
+                    <span>Sistem Siap</span>
+                </div>
             </div>
 
             <div class="topbar-right">
+                <div class="topbar-date-pill">
+                    <span>🗓️</span>
+                    <span><?= format_date_id(date('Y-m-d')) ?></span>
+                </div>
+
                 <div class="user-badge">
                     <div class="user-avatar"><?= strtoupper(substr($currentUser['full_name'] ?? 'U', 0, 1)) ?></div>
                     <div class="user-info">
