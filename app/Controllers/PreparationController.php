@@ -306,41 +306,87 @@ class PreparationController
             $gradeList = ['1', '2'];
         }
 
-        $teachers = Database::fetchAll("SELECT * FROM teachers WHERE status = 'Aktif' ORDER BY name ASC");
-        $subjects = Database::fetchAll("SELECT * FROM subjects ORDER BY code ASC");
+        // Check if there are known teacher-subject pairings from existing submissions
+        $knownPairs = Database::fetchAll("
+            SELECT DISTINCT eds.teacher_id, eds.subject_id, s.grade as subject_grade, s.exam_type as subject_exam_type
+            FROM exam_document_submissions eds
+            JOIN teachers t ON eds.teacher_id = t.id
+            JOIN subjects s ON eds.subject_id = s.id
+            WHERE t.status = 'Aktif'
+        ");
 
         $count = 0;
-        foreach ($teachers as $t) {
-            foreach ($subjects as $s) {
-                $subjGrade = trim((string)($s['grade'] ?? 'Semua'));
+        if (!empty($knownPairs)) {
+            foreach ($knownPairs as $pair) {
+                $tId = (int)$pair['teacher_id'];
+                $sId = (int)$pair['subject_id'];
+                $subjGrade = trim((string)($pair['subject_grade'] ?? 'Semua'));
 
                 foreach ($gradeList as $g) {
                     $isApplicable = ($subjGrade === 'Semua' || $subjGrade === 'all' || $subjGrade === '' || strcasecmp($subjGrade, (string)$g) === 0);
                     if (!$isApplicable) continue;
 
-                    // Ensure Soal & Kisi-Kisi
                     $types = ['naskah_soal', 'kisi_kisi'];
-                    if (in_array($s['exam_type'], ['practical', 'both'])) {
+                    if (in_array($pair['subject_exam_type'], ['practical', 'both'])) {
                         $types[] = 'lisan';
                     }
 
                     foreach ($types as $docType) {
                         $exists = Database::fetchColumn(
                             "SELECT COUNT(*) FROM exam_document_submissions WHERE exam_event_id = ? AND teacher_id = ? AND subject_id = ? AND grade = ? AND doc_type = ?",
-                            [$event['id'], $t['id'], $s['id'], $g, $docType]
+                            [$event['id'], $tId, $sId, $g, $docType]
                         );
 
                         if (!$exists) {
                             Database::insert('exam_document_submissions', [
                                 'exam_event_id' => $event['id'],
-                                'teacher_id' => $t['id'],
-                                'subject_id' => $s['id'],
+                                'teacher_id' => $tId,
+                                'subject_id' => $sId,
                                 'grade' => $g,
                                 'doc_type' => $docType,
                                 'status' => 'belum_diserahkan',
                                 'created_at' => date('Y-m-d H:i:s')
                             ]);
                             $count++;
+                        }
+                    }
+                }
+            }
+        } else {
+            $teachers = Database::fetchAll("SELECT * FROM teachers WHERE status = 'Aktif' ORDER BY name ASC");
+            $subjects = Database::fetchAll("SELECT * FROM subjects ORDER BY code ASC");
+
+            foreach ($teachers as $t) {
+                foreach ($subjects as $s) {
+                    $subjGrade = trim((string)($s['grade'] ?? 'Semua'));
+
+                    foreach ($gradeList as $g) {
+                        $isApplicable = ($subjGrade === 'Semua' || $subjGrade === 'all' || $subjGrade === '' || strcasecmp($subjGrade, (string)$g) === 0);
+                        if (!$isApplicable) continue;
+
+                        $types = ['naskah_soal', 'kisi_kisi'];
+                        if (in_array($s['exam_type'], ['practical', 'both'])) {
+                            $types[] = 'lisan';
+                        }
+
+                        foreach ($types as $docType) {
+                            $exists = Database::fetchColumn(
+                                "SELECT COUNT(*) FROM exam_document_submissions WHERE exam_event_id = ? AND teacher_id = ? AND subject_id = ? AND grade = ? AND doc_type = ?",
+                                [$event['id'], $t['id'], $s['id'], $g, $docType]
+                            );
+
+                            if (!$exists) {
+                                Database::insert('exam_document_submissions', [
+                                    'exam_event_id' => $event['id'],
+                                    'teacher_id' => $t['id'],
+                                    'subject_id' => $s['id'],
+                                    'grade' => $g,
+                                    'doc_type' => $docType,
+                                    'status' => 'belum_diserahkan',
+                                    'created_at' => date('Y-m-d H:i:s')
+                                ]);
+                                $count++;
+                            }
                         }
                     }
                 }
@@ -658,20 +704,19 @@ class PreparationController
         ", [$event['id']]);
 
         if (empty($pairs)) {
-            // Fallback from schedules or all active teachers & subjects
-            $schedules = Database::fetchAll("
-                SELECT DISTINCT wes.teacher_id, t.name as teacher_name, t.nip as teacher_nip,
-                                wes.subject_id, s.name as subject_name, s.code as subject_code,
+            // Check if there are teacher-subject pairs from any prior event in the school
+            $previousPairs = Database::fetchAll("
+                SELECT DISTINCT t.id as teacher_id, t.name as teacher_name, t.nip as teacher_nip,
+                                s.id as subject_id, s.name as subject_name, s.code as subject_code,
                                 s.grade as subject_grade, s.exam_type as subject_exam_type
-                FROM written_exam_schedules wes
-                JOIN teachers t ON wes.teacher_id = t.id
-                JOIN subjects s ON wes.subject_id = s.id
-                WHERE wes.exam_event_id = ?
-                ORDER BY t.name ASC, s.name ASC
-            ", [$event['id']]);
+                FROM exam_document_submissions eds
+                JOIN teachers t ON eds.teacher_id = t.id
+                JOIN subjects s ON eds.subject_id = s.id
+                ORDER BY t.name ASC, s.code ASC, s.name ASC
+            ");
 
-            if (!empty($schedules)) {
-                $pairs = $schedules;
+            if (!empty($previousPairs)) {
+                $pairs = $previousPairs;
             }
         }
 
