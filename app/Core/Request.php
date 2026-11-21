@@ -17,10 +17,10 @@ class Request
         $this->files = $_FILES;
         $this->server = $_SERVER;
 
-        $contentType = $this->server['CONTENT_TYPE'] ?? '';
-        if (str_contains($contentType, 'application/json')) {
-            $input = file_get_contents('php://input');
-            $this->json = json_decode($input, true) ?? [];
+        $contentType = $this->server['CONTENT_TYPE'] ?? ($this->server['HTTP_CONTENT_TYPE'] ?? '');
+        $rawInput = file_get_contents('php://input');
+        if (str_contains(strtolower($contentType), 'application/json') || (!empty($rawInput) && in_array(trim($rawInput)[0] ?? '', ['{', '['], true))) {
+            $this->json = json_decode($rawInput, true) ?? [];
         }
     }
 

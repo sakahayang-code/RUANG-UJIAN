@@ -219,6 +219,8 @@ class PreparationController
         // Normalize docType
         if ($docType === 'soal') {
             $docType = 'naskah_soal';
+        } elseif ($docType === 'kisi') {
+            $docType = 'kisi_kisi';
         }
 
         if (!$teacherId || !$subjectId || empty($grade) || empty($docType)) {
@@ -288,6 +290,109 @@ class PreparationController
         }
 
         flash('success', 'Status checklist dokumen berhasil diperbarui.');
+        Response::redirect(url('/preparation/submissions'));
+    }
+
+    public function batchCheck(Request $request): void
+    {
+        $event = active_event();
+        if (!$event) {
+            if ($request->isAjax()) {
+                Response::json(['success' => false, 'message' => 'Kegiatan ujian tidak aktif.'], 400);
+            }
+            Response::redirect(url('/events'));
+        }
+
+        $action = trim((string)$request->input('action', ''));
+        // Actions: 'check_all_soal', 'check_all_kisi', 'check_all_lisan', 'check_all_all', 'clear_all'
+        
+        $matrixData = $this->buildSubmissionsMatrixData($event, $request);
+        $grades = $matrixData['grades'];
+        $flatRows = $matrixData['flatRows'];
+
+        $updatedCount = 0;
+
+        if ($action === 'clear_all') {
+            Database::update('exam_document_submissions', [
+                'status' => 'belum_diserahkan',
+                'submission_date' => null,
+                'updated_at' => date('Y-m-d H:i:s')
+            ], 'exam_event_id = :event_id', ['event_id' => $event['id']]);
+
+            $message = 'Semua ceklis berhasil dikosongkan.';
+        } else {
+            foreach ($flatRows as $row) {
+                $tId = (int)$row['teacher_id'];
+                $sId = (int)$row['subject_id'];
+                $subjGrade = trim((string)($row['subject_grade'] ?? 'Semua'));
+                $subjExamType = $row['subject_exam_type'] ?? 'written';
+
+                foreach ($grades as $g) {
+                    $isApplicable = ($subjGrade === 'Semua' || $subjGrade === 'all' || $subjGrade === '' || strcasecmp($subjGrade, (string)$g) === 0);
+                    if (!$isApplicable) continue;
+
+                    $targetDocTypes = [];
+                    if ($action === 'check_all_soal' || $action === 'check_all_all') {
+                        $targetDocTypes[] = 'naskah_soal';
+                    }
+                    if ($action === 'check_all_kisi' || $action === 'check_all_all') {
+                        $targetDocTypes[] = 'kisi_kisi';
+                    }
+                    if (($action === 'check_all_lisan' || $action === 'check_all_all') && in_array($subjExamType, ['practical', 'both'])) {
+                        $targetDocTypes[] = 'lisan';
+                    }
+
+                    foreach ($targetDocTypes as $docType) {
+                        $existing = Database::fetch(
+                            "SELECT id FROM exam_document_submissions WHERE exam_event_id = ? AND teacher_id = ? AND subject_id = ? AND grade = ? AND doc_type = ?",
+                            [$event['id'], $tId, $sId, $g, $docType]
+                        );
+
+                        if ($existing) {
+                            Database::update('exam_document_submissions', [
+                                'status' => 'selesai',
+                                'submission_date' => date('Y-m-d'),
+                                'reviewer_id' => Auth::id(),
+                                'reviewed_at' => date('Y-m-d H:i:s'),
+                                'updated_at' => date('Y-m-d H:i:s')
+                            ], 'id = :id', ['id' => $existing['id']]);
+                        } else {
+                            Database::insert('exam_document_submissions', [
+                                'exam_event_id' => $event['id'],
+                                'teacher_id' => $tId,
+                                'subject_id' => $sId,
+                                'grade' => $g,
+                                'doc_type' => $docType,
+                                'submission_date' => date('Y-m-d'),
+                                'status' => 'selesai',
+                                'reviewer_id' => Auth::id(),
+                                'reviewed_at' => date('Y-m-d H:i:s'),
+                                'created_at' => date('Y-m-d H:i:s')
+                            ]);
+                        }
+                        $updatedCount++;
+                    }
+                }
+            }
+
+            $actionLabels = [
+                'check_all_soal' => 'Semua naskah soal berhasil diceklis (✓)',
+                'check_all_kisi' => 'Semua kisi-kisi soal berhasil diceklis (✓)',
+                'check_all_lisan' => 'Semua instrumen lisan berhasil diceklis (✓)',
+                'check_all_all' => 'Semua checklist dokumen berhasil diceklis lengkap (✓)',
+            ];
+            $message = $actionLabels[$action] ?? "Checklist berhasil diperbarui ({$updatedCount} entri).";
+        }
+
+        if ($request->isAjax() || $request->input('format') === 'json') {
+            Response::json([
+                'success' => true,
+                'message' => $message,
+                'count' => $updatedCount
+            ]);
+        }
+
+        flash('success', $message);
         Response::redirect(url('/preparation/submissions'));
     }
 
@@ -429,6 +534,16 @@ class PreparationController
             Response::back();
         }
 
+        // Also persist to teacher_subjects pivot table so relationship is preserved across all menus
+        $existsTS = Database::fetchColumn("SELECT COUNT(*) FROM teacher_subjects WHERE teacher_id = ? AND subject_id = ?", [$teacherId, $subjectId]);
+        if (!$existsTS) {
+            Database::insert('teacher_subjects', [
+                'teacher_id' => $teacherId,
+                'subject_id' => $subjectId,
+                'created_at' => date('Y-m-d H:i:s')
+            ]);
+        }
+
         // Get grades
         $grades = Database::fetchAll("SELECT DISTINCT grade FROM classes WHERE grade IS NOT NULL AND grade != '' ORDER BY grade ASC");
         $gradeList = array_column($grades, 'grade');
@@ -487,6 +602,11 @@ class PreparationController
                 'exam_event_id = ? AND teacher_id = ? AND subject_id = ?',
                 [$event['id'], $teacherId, $subjectId]
             );
+            Database::delete(
+                'teacher_subjects',
+                'teacher_id = ? AND subject_id = ?',
+                [$teacherId, $subjectId]
+            );
             flash('success', 'Baris guru dan mata pelajaran berhasil dihapus dari format ceklis.');
         }
 
@@ -500,6 +620,7 @@ class PreparationController
             die("Pilih kegiatan ujian aktif terlebih dahulu.");
         }
 
+        $mode = (string)$request->input('mode', 'filled');
         $school = school_setting();
         $matrixData = $this->buildSubmissionsMatrixData($event, $request);
 
@@ -518,7 +639,8 @@ class PreparationController
             'event' => $event,
             'school' => $school,
             'matrixData' => $matrixData,
-            'chair' => $chair
+            'chair' => $chair,
+            'mode' => $mode
         ], 'layouts/print');
     }
 
@@ -701,48 +823,36 @@ class PreparationController
         $showLisan = ($typeFilter === 'all' || $typeFilter === 'practical' || $typeFilter === 'lisan');
         $showTulis = ($typeFilter === 'all' || $typeFilter === 'written' || $typeFilter === 'tulis');
 
-        // 3. Retrieve Teacher + Subject Pairs
+        // 3. Retrieve Teacher + Subject Pairs (Union of this event submissions and active teacher-subject assignments)
         $pairs = Database::fetchAll("
             SELECT DISTINCT t.id as teacher_id, t.name as teacher_name, t.nip as teacher_nip,
                             s.id as subject_id, s.name as subject_name, s.code as subject_code,
                             s.grade as subject_grade, s.exam_type as subject_exam_type
-            FROM exam_document_submissions eds
-            JOIN teachers t ON eds.teacher_id = t.id
-            JOIN subjects s ON eds.subject_id = s.id
-            WHERE eds.exam_event_id = ?
+            FROM (
+                SELECT teacher_id, subject_id FROM exam_document_submissions WHERE exam_event_id = ?
+                UNION
+                SELECT ts.teacher_id, ts.subject_id FROM teacher_subjects ts 
+                JOIN teachers t2 ON ts.teacher_id = t2.id WHERE t2.status = 'Aktif'
+            ) combined
+            JOIN teachers t ON combined.teacher_id = t.id
+            JOIN subjects s ON combined.subject_id = s.id
             ORDER BY t.name ASC, s.code ASC, s.name ASC
         ", [$event['id']]);
 
         if (empty($pairs)) {
-            // First check authoritative teacher-subject assignments from teacher_subjects table
-            $authoritativePairs = Database::fetchAll("
+            // Check if there are teacher-subject pairs from any prior event in the school
+            $previousPairs = Database::fetchAll("
                 SELECT DISTINCT t.id as teacher_id, t.name as teacher_name, t.nip as teacher_nip,
                                 s.id as subject_id, s.name as subject_name, s.code as subject_code,
                                 s.grade as subject_grade, s.exam_type as subject_exam_type
-                FROM teacher_subjects ts
-                JOIN teachers t ON ts.teacher_id = t.id
-                JOIN subjects s ON ts.subject_id = s.id
-                WHERE t.status = 'Aktif'
+                FROM exam_document_submissions eds
+                JOIN teachers t ON eds.teacher_id = t.id
+                JOIN subjects s ON eds.subject_id = s.id
                 ORDER BY t.name ASC, s.code ASC, s.name ASC
             ");
 
-            if (!empty($authoritativePairs)) {
-                $pairs = $authoritativePairs;
-            } else {
-                // Check if there are teacher-subject pairs from any prior event in the school
-                $previousPairs = Database::fetchAll("
-                    SELECT DISTINCT t.id as teacher_id, t.name as teacher_name, t.nip as teacher_nip,
-                                    s.id as subject_id, s.name as subject_name, s.code as subject_code,
-                                    s.grade as subject_grade, s.exam_type as subject_exam_type
-                    FROM exam_document_submissions eds
-                    JOIN teachers t ON eds.teacher_id = t.id
-                    JOIN subjects s ON eds.subject_id = s.id
-                    ORDER BY t.name ASC, s.code ASC, s.name ASC
-                ");
-
-                if (!empty($previousPairs)) {
-                    $pairs = $previousPairs;
-                }
+            if (!empty($previousPairs)) {
+                $pairs = $previousPairs;
             }
         }
 

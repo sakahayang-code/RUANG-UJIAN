@@ -346,6 +346,7 @@ Router::get('/preparation/submissions', [PreparationController::class, 'submissi
 Router::get('/preparation/submissions/print', [PreparationController::class, 'printSubmissions'], ['auth']);
 Router::get('/preparation/submissions/export', [PreparationController::class, 'exportSubmissionsMatrix'], ['auth']);
 Router::post('/preparation/submissions/toggle-check', [PreparationController::class, 'toggleCheck'], ['auth']);
+Router::post('/preparation/submissions/batch-check', [PreparationController::class, 'batchCheck'], ['auth']);
 Router::post('/preparation/submissions/sync', [PreparationController::class, 'syncTeachersAndSubjects'], ['auth', 'csrf']);
 Router::post('/preparation/submissions/add-row', [PreparationController::class, 'addMatrixRow'], ['auth', 'csrf']);
 Router::post('/preparation/submissions/delete-row', [PreparationController::class, 'deleteMatrixRow'], ['auth', 'csrf']);

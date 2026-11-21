@@ -35,6 +35,7 @@ $routes = [
     '/preparation/submissions/print' => 'printSubmissions',
     '/preparation/submissions/export' => 'exportSubmissionsMatrix',
     '/preparation/submissions/toggle-check' => 'toggleCheck',
+    '/preparation/submissions/batch-check' => 'batchCheck',
     '/preparation/submissions/sync' => 'syncTeachersAndSubjects',
     '/preparation/submissions/add-row' => 'addMatrixRow',
     '/preparation/submissions/delete-row' => 'deleteMatrixRow'
@@ -91,7 +92,12 @@ $submMustHave = [
     'table-matrix-checklist' => 'Tabel Matriks Ceklis',
     'cell-shaded' => 'Pewarnaan Sel Abu-Abu (Tidak Diajarkan)',
     'cell-matrix-interactive' => 'Interaktivitas Sel Centang 1-Klik',
+    'matrix-cell-control' => 'Kotak Isian Interaktif Sel Matriks',
     'toggleMatrixCell' => 'Fungsi AJAX Toggle Checkmark',
+    'runBatchCheck' => 'Fungsi Isian Cepat / Batch Actions',
+    'inline-add-row' => 'Baris Tambah Cepat Guru & Mapel Langsung di Tabel',
+    'Centang Semua Soal' => 'Tombol Pengisian Cepat Soal',
+    'Centang Semua Kisi-Kisi' => 'Tombol Pengisian Cepat Kisi-Kisi',
     'addMatrixRowModal' => 'Modal Tambah Guru & Mapel ke Ceklis',
     'syncConfirmModal' => 'Modal Konfirmasi Sinkronkan Semua Guru & Mapel',
     'row-total-soal' => 'Total Naskah Soal per Baris',
@@ -120,7 +126,9 @@ $printMustHave = [
     'matrix-print-table' => 'Tabel Matriks Cetak Hitam-Putih Crisp',
     'cell-shaded' => 'Shading Abu-Abu pada Cetak',
     'principal_name' => 'Tanda Tangan Kepala Sekolah',
-    'committee_signature_url' => 'Tanda Tangan Digital Ketua Panitia'
+    'committee_signature_url' => 'Tanda Tangan Digital Ketua Panitia',
+    'mode=blank' => 'Dukungan Cetak Format Kosong Manual',
+    'print-toolbar' => 'Toolbar Cetak'
 ];
 
 foreach ($printMustHave as $needle => $desc) {

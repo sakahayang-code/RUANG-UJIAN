@@ -98,7 +98,7 @@ $totalLisanChecked = $colTotals['grand_lisan'];
     <!-- TAB 1: FORMAT REKAP MATRIKS SESUAI GAMBAR RESMI -->
 
     <!-- Filter & Guidance Bar -->
-    <div class="card p-3 mb-3" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+    <div class="card p-3 mb-2" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
             <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
                 <span style="font-size: 13px; font-weight: 600; color: #334155;">Filter Jenis Ujian:</span>
@@ -115,18 +115,50 @@ $totalLisanChecked = $colTotals['grand_lisan'];
 
             <!-- Legend info -->
             <div style="display: flex; align-items: center; gap: 16px; font-size: 12px; color: #475569;">
-                <span style="display: inline-flex; align-items: center; gap: 5px;">
-                    <span style="display: inline-block; width: 18px; height: 18px; background: #ffffff; border: 1px solid #94a3b8; text-align: center; line-height: 18px; font-weight: bold; color: #0284c7;">v</span>
-                    Terkumpul / Selesai
+                <span style="display: inline-flex; align-items: center; gap: 6px;">
+                    <span class="matrix-cell-control is-checked" style="width: 20px; height: 20px; font-size: 12px; pointer-events: none;"><span class="matrix-check-symbol">v</span></span>
+                    Terkumpul / Selesai (v)
                 </span>
-                <span style="display: inline-flex; align-items: center; gap: 5px;">
-                    <span style="display: inline-block; width: 18px; height: 18px; background: #ffffff; border: 1px solid #cbd5e1;"></span>
-                    Belum Diserahkan (Klik untuk centang)
+                <span style="display: inline-flex; align-items: center; gap: 6px;">
+                    <span class="matrix-cell-control" style="width: 20px; height: 20px; pointer-events: none;"></span>
+                    Belum Terisi (Klik kotak untuk mengisi)
                 </span>
-                <span style="display: inline-flex; align-items: center; gap: 5px;">
-                    <span style="display: inline-block; width: 18px; height: 18px; background: #cbd5e1; border: 1px solid #94a3b8;"></span>
-                    Tidak Diajarkan di Kelas Tersebut
+                <span style="display: inline-flex; align-items: center; gap: 6px;">
+                    <span style="display: inline-block; width: 20px; height: 20px; background: #cbd5e1; border: 1px solid #94a3b8; border-radius: 4px;"></span>
+                    Tidak Diajarkan di Kelas Ini
                 </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Fill (Isian Cepat / Batch Actions) Toolbar -->
+    <div class="card p-3 mb-3" style="background: linear-gradient(135deg, #f8fafc 0%, #edf2f7 100%); border: 1px solid #cbd5e1; border-radius: 8px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <span style="font-size: 13px; font-weight: 700; color: #0f172a; display: inline-flex; align-items: center; gap: 5px;">
+                    ⚡ Pengisian Cepat:
+                </span>
+                <button type="button" class="btn btn-sm btn-outline" style="background: #ffffff; font-weight: 700; font-size: 12px; border-color: #059669; color: #059669;" onclick="runBatchCheck('check_all_soal')" title="Beri centang v untuk seluruh naskah soal yang ada">
+                    ✓ Centang Semua Soal
+                </button>
+                <button type="button" class="btn btn-sm btn-outline" style="background: #ffffff; font-weight: 700; font-size: 12px; border-color: #0284c7; color: #0284c7;" onclick="runBatchCheck('check_all_kisi')" title="Beri centang v untuk seluruh kisi-kisi soal yang ada">
+                    ✓ Centang Semua Kisi-Kisi
+                </button>
+                <?php if ($hasLisan): ?>
+                <button type="button" class="btn btn-sm btn-outline" style="background: #ffffff; font-weight: 700; font-size: 12px; border-color: #7c3aed; color: #7c3aed;" onclick="runBatchCheck('check_all_lisan')" title="Beri centang v untuk seluruh ujian lisan/praktik">
+                    ✓ Centang Semua Lisan
+                </button>
+                <?php endif; ?>
+                <button type="button" class="btn btn-sm btn-success" style="font-weight: 700; font-size: 12px;" onclick="runBatchCheck('check_all_all')" title="Centang seluruh naskah soal dan kisi-kisi">
+                    ✓ Centang Semua (Lengkap)
+                </button>
+                <button type="button" class="btn btn-sm btn-outline" style="background: #ffffff; font-weight: 700; font-size: 12px; border-color: #ef4444; color: #ef4444;" onclick="runBatchCheck('clear_all')" title="Kosongkan seluruh tanda centang pada tabel">
+                    ✕ Kosongkan Semua Ceklis
+                </button>
+            </div>
+            
+            <div style="font-size: 12px; color: #475569; font-weight: 600;">
+                💡 <em>Klik langsung pada kotak cell di bawah untuk mengisi tanda ceklis (v).</em>
             </div>
         </div>
     </div>
@@ -177,7 +209,7 @@ $totalLisanChecked = $colTotals['grand_lisan'];
                             <td colspan="<?= 3 + $kelasColspan + 3 + 1 ?>" style="text-align: center; padding: 40px; color: #94a3b8;">
                                 <div style="font-size: 32px; margin-bottom: 8px;">📋</div>
                                 <div style="font-size: 15px; font-weight: 600; color: #475569;">Belum ada entri guru dan mata pelajaran pada checklist kegiatan ini.</div>
-                                <div style="font-size: 13px; color: #64748b; margin-top: 6px;">Klik tombol "Sinkronkan Semua" atau "Tambah Guru &amp; Mapel" di kanan atas untuk memuat matriks secara otomatis.</div>
+                                <div style="font-size: 13px; color: #64748b; margin-top: 6px;">Gunakan baris input di bawah atau tombol "Tambah Guru &amp; Mapel" di atas untuk memuat matriks.</div>
                             </td>
                         </tr>
                     <?php else: ?>
@@ -215,9 +247,11 @@ $totalLisanChecked = $colTotals['grand_lisan'];
                                                 data-doc-type="lisan"
                                                 data-col-type="lisan"
                                                 data-row-id="<?= $row['row_no'] ?>"
-                                                title="Klik untuk ubah: <?= e($row['teacher_name']) ?> - <?= e($row['subject_name']) ?> (Lisan Kelas <?= e($g) ?>)"
-                                                onclick="toggleMatrixCell(this)">
-                                                <span class="matrix-check" style="<?= $cell['checked'] ? '' : 'display: none;' ?>">v</span>
+                                                title="Klik untuk mengisi/mengosongkan: <?= e($row['teacher_name']) ?> - <?= e($row['subject_name']) ?> (Lisan Kelas <?= e($g) ?>)"
+                                                onclick="toggleMatrixCell(this, event)">
+                                                <div class="matrix-cell-control <?= $cell['checked'] ? 'is-checked' : '' ?>" tabindex="0" role="checkbox" aria-checked="<?= $cell['checked'] ? 'true' : 'false' ?>" onkeydown="handleCellKeydown(this, event)">
+                                                    <span class="matrix-check-symbol"><?= $cell['checked'] ? 'v' : '' ?></span>
+                                                </div>
                                             </td>
                                         <?php endif; ?>
                                     <?php endforeach; ?>
@@ -236,9 +270,11 @@ $totalLisanChecked = $colTotals['grand_lisan'];
                                             data-doc-type="naskah_soal"
                                             data-col-type="soal"
                                             data-row-id="<?= $row['row_no'] ?>"
-                                            title="Klik untuk ubah: <?= e($row['teacher_name']) ?> - <?= e($row['subject_name']) ?> (Soal Kelas <?= e($g) ?>)"
-                                            onclick="toggleMatrixCell(this)">
-                                            <span class="matrix-check" style="<?= $cSoal['checked'] ? '' : 'display: none;' ?>">v</span>
+                                            title="Klik untuk mengisi/mengosongkan: <?= e($row['teacher_name']) ?> - <?= e($row['subject_name']) ?> (Soal Kelas <?= e($g) ?>)"
+                                            onclick="toggleMatrixCell(this, event)">
+                                            <div class="matrix-cell-control <?= $cSoal['checked'] ? 'is-checked' : '' ?>" tabindex="0" role="checkbox" aria-checked="<?= $cSoal['checked'] ? 'true' : 'false' ?>" onkeydown="handleCellKeydown(this, event)">
+                                                <span class="matrix-check-symbol"><?= $cSoal['checked'] ? 'v' : '' ?></span>
+                                            </div>
                                         </td>
                                     <?php endif; ?>
 
@@ -253,9 +289,11 @@ $totalLisanChecked = $colTotals['grand_lisan'];
                                             data-doc-type="kisi_kisi"
                                             data-col-type="kisi"
                                             data-row-id="<?= $row['row_no'] ?>"
-                                            title="Klik untuk ubah: <?= e($row['teacher_name']) ?> - <?= e($row['subject_name']) ?> (Kisi-kisi Kelas <?= e($g) ?>)"
-                                            onclick="toggleMatrixCell(this)">
-                                            <span class="matrix-check" style="<?= $cKisi['checked'] ? '' : 'display: none;' ?>">v</span>
+                                            title="Klik untuk mengisi/mengosongkan: <?= e($row['teacher_name']) ?> - <?= e($row['subject_name']) ?> (Kisi-kisi Kelas <?= e($g) ?>)"
+                                            onclick="toggleMatrixCell(this, event)">
+                                            <div class="matrix-cell-control <?= $cKisi['checked'] ? 'is-checked' : '' ?>" tabindex="0" role="checkbox" aria-checked="<?= $cKisi['checked'] ? 'true' : 'false' ?>" onkeydown="handleCellKeydown(this, event)">
+                                                <span class="matrix-check-symbol"><?= $cKisi['checked'] ? 'v' : '' ?></span>
+                                            </div>
                                         </td>
                                     <?php endif; ?>
                                 <?php endforeach; ?>
@@ -277,6 +315,35 @@ $totalLisanChecked = $colTotals['grand_lisan'];
                             </tr>
                         <?php endforeach; ?>
                     <?php endif; ?>
+
+                    <!-- Inline Row Addition Directly at Bottom of Table -->
+                    <tr class="inline-add-row" style="background: #f8fafc; border-top: 2px solid #cbd5e1;">
+                        <td class="cell-center" style="font-weight: 800; color: #2563eb; font-size: 16px;">+</td>
+                        <td colspan="2" style="padding: 10px 12px;">
+                            <form action="<?= url('/preparation/submissions/add-row') ?>" method="POST" id="inlineAddRowForm" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                                <?= csrf_field() ?>
+                                <span style="font-size: 12px; font-weight: 700; color: #1e293b; white-space: nowrap;">➕ Tambah Baris:</span>
+                                <select name="teacher_id" class="form-control form-control-sm" style="min-width: 180px; font-size: 12px; background: #fff;" required>
+                                    <option value="">-- Pilih Guru --</option>
+                                    <?php foreach ($teachers as $t): ?>
+                                        <option value="<?= $t['id'] ?>"><?= e($t['name']) ?><?= !empty($t['nip']) ? ' (' . e($t['nip']) . ')' : '' ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <select name="subject_id" class="form-control form-control-sm" style="min-width: 180px; font-size: 12px; background: #fff;" required>
+                                    <option value="">-- Pilih Mata Pelajaran --</option>
+                                    <?php foreach ($subjects as $s): ?>
+                                        <option value="<?= $s['id'] ?>"><?= e($s['name']) ?> (<?= e($s['code']) ?>)</option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <button type="submit" class="btn btn-sm btn-primary" style="font-size: 12px; padding: 5px 14px; font-weight: 600; white-space: nowrap;">
+                                    Tambahkan
+                                </button>
+                            </form>
+                        </td>
+                        <td colspan="<?= $kelasColspan + 3 + 1 ?>" style="padding: 10px 12px; color: #64748b; font-size: 12px; font-style: italic;">
+                            Baris baru akan langsung muncul pada tabel dan siap diisi ceklisnya.
+                        </td>
+                    </tr>
                 </tbody>
                 <tfoot>
                     <tr>
@@ -643,7 +710,7 @@ $totalLisanChecked = $colTotals['grand_lisan'];
 .table-matrix-checklist th,
 .table-matrix-checklist td {
     border: 1px solid #cbd5e1;
-    padding: 7px 6px;
+    padding: 6px 4px;
     vertical-align: middle;
 }
 .table-matrix-checklist thead th {
@@ -677,9 +744,6 @@ $totalLisanChecked = $colTotals['grand_lisan'];
     cursor: pointer;
     user-select: none;
     transition: background-color 0.15s ease;
-    font-weight: 700;
-    font-size: 13px;
-    color: #0284c7;
     background-color: #ffffff;
 }
 .table-matrix-checklist .cell-matrix-interactive:hover {
@@ -692,11 +756,59 @@ $totalLisanChecked = $colTotals['grand_lisan'];
     opacity: 0.4;
     pointer-events: none;
 }
-.table-matrix-checklist .matrix-check {
+/* Visual Interactive Box for direct filling */
+.matrix-cell-control {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    margin: 0 auto;
+    border: 2px dashed #94a3b8;
+    border-radius: 6px;
+    background-color: #f8fafc;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    outline: none;
+    user-select: none;
+    position: relative;
+}
+.matrix-cell-control:hover {
+    border: 2px solid #2563eb;
+    background-color: #eff6ff;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+.matrix-cell-control:not(.is-checked):hover::after {
+    content: '+';
+    font-size: 15px;
+    font-weight: 800;
+    color: #2563eb;
+    position: absolute;
+}
+.matrix-cell-control.is-checked {
+    border: 2px solid #059669;
+    background-color: #ecfdf5;
+    color: #047857;
+    box-shadow: none;
+}
+.matrix-cell-control.is-checked:hover {
+    border-color: #dc2626;
+    background-color: #fef2f2;
+    color: #dc2626;
+}
+.matrix-cell-control:focus-visible {
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.35);
+    border-color: #2563eb;
+}
+.matrix-check-symbol {
+    font-weight: 800;
+    font-size: 15px;
+    line-height: 1;
     display: inline-block;
-    color: #0f172a;
-    font-weight: 700;
-    font-size: 14px;
+    color: #047857;
+}
+.matrix-cell-control.is-checked:hover .matrix-check-symbol {
+    color: #dc2626;
 }
 .table-matrix-checklist .cell-total-box {
     text-align: center;
@@ -738,40 +850,44 @@ $totalLisanChecked = $colTotals['grand_lisan'];
 </style>
 
 <script>
-function toggleMatrixCell(el) {
-    if (el.classList.contains('cell-shaded') || el.classList.contains('is-loading')) return;
+function toggleMatrixCell(targetEl, evt) {
+    if (evt) {
+        evt.stopPropagation();
+    }
+    const cellTd = targetEl.tagName === 'TD' ? targetEl : targetEl.closest('td');
+    if (!cellTd || cellTd.classList.contains('cell-shaded') || cellTd.classList.contains('is-loading')) return;
 
-    const teacherId = el.getAttribute('data-teacher-id');
-    const subjectId = el.getAttribute('data-subject-id');
-    const grade = el.getAttribute('data-grade');
-    const docType = el.getAttribute('data-doc-type');
-    const colType = el.getAttribute('data-col-type');
-    const rowId = el.getAttribute('data-row-id');
+    const teacherId = cellTd.getAttribute('data-teacher-id');
+    const subjectId = cellTd.getAttribute('data-subject-id');
+    const grade = cellTd.getAttribute('data-grade');
+    const docType = cellTd.getAttribute('data-doc-type');
+    const colType = cellTd.getAttribute('data-col-type');
+    const rowId = cellTd.getAttribute('data-row-id');
 
-    el.classList.add('is-loading');
+    cellTd.classList.add('is-loading');
 
-    const payload = {
-        teacher_id: teacherId,
-        subject_id: subjectId,
-        grade: grade,
-        doc_type: docType,
-        _csrf_token: '<?= csrf_token() ?>'
-    };
+    const params = new URLSearchParams();
+    params.append('teacher_id', teacherId);
+    params.append('subject_id', subjectId);
+    params.append('grade', grade);
+    params.append('doc_type', docType);
+    params.append('_csrf_token', '<?= csrf_token() ?>');
 
     fetch('<?= url('/preparation/submissions/toggle-check') ?>', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/x-www-form-urlencoded',
             'Accept': 'application/json',
             'X-Requested-With': 'XMLHttpRequest'
         },
-        body: JSON.stringify(payload)
+        body: params.toString()
     })
     .then(response => response.json())
     .then(data => {
-        el.classList.remove('is-loading');
+        cellTd.classList.remove('is-loading');
         if (data.success) {
-            const checkSpan = el.querySelector('.matrix-check');
+            const controlBox = cellTd.querySelector('.matrix-cell-control');
+            const symbolSpan = cellTd.querySelector('.matrix-check-symbol');
             const rowTotalEl = document.getElementById('row-total-' + colType + '-' + rowId);
             const colTotalEl = document.getElementById('col-total-' + colType + '-' + grade);
             const grandTotalEl = document.getElementById('grand-total-' + colType);
@@ -781,20 +897,26 @@ function toggleMatrixCell(el) {
             let grandTotal = parseInt(grandTotalEl ? grandTotalEl.innerText : 0) || 0;
 
             if (data.checked) {
-                el.classList.add('is-checked');
-                if (checkSpan) {
-                    checkSpan.innerText = 'v';
-                    checkSpan.style.display = 'inline-block';
+                cellTd.classList.add('is-checked');
+                if (controlBox) {
+                    controlBox.classList.add('is-checked');
+                    controlBox.setAttribute('aria-checked', 'true');
+                }
+                if (symbolSpan) {
+                    symbolSpan.innerText = 'v';
                 }
                 if (rowTotalEl) rowTotalEl.innerText = rowTotal + 1;
                 if (colTotalEl) colTotalEl.innerText = colTotal + 1;
                 if (grandTotalEl) grandTotalEl.innerText = grandTotal + 1;
                 showMatrixToast('✓ ' + (data.message || 'Ceklis berhasil ditandai selesai.'), '#10b981');
             } else {
-                el.classList.remove('is-checked');
-                if (checkSpan) {
-                    checkSpan.innerText = '';
-                    checkSpan.style.display = 'none';
+                cellTd.classList.remove('is-checked');
+                if (controlBox) {
+                    controlBox.classList.remove('is-checked');
+                    controlBox.setAttribute('aria-checked', 'false');
+                }
+                if (symbolSpan) {
+                    symbolSpan.innerText = '';
                 }
                 if (rowTotalEl) rowTotalEl.innerText = Math.max(0, rowTotal - 1);
                 if (colTotalEl) colTotalEl.innerText = Math.max(0, colTotal - 1);
@@ -806,9 +928,69 @@ function toggleMatrixCell(el) {
         }
     })
     .catch(error => {
-        el.classList.remove('is-loading');
+        cellTd.classList.remove('is-loading');
         console.error('Toggle error:', error);
         alert('Gagal menghubungi server.');
+    });
+}
+
+function handleCellKeydown(controlEl, evt) {
+    if (evt.key === ' ' || evt.key === 'Enter') {
+        evt.preventDefault();
+        toggleMatrixCell(controlEl, evt);
+    }
+}
+
+function runBatchCheck(action) {
+    if (action === 'clear_all' && !confirm('Yakin ingin mengosongkan seluruh ceklis pada format rekap dokumen ini?')) {
+        return;
+    }
+    if (action === 'check_all_all' && !confirm('Centang semua naskah soal dan kisi-kisi sebagai selesai (v)?')) {
+        return;
+    }
+
+    const params = new URLSearchParams();
+    params.append('action', action);
+    params.append('_csrf_token', '<?= csrf_token() ?>');
+
+    showMatrixToast('Memproses isian cepat...', '#2563eb');
+
+    fetch('<?= url('/preparation/submissions/batch-check') ?>', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: params.toString()
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showMatrixToast('✓ ' + data.message, '#10b981');
+            setTimeout(() => { window.location.reload(); }, 500);
+        } else {
+            alert(data.message || 'Gagal memproses isian cepat.');
+        }
+    })
+    .catch(err => {
+        console.error('Batch check error:', err);
+        // Fallback form submit
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '<?= url('/preparation/submissions/batch-check') ?>';
+        const inAction = document.createElement('input');
+        inAction.type = 'hidden';
+        inAction.name = 'action';
+        inAction.value = action;
+        form.appendChild(inAction);
+        const inCsrf = document.createElement('input');
+        inCsrf.type = 'hidden';
+        inCsrf.name = '_csrf_token';
+        inCsrf.value = '<?= csrf_token() ?>';
+        form.appendChild(inCsrf);
+        document.body.appendChild(form);
+        form.submit();
     });
 }
 

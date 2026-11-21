@@ -7,9 +7,36 @@ $grades = $matrixData['grades'];
 $hasLisan = $matrixData['hasLisan'];
 $kelasColspan = ($hasLisan ? count($grades) : 0) + (count($grades) * 2);
 $colTotals = $matrixData['columnTotals'];
+$mode = $mode ?? 'filled';
+$isBlank = ($mode === 'blank');
 ?>
 
+<div class="print-toolbar no-print" style="margin-bottom: 20px; display: flex; gap: 10px; align-items: center; justify-content: space-between; background: #ffffff; padding: 12px 18px; border-radius: 8px; border: 1px solid #cbd5e1; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+    <div style="display: flex; gap: 8px; align-items: center;">
+        <span style="font-size: 13px; font-weight: 700; color: #334155;">Mode Cetak:</span>
+        <a href="<?= url('/preparation/submissions/print?mode=filled') ?>" class="btn btn-sm <?= !$isBlank ? 'btn-primary' : 'btn-outline' ?>" style="font-size: 12px;">
+            ✓ Format Terisi (Digital)
+        </a>
+        <a href="<?= url('/preparation/submissions/print?mode=blank') ?>" class="btn btn-sm <?= $isBlank ? 'btn-primary' : 'btn-outline' ?>" style="font-size: 12px;">
+            📝 Format Kosong (Untuk Isi Manual)
+        </a>
+    </div>
+    <div style="display: flex; gap: 8px;">
+        <button type="button" onclick="window.print()" class="btn btn-sm btn-primary" style="font-size: 12px; font-weight: 700;">
+            🖨️ Cetak Dokumen (Print)
+        </button>
+        <a href="<?= url('/preparation/submissions') ?>" class="btn btn-sm btn-outline" style="font-size: 12px;">
+            ← Kembali ke Checklist
+        </a>
+    </div>
+</div>
+
 <style>
+@media print {
+    .no-print {
+        display: none !important;
+    }
+}
 @page {
     size: landscape;
     margin: 8mm 10mm;
@@ -185,7 +212,7 @@ $colTotals = $matrixData['columnTotals'];
                             <?php if ($cell['shaded']): ?>
                                 <td class="cell-shaded">&nbsp;</td>
                             <?php else: ?>
-                                <td class="cell-check"><?= $cell['checked'] ? 'v' : '' ?></td>
+                                <td class="cell-check"><?= (!$isBlank && $cell['checked']) ? 'v' : '&nbsp;' ?></td>
                             <?php endif; ?>
                         <?php endforeach; ?>
                     <?php endif; ?>
@@ -196,21 +223,21 @@ $colTotals = $matrixData['columnTotals'];
                         <?php if ($cSoal['shaded']): ?>
                             <td class="cell-shaded">&nbsp;</td>
                         <?php else: ?>
-                            <td class="cell-check"><?= $cSoal['checked'] ? 'v' : '' ?></td>
+                            <td class="cell-check"><?= (!$isBlank && $cSoal['checked']) ? 'v' : '&nbsp;' ?></td>
                         <?php endif; ?>
 
                         <?php $cKisi = $row['tulis_kisi_cells'][$g]; ?>
                         <?php if ($cKisi['shaded']): ?>
                             <td class="cell-shaded">&nbsp;</td>
                         <?php else: ?>
-                            <td class="cell-check"><?= $cKisi['checked'] ? 'v' : '' ?></td>
+                            <td class="cell-check"><?= (!$isBlank && $cKisi['checked']) ? 'v' : '&nbsp;' ?></td>
                         <?php endif; ?>
                     <?php endforeach; ?>
 
                     <!-- Row Totals -->
-                    <td class="cell-center"><?= $row['row_totals']['lisan'] ?></td>
-                    <td class="cell-center"><?= $row['row_totals']['soal'] ?></td>
-                    <td class="cell-center"><?= $row['row_totals']['kisi'] ?></td>
+                    <td class="cell-center"><?= !$isBlank ? $row['row_totals']['lisan'] : '&nbsp;' ?></td>
+                    <td class="cell-center"><?= !$isBlank ? $row['row_totals']['soal'] : '&nbsp;' ?></td>
+                    <td class="cell-center"><?= !$isBlank ? $row['row_totals']['kisi'] : '&nbsp;' ?></td>
                 </tr>
             <?php endforeach; ?>
         <?php endif; ?>
@@ -220,16 +247,16 @@ $colTotals = $matrixData['columnTotals'];
             <td colspan="3" style="text-align: right; padding-right: 12px; font-weight: 700;">JUMLAH</td>
             <?php if ($hasLisan): ?>
                 <?php foreach ($grades as $g): ?>
-                    <td class="cell-center font-bold"><?= $colTotals['lisan'][$g] ?? 0 ?></td>
+                    <td class="cell-center font-bold"><?= !$isBlank ? ($colTotals['lisan'][$g] ?? 0) : '&nbsp;' ?></td>
                 <?php endforeach; ?>
             <?php endif; ?>
             <?php foreach ($grades as $g): ?>
-                <td class="cell-center font-bold"><?= $colTotals['tulis_soal'][$g] ?? 0 ?></td>
-                <td class="cell-center font-bold"><?= $colTotals['tulis_kisi'][$g] ?? 0 ?></td>
+                <td class="cell-center font-bold"><?= !$isBlank ? ($colTotals['tulis_soal'][$g] ?? 0) : '&nbsp;' ?></td>
+                <td class="cell-center font-bold"><?= !$isBlank ? ($colTotals['tulis_kisi'][$g] ?? 0) : '&nbsp;' ?></td>
             <?php endforeach; ?>
-            <td class="cell-center font-bold"><?= $colTotals['grand_lisan'] ?></td>
-            <td class="cell-center font-bold"><?= $colTotals['grand_soal'] ?></td>
-            <td class="cell-center font-bold"><?= $colTotals['grand_kisi'] ?></td>
+            <td class="cell-center font-bold"><?= !$isBlank ? $colTotals['grand_lisan'] : '&nbsp;' ?></td>
+            <td class="cell-center font-bold"><?= !$isBlank ? $colTotals['grand_soal'] : '&nbsp;' ?></td>
+            <td class="cell-center font-bold"><?= !$isBlank ? $colTotals['grand_kisi'] : '&nbsp;' ?></td>
         </tr>
     </tfoot>
 </table>
