@@ -88,15 +88,8 @@ class Request
 
     public function isAjax(): bool
     {
-        if (!empty($this->server['HTTP_X_REQUESTED_WITH']) &&
-            strtolower($this->server['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
-            return true;
-        }
-        $accept = $this->server['HTTP_ACCEPT'] ?? '';
-        if (str_contains(strtolower($accept), 'application/json')) {
-            return true;
-        }
-        return $this->json !== null;
+        return !empty($this->server['HTTP_X_REQUESTED_WITH']) &&
+            strtolower($this->server['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
     }
 
     public function ip(): string
