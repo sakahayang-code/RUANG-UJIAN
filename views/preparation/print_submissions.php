@@ -2,30 +2,59 @@
 /**
  * Cetak Format Ceklis Penerimaan Dokumen Soal & Kisi-Kisi
  * Sesuai Standar Format Resmi (Landscape, Multi-level Header, Grey Shading, & Tanda Tangan)
+ * Terpisah Khusus: Ujian Tulis & Ujian Lisan/Praktik
  */
 $grades = $matrixData['grades'];
 $hasLisan = $matrixData['hasLisan'];
-$kelasColspan = ($hasLisan ? count($grades) : 0) + (count($grades) * 2);
+$hasTulis = $matrixData['hasTulis'];
 $colTotals = $matrixData['columnTotals'];
 $mode = $mode ?? 'filled';
 $isBlank = ($mode === 'blank');
+$examType = $examType ?? ($hasLisan && !$hasTulis ? 'practical' : 'written');
+
+// Determine columns colspan
+if ($hasTulis && $hasLisan) {
+    $kelasColspan = count($grades) + (count($grades) * 2);
+    $jumlahColspan = 3;
+    $docTitle = 'FORMAT CEKLIS PENERIMAAN DOKUMEN SOAL &amp; KISI-KISI (LISAN &amp; TULIS)';
+} elseif ($hasLisan) {
+    $kelasColspan = count($grades);
+    $jumlahColspan = 1;
+    $docTitle = 'FORMAT CEKLIS PENERIMAAN INSTRUMEN &amp; KISI-KISI UJIAN LISAN / PRAKTIK';
+} else {
+    $kelasColspan = count($grades) * 2;
+    $jumlahColspan = 2;
+    $docTitle = 'FORMAT CEKLIS PENERIMAAN NASKAH SOAL &amp; KISI-KISI UJIAN TULIS';
+}
 ?>
 
-<div class="print-toolbar no-print" style="margin-bottom: 20px; display: flex; gap: 10px; align-items: center; justify-content: space-between; background: #ffffff; padding: 12px 18px; border-radius: 8px; border: 1px solid #cbd5e1; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
-    <div style="display: flex; gap: 8px; align-items: center;">
-        <span style="font-size: 13px; font-weight: 700; color: #334155;">Mode Cetak:</span>
-        <a href="<?= url('/preparation/submissions/print?mode=filled') ?>" class="btn btn-sm <?= !$isBlank ? 'btn-primary' : 'btn-outline' ?>" style="font-size: 12px;">
-            ✓ Format Terisi (Digital)
-        </a>
-        <a href="<?= url('/preparation/submissions/print?mode=blank') ?>" class="btn btn-sm <?= $isBlank ? 'btn-primary' : 'btn-outline' ?>" style="font-size: 12px;">
-            📝 Format Kosong (Untuk Isi Manual)
-        </a>
+<div class="print-toolbar no-print" style="margin-bottom: 20px; display: flex; gap: 10px; align-items: center; justify-content: space-between; background: #ffffff; padding: 12px 18px; border-radius: 8px; border: 1px solid #cbd5e1; box-shadow: 0 1px 3px rgba(0,0,0,0.08); flex-wrap: wrap;">
+    <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+        <div style="display: flex; gap: 6px; align-items: center;">
+            <span style="font-size: 12px; font-weight: 700; color: #334155;">Pilihan Ujian:</span>
+            <a href="<?= url('/preparation/submissions/print?type=written&mode=' . $mode) ?>" class="btn btn-sm <?= $examType === 'written' ? 'btn-primary' : 'btn-outline' ?>" style="font-size: 12px;">
+                📝 Ujian Tulis
+            </a>
+            <a href="<?= url('/preparation/submissions/print?type=practical&mode=' . $mode) ?>" class="btn btn-sm <?= $examType === 'practical' ? 'btn-primary' : 'btn-outline' ?>" style="font-size: 12px;">
+                🗣️ Ujian Lisan
+            </a>
+        </div>
+        <div style="border-left: 1px solid #cbd5e1; height: 24px;"></div>
+        <div style="display: flex; gap: 6px; align-items: center;">
+            <span style="font-size: 12px; font-weight: 700; color: #334155;">Mode Data:</span>
+            <a href="<?= url('/preparation/submissions/print?type=' . $examType . '&mode=filled') ?>" class="btn btn-sm <?= !$isBlank ? 'btn-primary' : 'btn-outline' ?>" style="font-size: 12px;">
+                ✓ Format Terisi (Digital)
+            </a>
+            <a href="<?= url('/preparation/submissions/print?type=' . $examType . '&mode=blank') ?>" class="btn btn-sm <?= $isBlank ? 'btn-primary' : 'btn-outline' ?>" style="font-size: 12px;">
+                📝 Format Kosong (Manual)
+            </a>
+        </div>
     </div>
-    <div style="display: flex; gap: 8px;">
+    <div style="display: flex; gap: 8px; align-items: center;">
         <button type="button" onclick="window.print()" class="btn btn-sm btn-primary" style="font-size: 12px; font-weight: 700;">
             🖨️ Cetak Dokumen (Print)
         </button>
-        <a href="<?= url('/preparation/submissions') ?>" class="btn btn-sm btn-outline" style="font-size: 12px;">
+        <a href="<?= url('/preparation/submissions?tab=' . ($examType === 'practical' ? 'oral' : 'written')) ?>" class="btn btn-sm btn-outline" style="font-size: 12px;">
             ← Kembali ke Checklist
         </a>
     </div>
@@ -105,7 +134,8 @@ $isBlank = ($mode === 'blank');
 .matrix-print-table .cell-check {
     text-align: center;
     font-weight: 700;
-    font-size: 10pt;
+    font-size: 10.5pt;
+    color: #000;
 }
 .matrix-print-table tfoot td {
     background-color: #f8fafc !important;
@@ -145,7 +175,7 @@ $isBlank = ($mode === 'blank');
 </style>
 
 <div class="doc-title-section">
-    <div class="doc-title-main">FORMAT CEKLIS PENERIMAAN DOKUMEN SOAL &amp; KISI-KISI</div>
+    <div class="doc-title-main"><?= $docTitle ?></div>
     <div class="doc-title-sub">
         <?= e($event['name']) ?> • Tahun Pelajaran <?= e($school['academic_year'] ?? '') ?>
     </div>
@@ -153,44 +183,84 @@ $isBlank = ($mode === 'blank');
 
 <table class="matrix-print-table">
     <thead>
-        <!-- Header Level 1 -->
-        <tr>
-            <th rowspan="3" style="width: 35px;">NO</th>
-            <th rowspan="3" style="width: 240px;">NAMA PENDIDIK/GURU</th>
-            <th rowspan="3" style="width: 200px;">MATA PELAJARAN</th>
-            <th colspan="<?= $kelasColspan ?>">KELAS</th>
-            <th colspan="3">JUMLAH</th>
-        </tr>
-        <!-- Header Level 2 -->
-        <tr>
-            <?php if ($hasLisan): ?>
+        <?php if ($hasTulis && !$hasLisan): ?>
+            <!-- UJIAN TULIS: FORMAT RESMI GAMBAR SESUAI image.png -->
+            <!-- Header Level 1 -->
+            <tr>
+                <th rowspan="3" style="width: 35px;">NO</th>
+                <th rowspan="3" style="width: 250px;">NAMA PENDIDIK/GURU</th>
+                <th rowspan="3" style="width: 220px;">MATA PELAJARAN</th>
+                <th colspan="<?= count($grades) * 2 ?>">KELAS</th>
+                <th colspan="2">JUMLAH</th>
+            </tr>
+            <!-- Header Level 2 -->
+            <tr>
+                <?php foreach ($grades as $g): ?>
+                    <th colspan="2">Kelas <?= e((string)$g) ?></th>
+                <?php endforeach; ?>
+                <th colspan="2">TULIS</th>
+            </tr>
+            <!-- Header Level 3 -->
+            <tr>
+                <?php foreach ($grades as $g): ?>
+                    <th style="width: 48px;">SOAL</th>
+                    <th style="width: 48px;">KISI-KISI</th>
+                <?php endforeach; ?>
+                <th style="width: 48px;">SOAL</th>
+                <th style="width: 48px;">KISI-KISI</th>
+            </tr>
+
+        <?php elseif ($hasLisan && !$hasTulis): ?>
+            <!-- UJIAN LISAN: FORMAT RINGKAS & FOKUS LISAN/PRAKTIK -->
+            <!-- Header Level 1 -->
+            <tr>
+                <th rowspan="2" style="width: 35px;">NO</th>
+                <th rowspan="2" style="width: 260px;">NAMA PENDIDIK/GURU</th>
+                <th rowspan="2" style="width: 240px;">MATA PELAJARAN</th>
+                <th colspan="<?= count($grades) ?>">KELAS (UJIAN LISAN / PRAKTIK)</th>
+                <th rowspan="2" style="width: 70px;">JUMLAH<br>LISAN</th>
+            </tr>
+            <!-- Header Level 2 -->
+            <tr>
+                <?php foreach ($grades as $g): ?>
+                    <th style="width: 60px;">Kelas <?= e((string)$g) ?></th>
+                <?php endforeach; ?>
+            </tr>
+
+        <?php else: ?>
+            <!-- FALLBACK KEDUA TIPE -->
+            <tr>
+                <th rowspan="3" style="width: 35px;">NO</th>
+                <th rowspan="3" style="width: 240px;">NAMA PENDIDIK/GURU</th>
+                <th rowspan="3" style="width: 200px;">MATA PELAJARAN</th>
+                <th colspan="<?= $kelasColspan ?>">KELAS</th>
+                <th colspan="<?= $jumlahColspan ?>">JUMLAH</th>
+            </tr>
+            <tr>
                 <th colspan="<?= count($grades) ?>">LISAN</th>
-            <?php endif; ?>
-            <?php foreach ($grades as $g): ?>
-                <th colspan="2"><?= e((string)$g) ?></th>
-            <?php endforeach; ?>
-            <th rowspan="2" style="width: 50px;">LISAN</th>
-            <th colspan="2">TULIS</th>
-        </tr>
-        <!-- Header Level 3 -->
-        <tr>
-            <?php if ($hasLisan): ?>
+                <?php foreach ($grades as $g): ?>
+                    <th colspan="2"><?= e((string)$g) ?></th>
+                <?php endforeach; ?>
+                <th rowspan="2" style="width: 50px;">LISAN</th>
+                <th colspan="2">TULIS</th>
+            </tr>
+            <tr>
                 <?php foreach ($grades as $g): ?>
                     <th style="width: 38px;"><?= e((string)$g) ?></th>
                 <?php endforeach; ?>
-            <?php endif; ?>
-            <?php foreach ($grades as $g): ?>
+                <?php foreach ($grades as $g): ?>
+                    <th style="width: 48px;">SOAL</th>
+                    <th style="width: 48px;">KISI-KISI</th>
+                <?php endforeach; ?>
                 <th style="width: 48px;">SOAL</th>
                 <th style="width: 48px;">KISI-KISI</th>
-            <?php endforeach; ?>
-            <th style="width: 48px;">SOAL</th>
-            <th style="width: 48px;">KISI-KISI</th>
-        </tr>
+            </tr>
+        <?php endif; ?>
     </thead>
     <tbody>
         <?php if (empty($matrixData['flatRows'])): ?>
             <tr>
-                <td colspan="<?= 3 + $kelasColspan + 3 ?>" class="cell-center" style="padding: 20px; color: #64748b;">
+                <td colspan="<?= 3 + $kelasColspan + $jumlahColspan ?>" class="cell-center" style="padding: 20px; color: #64748b;">
                     Belum ada data guru dan mata pelajaran.
                 </td>
             </tr>
@@ -201,12 +271,20 @@ $isBlank = ($mode === 'blank');
                     <?php if ($row['is_first_subject']): ?>
                         <td rowspan="<?= $row['subject_count'] ?>" class="cell-name">
                             <?= e($row['teacher_name']) ?>
+                            <?php if (!empty($row['teacher_nip'])): ?>
+                                <div style="font-size: 8pt; font-weight: normal; color: #475569;">NIP: <?= e($row['teacher_nip']) ?></div>
+                            <?php endif; ?>
                         </td>
                     <?php endif; ?>
-                    <td class="cell-subject"><?= e($row['subject_name']) ?></td>
+                    <td class="cell-subject">
+                        <?= e($row['subject_name']) ?>
+                        <?php if ($row['subject_grade'] !== 'Semua' && !empty($row['subject_grade'])): ?>
+                            <span style="font-size: 8pt; color: #64748b;">(Kls <?= e($row['subject_grade']) ?>)</span>
+                        <?php endif; ?>
+                    </td>
 
-                    <!-- Lisan Cells -->
-                    <?php if ($hasLisan): ?>
+                    <?php if ($hasLisan && !$hasTulis): ?>
+                        <!-- Only Lisan Cells -->
                         <?php foreach ($grades as $g): ?>
                             <?php $cell = $row['lisan_cells'][$g]; ?>
                             <?php if ($cell['shaded']): ?>
@@ -215,29 +293,57 @@ $isBlank = ($mode === 'blank');
                                 <td class="cell-check"><?= (!$isBlank && $cell['checked']) ? 'v' : '&nbsp;' ?></td>
                             <?php endif; ?>
                         <?php endforeach; ?>
+                        <td class="cell-center"><?= !$isBlank ? $row['row_totals']['lisan'] : '&nbsp;' ?></td>
+
+                    <?php elseif ($hasTulis && !$hasLisan): ?>
+                        <!-- Only Tulis Cells -->
+                        <?php foreach ($grades as $g): ?>
+                            <?php $cSoal = $row['tulis_soal_cells'][$g]; ?>
+                            <?php if ($cSoal['shaded']): ?>
+                                <td class="cell-shaded">&nbsp;</td>
+                            <?php else: ?>
+                                <td class="cell-check"><?= (!$isBlank && $cSoal['checked']) ? 'v' : '&nbsp;' ?></td>
+                            <?php endif; ?>
+
+                            <?php $cKisi = $row['tulis_kisi_cells'][$g]; ?>
+                            <?php if ($cKisi['shaded']): ?>
+                                <td class="cell-shaded">&nbsp;</td>
+                            <?php else: ?>
+                                <td class="cell-check"><?= (!$isBlank && $cKisi['checked']) ? 'v' : '&nbsp;' ?></td>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                        <td class="cell-center"><?= !$isBlank ? $row['row_totals']['soal'] : '&nbsp;' ?></td>
+                        <td class="cell-center"><?= !$isBlank ? $row['row_totals']['kisi'] : '&nbsp;' ?></td>
+
+                    <?php else: ?>
+                        <!-- Both Cells -->
+                        <?php foreach ($grades as $g): ?>
+                            <?php $cell = $row['lisan_cells'][$g]; ?>
+                            <?php if ($cell['shaded']): ?>
+                                <td class="cell-shaded">&nbsp;</td>
+                            <?php else: ?>
+                                <td class="cell-check"><?= (!$isBlank && $cell['checked']) ? 'v' : '&nbsp;' ?></td>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                        <?php foreach ($grades as $g): ?>
+                            <?php $cSoal = $row['tulis_soal_cells'][$g]; ?>
+                            <?php if ($cSoal['shaded']): ?>
+                                <td class="cell-shaded">&nbsp;</td>
+                            <?php else: ?>
+                                <td class="cell-check"><?= (!$isBlank && $cSoal['checked']) ? 'v' : '&nbsp;' ?></td>
+                            <?php endif; ?>
+
+                            <?php $cKisi = $row['tulis_kisi_cells'][$g]; ?>
+                            <?php if ($cKisi['shaded']): ?>
+                                <td class="cell-shaded">&nbsp;</td>
+                            <?php else: ?>
+                                <td class="cell-check"><?= (!$isBlank && $cKisi['checked']) ? 'v' : '&nbsp;' ?></td>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                        <td class="cell-center"><?= !$isBlank ? $row['row_totals']['lisan'] : '&nbsp;' ?></td>
+                        <td class="cell-center"><?= !$isBlank ? $row['row_totals']['soal'] : '&nbsp;' ?></td>
+                        <td class="cell-center"><?= !$isBlank ? $row['row_totals']['kisi'] : '&nbsp;' ?></td>
                     <?php endif; ?>
-
-                    <!-- Tulis Soal & Kisi-Kisi Cells -->
-                    <?php foreach ($grades as $g): ?>
-                        <?php $cSoal = $row['tulis_soal_cells'][$g]; ?>
-                        <?php if ($cSoal['shaded']): ?>
-                            <td class="cell-shaded">&nbsp;</td>
-                        <?php else: ?>
-                            <td class="cell-check"><?= (!$isBlank && $cSoal['checked']) ? 'v' : '&nbsp;' ?></td>
-                        <?php endif; ?>
-
-                        <?php $cKisi = $row['tulis_kisi_cells'][$g]; ?>
-                        <?php if ($cKisi['shaded']): ?>
-                            <td class="cell-shaded">&nbsp;</td>
-                        <?php else: ?>
-                            <td class="cell-check"><?= (!$isBlank && $cKisi['checked']) ? 'v' : '&nbsp;' ?></td>
-                        <?php endif; ?>
-                    <?php endforeach; ?>
-
-                    <!-- Row Totals -->
-                    <td class="cell-center"><?= !$isBlank ? $row['row_totals']['lisan'] : '&nbsp;' ?></td>
-                    <td class="cell-center"><?= !$isBlank ? $row['row_totals']['soal'] : '&nbsp;' ?></td>
-                    <td class="cell-center"><?= !$isBlank ? $row['row_totals']['kisi'] : '&nbsp;' ?></td>
                 </tr>
             <?php endforeach; ?>
         <?php endif; ?>
@@ -245,18 +351,30 @@ $isBlank = ($mode === 'blank');
     <tfoot>
         <tr>
             <td colspan="3" style="text-align: right; padding-right: 12px; font-weight: 700;">JUMLAH</td>
-            <?php if ($hasLisan): ?>
+            <?php if ($hasLisan && !$hasTulis): ?>
                 <?php foreach ($grades as $g): ?>
                     <td class="cell-center font-bold"><?= !$isBlank ? ($colTotals['lisan'][$g] ?? 0) : '&nbsp;' ?></td>
                 <?php endforeach; ?>
+                <td class="cell-center font-bold"><?= !$isBlank ? $colTotals['grand_lisan'] : '&nbsp;' ?></td>
+            <?php elseif ($hasTulis && !$hasLisan): ?>
+                <?php foreach ($grades as $g): ?>
+                    <td class="cell-center font-bold"><?= !$isBlank ? ($colTotals['tulis_soal'][$g] ?? 0) : '&nbsp;' ?></td>
+                    <td class="cell-center font-bold"><?= !$isBlank ? ($colTotals['tulis_kisi'][$g] ?? 0) : '&nbsp;' ?></td>
+                <?php endforeach; ?>
+                <td class="cell-center font-bold"><?= !$isBlank ? $colTotals['grand_soal'] : '&nbsp;' ?></td>
+                <td class="cell-center font-bold"><?= !$isBlank ? $colTotals['grand_kisi'] : '&nbsp;' ?></td>
+            <?php else: ?>
+                <?php foreach ($grades as $g): ?>
+                    <td class="cell-center font-bold"><?= !$isBlank ? ($colTotals['lisan'][$g] ?? 0) : '&nbsp;' ?></td>
+                <?php endforeach; ?>
+                <?php foreach ($grades as $g): ?>
+                    <td class="cell-center font-bold"><?= !$isBlank ? ($colTotals['tulis_soal'][$g] ?? 0) : '&nbsp;' ?></td>
+                    <td class="cell-center font-bold"><?= !$isBlank ? ($colTotals['tulis_kisi'][$g] ?? 0) : '&nbsp;' ?></td>
+                <?php endforeach; ?>
+                <td class="cell-center font-bold"><?= !$isBlank ? $colTotals['grand_lisan'] : '&nbsp;' ?></td>
+                <td class="cell-center font-bold"><?= !$isBlank ? $colTotals['grand_soal'] : '&nbsp;' ?></td>
+                <td class="cell-center font-bold"><?= !$isBlank ? $colTotals['grand_kisi'] : '&nbsp;' ?></td>
             <?php endif; ?>
-            <?php foreach ($grades as $g): ?>
-                <td class="cell-center font-bold"><?= !$isBlank ? ($colTotals['tulis_soal'][$g] ?? 0) : '&nbsp;' ?></td>
-                <td class="cell-center font-bold"><?= !$isBlank ? ($colTotals['tulis_kisi'][$g] ?? 0) : '&nbsp;' ?></td>
-            <?php endforeach; ?>
-            <td class="cell-center font-bold"><?= !$isBlank ? $colTotals['grand_lisan'] : '&nbsp;' ?></td>
-            <td class="cell-center font-bold"><?= !$isBlank ? $colTotals['grand_soal'] : '&nbsp;' ?></td>
-            <td class="cell-center font-bold"><?= !$isBlank ? $colTotals['grand_kisi'] : '&nbsp;' ?></td>
         </tr>
     </tfoot>
 </table>
