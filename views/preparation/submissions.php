@@ -33,8 +33,8 @@ $totalLisanChecked = $colTotals['grand_lisan'];
         <button type="button" class="btn btn-outline" style="background: #fff;" data-modal-open="addMatrixRowModal">
             ➕ Tambah Guru &amp; Mapel
         </button>
-        <button type="button" class="btn btn-primary" data-modal-open="syncConfirmModal">
-            🔄 Sinkronkan Semua
+        <button type="button" class="btn btn-primary" data-modal-open="syncConfirmModal" style="display: inline-flex; align-items: center; gap: 6px;">
+            🔄 Sinkronkan Guru &amp; Mapel
         </button>
     </div>
 </div>
@@ -96,6 +96,42 @@ $totalLisanChecked = $colTotals['grand_lisan'];
 
 <?php if ($activeTab === 'matrix'): ?>
     <!-- TAB 1: FORMAT REKAP MATRIKS SESUAI GAMBAR RESMI -->
+
+    <!-- Info Banner: Sinkronisasi Otomatis Guru & Mapel -->
+    <div class="card mb-3" style="background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); border: 1px solid #86efac; border-radius: 10px; padding: 14px 18px;">
+        <div style="display: flex; align-items: flex-start; gap: 14px;">
+            <div style="font-size: 26px; line-height: 1;">✨</div>
+            <div style="flex: 1;">
+                <div style="font-size: 13.5px; font-weight: 700; color: #166534; margin-bottom: 3px;">
+                    Format Ceklis Dokumen Soal, Kisi-Kisi, dan Ujian Lisan Terhubung &amp; Otomatis Tersinkron
+                </div>
+                <div style="font-size: 12.5px; color: #15803d; line-height: 1.5;">
+                    Nama pendidik/guru beserta mata pelajaran yang diampunya <strong>otomatis disinkronkan</strong> dari <a href="<?= url('/master/teachers') ?>" style="color: #166534; font-weight: 700; text-decoration: underline;">Data Master Guru</a>. 
+                    Klik langsung pada kotak kolom <strong>LISAN</strong>, <strong>SOAL</strong>, atau <strong>KISI-KISI</strong> untuk menandai bahwa guru yang bersangkutan <strong>sudah mengumpulkan berkas</strong> (tanda centang <strong>v</strong>). Jumlah rekapitulasi per baris dan kolom dihitung otomatis secara langsung (real-time).
+                </div>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline" data-modal-open="syncConfirmModal" style="background: #ffffff; border-color: #16a34a; color: #166534; font-weight: 700; white-space: nowrap; font-size: 12px; align-self: center;">
+                🔄 Sinkron Ulang
+            </button>
+        </div>
+    </div>
+
+    <?php if (!empty($unassignedTeachers)): ?>
+    <!-- Warning Banner: Guru Belum Ditetapkan Mapel Ampuan -->
+    <div class="card mb-3" style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 12px 16px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 20px;">⚠️</span>
+                <div style="font-size: 12.5px; color: #92400e;">
+                    <strong>Perhatian:</strong> Ditemukan <strong><?= count($unassignedTeachers) ?> guru aktif</strong> yang belum dipilihkan mata pelajaran ampuan di Menu Guru (misal: <?= e(implode(', ', array_slice(array_column($unassignedTeachers, 'name'), 0, 3))) ?><?= count($unassignedTeachers) > 3 ? '...' : '' ?>).
+                </div>
+            </div>
+            <a href="<?= url('/master/teachers') ?>" class="btn btn-sm btn-outline" style="border-color: #d97706; color: #b45309; background: #fff; font-size: 12px; font-weight: 700;">
+                Atur Mapel Guru Sekarang &rarr;
+            </a>
+        </div>
+    </div>
+    <?php endif; ?>
 
     <!-- Filter & Guidance Bar -->
     <div class="card p-3 mb-2" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
@@ -247,7 +283,7 @@ $totalLisanChecked = $colTotals['grand_lisan'];
                                                 data-doc-type="lisan"
                                                 data-col-type="lisan"
                                                 data-row-id="<?= $row['row_no'] ?>"
-                                                title="Klik untuk mengisi/mengosongkan: <?= e($row['teacher_name']) ?> - <?= e($row['subject_name']) ?> (Lisan Kelas <?= e($g) ?>)"
+                                                title="Klik untuk menandai guru SUDAH mengumpulkan Ujian Lisan Kelas <?= e($g) ?> (v): <?= e($row['teacher_name']) ?> - <?= e($row['subject_name']) ?>"
                                                 onclick="toggleMatrixCell(this, event)">
                                                 <div class="matrix-cell-control <?= $cell['checked'] ? 'is-checked' : '' ?>" tabindex="0" role="checkbox" aria-checked="<?= $cell['checked'] ? 'true' : 'false' ?>" onkeydown="handleCellKeydown(this, event)">
                                                     <span class="matrix-check-symbol"><?= $cell['checked'] ? 'v' : '' ?></span>
@@ -270,7 +306,7 @@ $totalLisanChecked = $colTotals['grand_lisan'];
                                             data-doc-type="naskah_soal"
                                             data-col-type="soal"
                                             data-row-id="<?= $row['row_no'] ?>"
-                                            title="Klik untuk mengisi/mengosongkan: <?= e($row['teacher_name']) ?> - <?= e($row['subject_name']) ?> (Soal Kelas <?= e($g) ?>)"
+                                            title="Klik untuk menandai guru SUDAH mengumpulkan Naskah Soal Tulis Kelas <?= e($g) ?> (v): <?= e($row['teacher_name']) ?> - <?= e($row['subject_name']) ?>"
                                             onclick="toggleMatrixCell(this, event)">
                                             <div class="matrix-cell-control <?= $cSoal['checked'] ? 'is-checked' : '' ?>" tabindex="0" role="checkbox" aria-checked="<?= $cSoal['checked'] ? 'true' : 'false' ?>" onkeydown="handleCellKeydown(this, event)">
                                                 <span class="matrix-check-symbol"><?= $cSoal['checked'] ? 'v' : '' ?></span>
@@ -289,7 +325,7 @@ $totalLisanChecked = $colTotals['grand_lisan'];
                                             data-doc-type="kisi_kisi"
                                             data-col-type="kisi"
                                             data-row-id="<?= $row['row_no'] ?>"
-                                            title="Klik untuk mengisi/mengosongkan: <?= e($row['teacher_name']) ?> - <?= e($row['subject_name']) ?> (Kisi-kisi Kelas <?= e($g) ?>)"
+                                            title="Klik untuk menandai guru SUDAH mengumpulkan Kisi-Kisi Soal Kelas <?= e($g) ?> (v): <?= e($row['teacher_name']) ?> - <?= e($row['subject_name']) ?>"
                                             onclick="toggleMatrixCell(this, event)">
                                             <div class="matrix-cell-control <?= $cKisi['checked'] ? 'is-checked' : '' ?>" tabindex="0" role="checkbox" aria-checked="<?= $cKisi['checked'] ? 'true' : 'false' ?>" onkeydown="handleCellKeydown(this, event)">
                                                 <span class="matrix-check-symbol"><?= $cKisi['checked'] ? 'v' : '' ?></span>
@@ -855,7 +891,7 @@ function toggleMatrixCell(targetEl, evt) {
         evt.stopPropagation();
     }
     const cellTd = targetEl.tagName === 'TD' ? targetEl : targetEl.closest('td');
-    if (!cellTd || cellTd.classList.contains('cell-shaded') || cellTd.classList.contains('is-loading')) return;
+    if (!cellTd || cellTd.classList.contains('cell-shaded')) return;
 
     const teacherId = cellTd.getAttribute('data-teacher-id');
     const subjectId = cellTd.getAttribute('data-subject-id');
@@ -864,8 +900,53 @@ function toggleMatrixCell(targetEl, evt) {
     const colType = cellTd.getAttribute('data-col-type');
     const rowId = cellTd.getAttribute('data-row-id');
 
-    cellTd.classList.add('is-loading');
+    const controlBox = cellTd.querySelector('.matrix-cell-control');
+    const symbolSpan = cellTd.querySelector('.matrix-check-symbol');
+    const rowTotalEl = document.getElementById('row-total-' + colType + '-' + rowId);
+    const colTotalEl = document.getElementById('col-total-' + colType + '-' + grade);
+    const grandTotalEl = document.getElementById('grand-total-' + colType);
 
+    const rowTotal = parseInt(rowTotalEl ? rowTotalEl.innerText : 0) || 0;
+    const colTotal = parseInt(colTotalEl ? colTotalEl.innerText : 0) || 0;
+    const grandTotal = parseInt(grandTotalEl ? grandTotalEl.innerText : 0) || 0;
+
+    // Determine current state
+    const wasChecked = cellTd.classList.contains('is-checked');
+    const willBeChecked = !wasChecked;
+
+    // 1. OPTIMISTIC UI: Instant 0ms visual update
+    if (willBeChecked) {
+        cellTd.classList.add('is-checked');
+        if (controlBox) {
+            controlBox.classList.add('is-checked');
+            controlBox.setAttribute('aria-checked', 'true');
+        }
+        if (symbolSpan) {
+            symbolSpan.innerText = 'v';
+        }
+        if (rowTotalEl) rowTotalEl.innerText = rowTotal + 1;
+        if (colTotalEl) colTotalEl.innerText = colTotal + 1;
+        if (grandTotalEl) grandTotalEl.innerText = grandTotal + 1;
+
+        const docName = colType === 'lisan' ? 'Ujian Lisan' : (colType === 'soal' ? 'Naskah Soal' : 'Kisi-Kisi');
+        showMatrixToast('✓ ' + docName + ' ditandai sudah dikumpulkan (v)', '#10b981');
+    } else {
+        cellTd.classList.remove('is-checked');
+        if (controlBox) {
+            controlBox.classList.remove('is-checked');
+            controlBox.setAttribute('aria-checked', 'false');
+        }
+        if (symbolSpan) {
+            symbolSpan.innerText = '';
+        }
+        if (rowTotalEl) rowTotalEl.innerText = Math.max(0, rowTotal - 1);
+        if (colTotalEl) colTotalEl.innerText = Math.max(0, colTotal - 1);
+        if (grandTotalEl) grandTotalEl.innerText = Math.max(0, grandTotal - 1);
+
+        showMatrixToast('Tanda ceklis dikosongkan', '#64748b');
+    }
+
+    // 2. Background AJAX persistence
     const params = new URLSearchParams();
     params.append('teacher_id', teacherId);
     params.append('subject_id', subjectId);
@@ -884,54 +965,37 @@ function toggleMatrixCell(targetEl, evt) {
     })
     .then(response => response.json())
     .then(data => {
-        cellTd.classList.remove('is-loading');
-        if (data.success) {
-            const controlBox = cellTd.querySelector('.matrix-cell-control');
-            const symbolSpan = cellTd.querySelector('.matrix-check-symbol');
-            const rowTotalEl = document.getElementById('row-total-' + colType + '-' + rowId);
-            const colTotalEl = document.getElementById('col-total-' + colType + '-' + grade);
-            const grandTotalEl = document.getElementById('grand-total-' + colType);
-
-            let rowTotal = parseInt(rowTotalEl ? rowTotalEl.innerText : 0) || 0;
-            let colTotal = parseInt(colTotalEl ? colTotalEl.innerText : 0) || 0;
-            let grandTotal = parseInt(grandTotalEl ? grandTotalEl.innerText : 0) || 0;
-
-            if (data.checked) {
-                cellTd.classList.add('is-checked');
-                if (controlBox) {
-                    controlBox.classList.add('is-checked');
-                    controlBox.setAttribute('aria-checked', 'true');
-                }
-                if (symbolSpan) {
-                    symbolSpan.innerText = 'v';
-                }
-                if (rowTotalEl) rowTotalEl.innerText = rowTotal + 1;
-                if (colTotalEl) colTotalEl.innerText = colTotal + 1;
-                if (grandTotalEl) grandTotalEl.innerText = grandTotal + 1;
-                showMatrixToast('✓ ' + (data.message || 'Ceklis berhasil ditandai selesai.'), '#10b981');
-            } else {
-                cellTd.classList.remove('is-checked');
-                if (controlBox) {
-                    controlBox.classList.remove('is-checked');
-                    controlBox.setAttribute('aria-checked', 'false');
-                }
-                if (symbolSpan) {
-                    symbolSpan.innerText = '';
-                }
-                if (rowTotalEl) rowTotalEl.innerText = Math.max(0, rowTotal - 1);
-                if (colTotalEl) colTotalEl.innerText = Math.max(0, colTotal - 1);
-                if (grandTotalEl) grandTotalEl.innerText = Math.max(0, grandTotal - 1);
-                showMatrixToast('Ceklis naskah dikosongkan', '#64748b');
-            }
-        } else {
-            alert(data.message || 'Gagal memperbarui status checklist.');
+        if (!data.success) {
+            revert();
+            showMatrixToast('⚠️ ' + (data.message || 'Gagal menyimpan status.'), '#ef4444');
         }
     })
     .catch(error => {
-        cellTd.classList.remove('is-loading');
         console.error('Toggle error:', error);
-        alert('Gagal menghubungi server.');
+        revert();
+        showMatrixToast('⚠️ Gagal terhubung ke server.', '#ef4444');
     });
+
+    function revert() {
+        if (wasChecked) {
+            cellTd.classList.add('is-checked');
+            if (controlBox) {
+                controlBox.classList.add('is-checked');
+                controlBox.setAttribute('aria-checked', 'true');
+            }
+            if (symbolSpan) symbolSpan.innerText = 'v';
+        } else {
+            cellTd.classList.remove('is-checked');
+            if (controlBox) {
+                controlBox.classList.remove('is-checked');
+                controlBox.setAttribute('aria-checked', 'false');
+            }
+            if (symbolSpan) symbolSpan.innerText = '';
+        }
+        if (rowTotalEl) rowTotalEl.innerText = rowTotal;
+        if (colTotalEl) colTotalEl.innerText = colTotal;
+        if (grandTotalEl) grandTotalEl.innerText = grandTotal;
+    }
 }
 
 function handleCellKeydown(controlEl, evt) {

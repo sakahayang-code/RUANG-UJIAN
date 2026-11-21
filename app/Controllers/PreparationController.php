@@ -156,6 +156,9 @@ class PreparationController
             Response::redirect(url('/events'));
         }
 
+        // Auto-sync: Ensure all active teachers and their assigned subjects from Master Guru are synchronized
+        $this->autoSyncTeacherSubmissions($event);
+
         $matrixData = $this->buildSubmissionsMatrixData($event, $request);
 
         // Detailed submissions list for Log & Telaah Tab
@@ -187,6 +190,13 @@ class PreparationController
         $subjects = Database::fetchAll("SELECT * FROM subjects ORDER BY code ASC");
         $classes = Database::fetchAll("SELECT * FROM classes ORDER BY grade ASC, name ASC");
 
+        $unassignedTeachers = Database::fetchAll("
+            SELECT * FROM teachers 
+            WHERE status = 'Aktif' 
+              AND id NOT IN (SELECT DISTINCT teacher_id FROM teacher_subjects)
+            ORDER BY name ASC
+        ");
+
         View::render('preparation/submissions', [
             'title' => 'Checklist Persiapan & Penerimaan Dokumen',
             'event' => $event,
@@ -197,6 +207,7 @@ class PreparationController
             'classes' => $classes,
             'typeFilter' => $typeFilter,
             'statusFilter' => $statusFilter,
+            'unassignedTeachers' => $unassignedTeachers,
             'activeTab' => $request->input('tab', 'matrix')
         ]);
     }
@@ -221,6 +232,8 @@ class PreparationController
             $docType = 'naskah_soal';
         } elseif ($docType === 'kisi') {
             $docType = 'kisi_kisi';
+        } elseif ($docType === 'praktik') {
+            $docType = 'lisan';
         }
 
         if (!$teacherId || !$subjectId || empty($grade) || empty($docType)) {
@@ -233,8 +246,8 @@ class PreparationController
 
         // Check existing record
         $existing = Database::fetch(
-            "SELECT * FROM exam_document_submissions WHERE exam_event_id = ? AND teacher_id = ? AND subject_id = ? AND grade = ? AND doc_type = ?",
-            [$event['id'], $teacherId, $subjectId, $grade, $docType]
+            "SELECT * FROM exam_document_submissions WHERE exam_event_id = ? AND teacher_id = ? AND subject_id = ? AND grade = ? AND (doc_type = ? OR (doc_type IN ('lisan', 'praktik') AND ? = 'lisan'))",
+            [$event['id'], $teacherId, $subjectId, $grade, $docType, $docType]
         );
 
         $isChecked = false;
@@ -242,7 +255,7 @@ class PreparationController
 
         if ($existing) {
             if (in_array($existing['status'], ['selesai', 'sudah_diserahkan'])) {
-                // Toggle OFF -> uncheck
+                // Toggle OFF -> uncheck (belum mengumpulkan)
                 Database::update('exam_document_submissions', [
                     'status' => 'belum_diserahkan',
                     'submission_date' => null,
@@ -251,7 +264,7 @@ class PreparationController
                 $isChecked = false;
                 $newStatus = 'belum_diserahkan';
             } else {
-                // Toggle ON -> check
+                // Toggle ON -> check (sudah mengumpulkan)
                 Database::update('exam_document_submissions', [
                     'status' => 'selesai',
                     'submission_date' => date('Y-m-d'),
@@ -280,16 +293,25 @@ class PreparationController
             $newStatus = 'selesai';
         }
 
+        $docLabels = [
+            'naskah_soal' => 'Naskah Soal Tulis',
+            'kisi_kisi' => 'Kisi-Kisi Soal',
+            'lisan' => 'Ujian Lisan/Praktik'
+        ];
+        $label = $docLabels[$docType] ?? 'Dokumen';
+        $message = $isChecked ? "✓ {$label} berhasil ditandai sudah dikumpulkan (v)." : "{$label} ditandai belum dikumpulkan.";
+
         if ($request->isAjax() || $request->input('format') === 'json') {
             Response::json([
                 'success' => true,
                 'checked' => $isChecked,
                 'status' => $newStatus,
-                'message' => $isChecked ? 'Ceklis berhasil ditandai selesai (✓).' : 'Ceklis dikosongkan.'
+                'doc_type' => $docType,
+                'message' => $message
             ]);
         }
 
-        flash('success', 'Status checklist dokumen berhasil diperbarui.');
+        flash('success', $message);
         Response::redirect(url('/preparation/submissions'));
     }
 
@@ -338,7 +360,7 @@ class PreparationController
                     if ($action === 'check_all_kisi' || $action === 'check_all_all') {
                         $targetDocTypes[] = 'kisi_kisi';
                     }
-                    if (($action === 'check_all_lisan' || $action === 'check_all_all') && in_array($subjExamType, ['practical', 'both'])) {
+                    if ($action === 'check_all_lisan' || ($action === 'check_all_all' && $matrixData['hasLisan'])) {
                         $targetDocTypes[] = 'lisan';
                     }
 
@@ -404,14 +426,41 @@ class PreparationController
             Response::redirect(url('/events'));
         }
 
-        // Distinct grades from classes or default
-        $grades = Database::fetchAll("SELECT DISTINCT grade FROM classes WHERE grade IS NOT NULL AND grade != '' ORDER BY grade ASC");
-        $gradeList = array_column($grades, 'grade');
+        $count = $this->autoSyncTeacherSubmissions($event);
+
+        flash('success', "Sinkronisasi berhasil! Seluruh data guru aktif dan mata pelajaran yang diampu telah disinkronkan ke dalam format ceklis ({$count} entri checklist diperiksa/disiapkan).");
+        Response::redirect(url('/preparation/submissions'));
+    }
+
+    public function autoSyncTeacherSubmissions(array $event): int
+    {
+        // 1. Resolve distinct grades from classes and submissions
+        $submissionGrades = Database::fetchAll("
+            SELECT DISTINCT grade FROM exam_document_submissions 
+            WHERE exam_event_id = ? AND grade IS NOT NULL AND grade != ''
+        ", [$event['id']]);
+
+        $classGrades = Database::fetchAll("
+            SELECT DISTINCT grade FROM classes 
+            WHERE grade IS NOT NULL AND grade != ''
+        ");
+
+        $gradesMap = [];
+        foreach ($submissionGrades as $sg) {
+            if (!empty($sg['grade'])) $gradesMap[$sg['grade']] = true;
+        }
+        foreach ($classGrades as $cg) {
+            if (!empty($cg['grade'])) $gradesMap[$cg['grade']] = true;
+        }
+        $gradeList = array_keys($gradesMap);
         if (empty($gradeList)) {
             $gradeList = ['1', '2'];
+        } else {
+            natsort($gradeList);
+            $gradeList = array_values($gradeList);
         }
 
-        // Check if there are known teacher-subject pairings from teacher_subjects or submissions
+        // 2. Fetch known teacher-subject pairings from teacher_subjects
         $knownPairs = Database::fetchAll("
             SELECT DISTINCT ts.teacher_id, ts.subject_id, s.grade as subject_grade, s.exam_type as subject_exam_type
             FROM teacher_subjects ts
@@ -441,10 +490,7 @@ class PreparationController
                     $isApplicable = ($subjGrade === 'Semua' || $subjGrade === 'all' || $subjGrade === '' || strcasecmp($subjGrade, (string)$g) === 0);
                     if (!$isApplicable) continue;
 
-                    $types = ['naskah_soal', 'kisi_kisi'];
-                    if (in_array($pair['subject_exam_type'], ['practical', 'both'])) {
-                        $types[] = 'lisan';
-                    }
+                    $types = ['naskah_soal', 'kisi_kisi', 'lisan'];
 
                     foreach ($types as $docType) {
                         $exists = Database::fetchColumn(
@@ -467,49 +513,9 @@ class PreparationController
                     }
                 }
             }
-        } else {
-            $teachers = Database::fetchAll("SELECT * FROM teachers WHERE status = 'Aktif' ORDER BY name ASC");
-            $subjects = Database::fetchAll("SELECT * FROM subjects ORDER BY code ASC");
-
-            foreach ($teachers as $t) {
-                foreach ($subjects as $s) {
-                    $subjGrade = trim((string)($s['grade'] ?? 'Semua'));
-
-                    foreach ($gradeList as $g) {
-                        $isApplicable = ($subjGrade === 'Semua' || $subjGrade === 'all' || $subjGrade === '' || strcasecmp($subjGrade, (string)$g) === 0);
-                        if (!$isApplicable) continue;
-
-                        $types = ['naskah_soal', 'kisi_kisi'];
-                        if (in_array($s['exam_type'], ['practical', 'both'])) {
-                            $types[] = 'lisan';
-                        }
-
-                        foreach ($types as $docType) {
-                            $exists = Database::fetchColumn(
-                                "SELECT COUNT(*) FROM exam_document_submissions WHERE exam_event_id = ? AND teacher_id = ? AND subject_id = ? AND grade = ? AND doc_type = ?",
-                                [$event['id'], $t['id'], $s['id'], $g, $docType]
-                            );
-
-                            if (!$exists) {
-                                Database::insert('exam_document_submissions', [
-                                    'exam_event_id' => $event['id'],
-                                    'teacher_id' => $t['id'],
-                                    'subject_id' => $s['id'],
-                                    'grade' => $g,
-                                    'doc_type' => $docType,
-                                    'status' => 'belum_diserahkan',
-                                    'created_at' => date('Y-m-d H:i:s')
-                                ]);
-                                $count++;
-                            }
-                        }
-                    }
-                }
-            }
         }
 
-        flash('success', "Sinkronisasi berhasil! Menambahkan/memeriksa {$count} entri data matriks checklist.");
-        Response::redirect(url('/preparation/submissions'));
+        return $count;
     }
 
     public function addMatrixRow(Request $request): void
@@ -556,10 +562,7 @@ class PreparationController
             $isApplicable = ($subjGrade === 'Semua' || $subjGrade === 'all' || $subjGrade === '' || strcasecmp($subjGrade, (string)$g) === 0);
             if (!$isApplicable) continue;
 
-            $types = ['naskah_soal', 'kisi_kisi'];
-            if (in_array($subject['exam_type'] ?? 'written', ['practical', 'both'])) {
-                $types[] = 'lisan';
-            }
+            $types = ['naskah_soal', 'kisi_kisi', 'lisan'];
 
             foreach ($types as $docType) {
                 $exists = Database::fetchColumn(
