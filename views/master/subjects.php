@@ -24,13 +24,30 @@
     </div>
 </div>
 
+<!-- Tabs Kategori Mata Pelajaran: Semua, Ujian Tulis, Ujian Praktik -->
+<div style="display: flex; border-bottom: 2px solid #e2e8f0; margin-bottom: 20px; gap: 8px; flex-wrap: wrap;">
+    <a href="<?= url('/master/subjects?type=all') ?>" 
+       style="padding: 10px 18px; font-weight: 700; font-size: 13.5px; text-decoration: none; border-bottom: 3px solid <?= ($type ?? 'all') === 'all' ? '#2563eb' : 'transparent' ?>; color: <?= ($type ?? 'all') === 'all' ? '#1d4ed8' : '#64748b' ?>; display: inline-flex; align-items: center; gap: 6px; background: <?= ($type ?? 'all') === 'all' ? '#eff6ff' : 'transparent' ?>; border-top-left-radius: 8px; border-top-right-radius: 8px;">
+        📚 Semua Mata Pelajaran (<?= $totalAll ?? count($subjects) ?>)
+    </a>
+    <a href="<?= url('/master/subjects?type=written') ?>" 
+       style="padding: 10px 18px; font-weight: 700; font-size: 13.5px; text-decoration: none; border-bottom: 3px solid <?= ($type ?? 'all') === 'written' ? '#059669' : 'transparent' ?>; color: <?= ($type ?? 'all') === 'written' ? '#047857' : '#64748b' ?>; display: inline-flex; align-items: center; gap: 6px; background: <?= ($type ?? 'all') === 'written' ? '#ecfdf5' : 'transparent' ?>; border-top-left-radius: 8px; border-top-right-radius: 8px;">
+        📝 Mata Pelajaran Ujian Tulis (<?= $totalWritten ?? 0 ?>)
+    </a>
+    <a href="<?= url('/master/subjects?type=practical') ?>" 
+       style="padding: 10px 18px; font-weight: 700; font-size: 13.5px; text-decoration: none; border-bottom: 3px solid <?= ($type ?? 'all') === 'practical' ? '#7c3aed' : 'transparent' ?>; color: <?= ($type ?? 'all') === 'practical' ? '#6d28d9' : '#64748b' ?>; display: inline-flex; align-items: center; gap: 6px; background: <?= ($type ?? 'all') === 'practical' ? '#f5f3ff' : 'transparent' ?>; border-top-left-radius: 8px; border-top-right-radius: 8px;">
+        🧪 Mata Pelajaran Ujian Praktik (<?= $totalPractical ?? 0 ?>)
+    </a>
+</div>
+
 <form method="GET" action="<?= url('/master/subjects') ?>" class="filter-bar">
+    <input type="hidden" name="type" value="<?= e($type ?? 'all') ?>">
     <div class="filter-input">
         <input type="text" name="q" class="form-control" placeholder="Cari kode atau nama mapel..." value="<?= e($search) ?>">
     </div>
     <button type="submit" class="btn btn-secondary">Cari</button>
     <?php if (!empty($search)): ?>
-        <a href="<?= url('/master/subjects') ?>" class="btn btn-outline">Reset</a>
+        <a href="<?= url('/master/subjects?type=' . e($type ?? 'all')) ?>" class="btn btn-outline">Reset</a>
     <?php endif; ?>
 </form>
 

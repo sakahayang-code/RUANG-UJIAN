@@ -505,4 +505,201 @@ class PrintController
             'hideKop' => true,
         ]);
     }
+
+    public function schedules(Request $request): void
+    {
+        $event = active_event();
+        if (!$event) {
+            flash('warning', 'Pilih kegiatan ujian aktif terlebih dahulu.');
+            Response::redirect(url('/events'));
+        }
+
+        $type = (string)$request->input('type', 'written');
+        $school = school_setting();
+
+        $chair = Database::fetch("
+            SELECT cm.*, t.name as teacher_name, t.nip as teacher_nip
+            FROM committee_members cm
+            LEFT JOIN teachers t ON cm.teacher_id = t.id
+            JOIN committees c ON cm.committee_id = c.id
+            WHERE c.exam_event_id = ? AND (cm.role_title LIKE '%Ketua%' OR cm.role_title = 'Ketua Panitia')
+            ORDER BY cm.order_index ASC LIMIT 1
+        ", [$event['id']]);
+
+        $writtenSchedules = [];
+        $practicalSchedules = [];
+
+        if ($type === 'written' || $type === 'all') {
+            $writtenSchedules = Database::fetchAll("
+                SELECT ws.*, s.name as subject_name, s.code as subject_code
+                FROM written_exam_schedules ws
+                JOIN subjects s ON ws.subject_id = s.id
+                WHERE ws.exam_event_id = ?
+                ORDER BY ws.exam_date ASC, ws.session ASC, ws.start_time ASC
+            ", [$event['id']]);
+        }
+
+        if ($type === 'practical' || $type === 'all') {
+            $practicalSchedules = Database::fetchAll("
+                SELECT ps.*, s.name as subject_name, s.code as subject_code,
+                       (SELECT GROUP_CONCAT(t.name, ', ') 
+                        FROM practical_exam_assignments pa 
+                        JOIN teachers t ON pa.examiner_id = t.id 
+                        WHERE pa.practical_schedule_id = ps.id) as examiners_list
+                FROM practical_exam_schedules ps
+                JOIN subjects s ON ps.subject_id = s.id
+                WHERE ps.exam_event_id = ?
+                ORDER BY ps.exam_date ASC, ps.start_time ASC
+            ", [$event['id']]);
+        }
+
+        View::layout('layouts/print');
+        View::render('print/schedules', [
+            'title' => ($type === 'practical' ? 'Jadwal Ujian Praktik' : 'Jadwal Ujian Tulis') . ' - ' . $event['name'],
+            'event' => $event,
+            'school' => $school,
+            'chair' => $chair,
+            'type' => $type,
+            'writtenSchedules' => $writtenSchedules,
+            'practicalSchedules' => $practicalSchedules,
+        ]);
+    }
+
+    public function participants(Request $request): void
+    {
+        $event = active_event();
+        if (!$event) {
+            flash('warning', 'Pilih kegiatan ujian aktif terlebih dahulu.');
+            Response::redirect(url('/events'));
+        }
+
+        $classId = (string)$request->input('class_id', '');
+        $roomId = (string)$request->input('room_id', '');
+        $school = school_setting();
+
+        $sql = "
+            SELECT ep.*, era.seat_number, er.room_number, er.name as room_name, c.name as class_name
+            FROM exam_participants ep
+            LEFT JOIN exam_room_assignments era ON ep.id = era.participant_id
+            LEFT JOIN exam_rooms er ON era.exam_room_id = er.id
+            LEFT JOIN classes c ON ep.class_id = c.id
+            WHERE ep.exam_event_id = ?
+        ";
+        $params = [$event['id']];
+
+        if (!empty($classId)) {
+            $sql .= " AND ep.class_id = ?";
+            $params[] = $classId;
+        }
+
+        if (!empty($roomId)) {
+            $sql .= " AND er.id = ?";
+            $params[] = $roomId;
+        }
+
+        $sql .= " ORDER BY er.room_number ASC, era.seat_number ASC, ep.participant_number ASC";
+        $participants = Database::fetchAll($sql, $params);
+
+        $classes = Database::fetchAll("SELECT * FROM classes ORDER BY grade ASC, name ASC");
+        $rooms = Database::fetchAll("SELECT * FROM exam_rooms WHERE exam_event_id = ? ORDER BY room_number ASC", [$event['id']]);
+
+        $chair = Database::fetch("
+            SELECT cm.*, t.name as teacher_name, t.nip as teacher_nip
+            FROM committee_members cm
+            LEFT JOIN teachers t ON cm.teacher_id = t.id
+            JOIN committees c ON cm.committee_id = c.id
+            WHERE c.exam_event_id = ? AND (cm.role_title LIKE '%Ketua%' OR cm.role_title = 'Ketua Panitia')
+            ORDER BY cm.order_index ASC LIMIT 1
+        ", [$event['id']]);
+
+        View::layout('layouts/print');
+        View::render('print/participants', [
+            'title' => 'Daftar Peserta Ujian - ' . $event['name'],
+            'event' => $event,
+            'school' => $school,
+            'chair' => $chair,
+            'participants' => $participants,
+            'classes' => $classes,
+            'rooms' => $rooms,
+            'selectedClassId' => $classId,
+            'selectedRoomId' => $roomId,
+        ]);
+    }
+
+    public function attendance(Request $request): void
+    {
+        $event = active_event();
+        if (!$event) {
+            flash('warning', 'Pilih kegiatan ujian aktif terlebih dahulu.');
+            Response::redirect(url('/events'));
+        }
+
+        $rooms = Database::fetchAll("SELECT * FROM exam_rooms WHERE exam_event_id = ? ORDER BY room_number ASC", [$event['id']]);
+        $schedules = Database::fetchAll("
+            SELECT ws.*, s.name as subject_name
+            FROM written_exam_schedules ws
+            JOIN subjects s ON ws.subject_id = s.id
+            WHERE ws.exam_event_id = ?
+            ORDER BY ws.exam_date ASC, ws.session ASC
+        ", [$event['id']]);
+
+        View::render('print/attendance_hub', [
+            'title' => 'Pusat Cetak Daftar Hadir',
+            'event' => $event,
+            'rooms' => $rooms,
+            'schedules' => $schedules
+        ]);
+    }
+
+    public function studentAttendance(Request $request): void
+    {
+        $event = active_event();
+        if (!$event) {
+            flash('warning', 'Pilih kegiatan ujian aktif terlebih dahulu.');
+            Response::redirect(url('/events'));
+        }
+
+        $roomId = (int)$request->input('room_id');
+        $scheduleId = (int)$request->input('schedule_id');
+        $school = school_setting();
+
+        $schedule = Database::fetch("
+            SELECT ws.*, s.name as subject_name, s.code as subject_code
+            FROM written_exam_schedules ws
+            JOIN subjects s ON ws.subject_id = s.id
+            WHERE ws.id = ?
+        ", [$scheduleId]);
+
+        $room = Database::fetch("SELECT * FROM exam_rooms WHERE id = ?", [$roomId]);
+
+        $supervisors = Database::fetch("
+            SELECT s.*, t1.name as sup1_name, t1.nip as sup1_nip, t2.name as sup2_name, t2.nip as sup2_nip
+            FROM written_exam_supervisors s
+            LEFT JOIN teachers t1 ON s.supervisor1_id = t1.id
+            LEFT JOIN teachers t2 ON s.supervisor2_id = t2.id
+            WHERE s.schedule_id = ? AND s.room_id = ?
+        ", [$scheduleId, $roomId]);
+
+        $participants = Database::fetchAll("
+            SELECT ep.*, era.seat_number, c.name as class_name,
+                   wea.status as attendance_status
+            FROM exam_room_assignments era
+            JOIN exam_participants ep ON era.participant_id = ep.id
+            LEFT JOIN classes c ON ep.class_id = c.id
+            LEFT JOIN written_exam_attendances wea ON (wea.schedule_id = ? AND wea.room_id = ? AND wea.participant_id = ep.id)
+            WHERE era.exam_room_id = ?
+            ORDER BY era.seat_number ASC, ep.participant_number ASC
+        ", [$scheduleId, $roomId, $roomId]);
+
+        View::layout('layouts/print');
+        View::render('print/student_attendance', [
+            'title' => 'Daftar Hadir Peserta - ' . ($room['name'] ?? 'Ruang') . ' - ' . ($schedule['subject_name'] ?? 'Ujian'),
+            'event' => $event,
+            'school' => $school,
+            'room' => $room,
+            'schedule' => $schedule,
+            'supervisors' => $supervisors,
+            'participants' => $participants
+        ]);
+    }
 }

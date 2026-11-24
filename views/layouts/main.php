@@ -62,7 +62,8 @@ $allEvents = \App\Core\Database::fetchAll("SELECT * FROM exam_events ORDER BY id
         </div>
 
         <nav class="sidebar-menu">
-            <div class="menu-category">Utama</div>
+            <!-- Menu Utama -->
+            <div class="menu-category">Menu Utama</div>
             <a href="<?= url('/dashboard') ?>" class="menu-item <?= str_contains($currentUrl, '/dashboard') ? 'active' : '' ?>">
                 <span class="menu-icon">📊</span> Dashboard
             </a>
@@ -73,134 +74,90 @@ $allEvents = \App\Core\Database::fetchAll("SELECT * FROM exam_events ORDER BY id
             </a>
             <?php endif; ?>
 
-            <?php if (has_role(['super_admin', 'admin', 'operator'])): ?>
-            <div class="menu-category">Master Data</div>
-            <a href="<?= url('/master/students') ?>" class="menu-item <?= str_contains($currentUrl, '/master/students') ? 'active' : '' ?>">
-                <span class="menu-icon">👨‍🎓</span> Data Siswa
+            <a href="<?= url('/events') ?>" class="menu-item <?= str_contains($currentUrl, '/events') ? 'active' : '' ?>">
+                <span class="menu-icon">📅</span> Manajemen Ujian
             </a>
+
+            <!-- Master Data -->
+            <div class="menu-category">Master Data</div>
             <a href="<?= url('/master/classes') ?>" class="menu-item <?= str_contains($currentUrl, '/master/classes') ? 'active' : '' ?>">
                 <span class="menu-icon">🏛️</span> Data Kelas
-            </a>
-            <a href="<?= url('/master/teachers') ?>" class="menu-item <?= str_contains($currentUrl, '/master/teachers') ? 'active' : '' ?>">
-                <span class="menu-icon">👨‍🏫</span> Data Guru & Tendik
             </a>
             <a href="<?= url('/master/subjects') ?>" class="menu-item <?= str_contains($currentUrl, '/master/subjects') ? 'active' : '' ?>">
                 <span class="menu-icon">📚</span> Data Mata Pelajaran
             </a>
+            <a href="<?= url('/master/students') ?>" class="menu-item <?= str_contains($currentUrl, '/master/students') ? 'active' : '' ?>">
+                <span class="menu-icon">👨‍🎓</span> Data Peserta Ujian
+            </a>
+            <a href="<?= url('/committee') ?>" class="menu-item <?= (str_contains($currentUrl, '/committee') && !str_contains($currentUrl, '/letters')) ? 'active' : '' ?>">
+                <span class="menu-icon">👥</span> Data Panitia
+            </a>
+            <a href="<?= url('/written-exam/supervisors') ?>" class="menu-item <?= (str_contains($currentUrl, '/written-exam/supervisors') || str_contains($currentUrl, '/master/supervisors')) ? 'active' : '' ?>">
+                <span class="menu-icon">👀</span> Data Pengawas Ruang
+            </a>
+            <a href="<?= url('/master/examiners') ?>" class="menu-item <?= str_contains($currentUrl, '/master/examiners') ? 'active' : '' ?>">
+                <span class="menu-icon">🩺</span> Data Penguji Praktik
+            </a>
             <a href="<?= url('/written-exam/rooms') ?>" class="menu-item <?= (str_contains($currentUrl, '/written-exam/rooms') || str_contains($currentUrl, '/master/rooms')) ? 'active' : '' ?>">
                 <span class="menu-icon">🚪</span> Atur Ruangan
             </a>
-            <?php endif; ?>
 
-            <?php if (has_role(['super_admin', 'admin', 'ketua_panitia', 'sekretaris', 'operator'])): ?>
-            <div class="menu-category">Kegiatan & Kepanitiaan</div>
-            <a href="<?= url('/events') ?>" class="menu-item <?= str_contains($currentUrl, '/events') ? 'active' : '' ?>">
-                <span class="menu-icon">📅</span> Manajemen Kegiatan
+            <!-- Persiapan Kegiatan -->
+            <div class="menu-category">Persiapan Kegiatan</div>
+            <a href="<?= url('/work-program') ?>" class="menu-item <?= str_contains($currentUrl, '/work-program') ? 'active' : '' ?>">
+                <span class="menu-icon">📋</span> Program Kerja Panitia
             </a>
-            <a href="<?= url('/committee') ?>" class="menu-item <?= (str_contains($currentUrl, '/committee') && !str_contains($currentUrl, '/work-program')) ? 'active' : '' ?>">
-                <span class="menu-icon">👥</span> Struktur & Dokumen SK
+            <a href="<?= url('/written-exam/schedules') ?>" class="menu-item <?= str_contains($currentUrl, '/written-exam/schedules') ? 'active' : '' ?>">
+                <span class="menu-icon">🗓️</span> Jadwal Ujian Tulis
+            </a>
+            <a href="<?= url('/practical-exam') ?>" class="menu-item <?= (str_contains($currentUrl, '/practical-exam') && !str_contains($currentUrl, '/execution')) ? 'active' : '' ?>">
+                <span class="menu-icon">🧪</span> Jadwal Ujian Praktik
             </a>
             <a href="<?= url('/committee/letters') ?>" class="menu-item <?= str_contains($currentUrl, '/committee/letters') ? 'active' : '' ?>">
-                <span class="menu-icon">✉️</span> Undangan & Surat Tugas
+                <span class="menu-icon">✉️</span> Persuratan
             </a>
-            <a href="<?= url('/work-program') ?>" class="menu-item <?= str_contains($currentUrl, '/work-program') ? 'active' : '' ?>">
-                <span class="menu-icon">📋</span> Program Kerja & RAB
-            </a>
-            <?php endif; ?>
-
-            <?php if (has_role(['super_admin', 'admin', 'ketua_panitia', 'sekretaris', 'operator'])): ?>
-            <div class="menu-category">Persiapan Naskah & Dokumen</div>
             <a href="<?= url('/preparation/rules') ?>" class="menu-item <?= str_contains($currentUrl, '/preparation/rules') ? 'active' : '' ?>">
-                <span class="menu-icon">📜</span> Tata Tertib & Juknis
+                <span class="menu-icon">📜</span> Tata Tertib
             </a>
-            <a href="<?= url('/preparation/submissions') ?>" class="menu-item <?= str_contains($currentUrl, '/preparation/submissions') ? 'active' : '' ?>">
-                <span class="menu-icon">📝</span> Checklist Dokumen Soal
-            </a>
-            <a href="<?= url('/preparation/printing') ?>" class="menu-item <?= str_contains($currentUrl, '/preparation/printing') ? 'active' : '' ?>">
-                <span class="menu-icon">🖨️</span> Penggandaan Naskah
-            </a>
-            <?php endif; ?>
 
-            <?php if (has_role(['super_admin', 'admin', 'ketua_panitia', 'sekretaris', 'operator', 'pengawas'])): ?>
-            <div class="menu-category">Ujian Tertulis</div>
-            <a href="<?= url('/written-exam/schedules') ?>" class="menu-item <?= str_contains($currentUrl, '/written-exam/schedules') ? 'active' : '' ?>">
-                <span class="menu-icon">🗓️</span> Jadwal Ujian Tertulis
+            <!-- Cetak -->
+            <div class="menu-category">Cetak</div>
+            <a href="<?= url('/print/participant-cards') ?>" class="menu-item <?= str_contains($currentUrl, '/print/participant-cards') ? 'active' : '' ?>">
+                <span class="menu-icon">🪪</span> Kartu Peserta
             </a>
-            <?php if (!has_role('pengawas')): ?>
-            <a href="<?= url('/written-exam/rooms') ?>" class="menu-item <?= (str_contains($currentUrl, '/written-exam/rooms') || str_contains($currentUrl, '/master/rooms')) ? 'active' : '' ?>">
-                <span class="menu-icon">🚪</span> Atur Ruangan & Peserta
+            <a href="<?= url('/print/name-tags?type=panitia') ?>" class="menu-item <?= (str_contains($currentUrl, '/print/name-tags') && str_contains($_SERVER['REQUEST_URI'] ?? '', 'panitia')) ? 'active' : '' ?>">
+                <span class="menu-icon">🏷️</span> Kartu Panitia
             </a>
-            <a href="<?= url('/written-exam/seating') ?>" class="menu-item <?= str_contains($currentUrl, '/written-exam/seating') ? 'active' : '' ?>">
+            <a href="<?= url('/print/schedules') ?>" class="menu-item <?= str_contains($currentUrl, '/print/schedules') ? 'active' : '' ?>">
+                <span class="menu-icon">📅</span> Jadwal (Tulis &amp; Praktik)
+            </a>
+            <a href="<?= url('/print/room-signs') ?>" class="menu-item <?= str_contains($currentUrl, '/print/room-signs') ? 'active' : '' ?>">
+                <span class="menu-icon">🚪</span> Nomor Ruangan Ujian
+            </a>
+            <a href="<?= url('/print/participants') ?>" class="menu-item <?= str_contains($currentUrl, '/print/participants') ? 'active' : '' ?>">
+                <span class="menu-icon">📑</span> Daftar Peserta Ujian
+            </a>
+            <a href="<?= url('/written-exam/seating/print') ?>" target="_blank" class="menu-item">
                 <span class="menu-icon">🪑</span> Denah Tempat Duduk
             </a>
-            <a href="<?= url('/written-exam/supervisors') ?>" class="menu-item <?= str_contains($currentUrl, '/written-exam/supervisors') ? 'active' : '' ?>">
-                <span class="menu-icon">👀</span> Penugasan Pengawas
-            </a>
-            <?php endif; ?>
-            <a href="<?= url('/written-exam/execution') ?>" class="menu-item <?= str_contains($currentUrl, '/written-exam/execution') ? 'active' : '' ?>">
-                <span class="menu-icon">✍️</span> Presensi & Berita Acara
-            </a>
-            <?php endif; ?>
-
-            <?php if (has_role(['super_admin', 'admin', 'ketua_panitia', 'sekretaris', 'operator', 'penguji'])): ?>
-            <div class="menu-category">Ujian Praktik</div>
-            <a href="<?= url('/practical-exam') ?>" class="menu-item <?= str_contains($currentUrl, '/practical-exam') ? 'active' : '' ?>">
-                <span class="menu-icon">🧪</span> Jadwal & Stasiun Praktik
-            </a>
-            <a href="<?= url('/practical-exam/execution') ?>" class="menu-item <?= str_contains($currentUrl, '/practical-exam/execution') ? 'active' : '' ?>">
-                <span class="menu-icon">🔬</span> Presensi & Pelaksanaan
-            </a>
-            <?php endif; ?>
-
-            <?php if (has_role(['super_admin', 'admin', 'ketua_panitia', 'sekretaris', 'operator'])): ?>
-            <div class="menu-category">Kehadiran & Distribusi</div>
-            <a href="<?= url('/attendance/committee') ?>" class="menu-item <?= str_contains($currentUrl, '/attendance/committee') ? 'active' : '' ?>">
-                <span class="menu-icon">✅</span> Kehadiran Panitia
-            </a>
-            <a href="<?= url('/attendance/supervisors') ?>" class="menu-item <?= str_contains($currentUrl, '/attendance/supervisors') ? 'active' : '' ?>">
-                <span class="menu-icon">📋</span> Kehadiran Pengawas
-            </a>
-            <a href="<?= url('/attendance/examiners') ?>" class="menu-item <?= str_contains($currentUrl, '/attendance/examiners') ? 'active' : '' ?>">
-                <span class="menu-icon">🩺</span> Kehadiran Penguji Praktik
-            </a>
-            <a href="<?= url('/distribution/handover') ?>" class="menu-item <?= str_contains($currentUrl, '/distribution/handover') ? 'active' : '' ?>">
-                <span class="menu-icon">📦</span> Distribusi Naskah Soal
-            </a>
-            <?php endif; ?>
-
-            <?php if (has_role(['super_admin', 'admin', 'ketua_panitia', 'sekretaris', 'operator'])): ?>
-            <div class="menu-category">Lembar Jawaban & Packing</div>
-            <a href="<?= url('/answer-sheets/receipts') ?>" class="menu-item <?= str_contains($currentUrl, '/answer-sheets/receipts') ? 'active' : '' ?>">
-                <span class="menu-icon">📥</span> Penerimaan Lembar Jawaban
-            </a>
-            <a href="<?= url('/answer-sheets/packing') ?>" class="menu-item <?= str_contains($currentUrl, '/answer-sheets/packing') ? 'active' : '' ?>">
-                <span class="menu-icon">✉️</span> Packing & Label 3 Mode
-            </a>
-            <a href="<?= url('/answer-sheets/handover') ?>" class="menu-item <?= str_contains($currentUrl, '/answer-sheets/handover') ? 'active' : '' ?>">
-                <span class="menu-icon">📑</span> Rekap Penyerahan LJ
-            </a>
-            <?php endif; ?>
-
-            <div class="menu-category">Cetak & Laporan</div>
-            <a href="<?= url('/print') ?>" class="menu-item <?= str_contains($currentUrl, '/print') ? 'active' : '' ?>">
-                <span class="menu-icon">🖨️</span> Pusat Cetak Perlengkapan
+            <a href="<?= url('/print/attendance') ?>" class="menu-item <?= (str_contains($currentUrl, '/print/attendance') || str_contains($currentUrl, '/attendance/')) ? 'active' : '' ?>">
+                <span class="menu-icon">✅</span> Daftar Hadir
             </a>
             <a href="<?= url('/reports/minutes') ?>" class="menu-item <?= str_contains($currentUrl, '/reports/minutes') ? 'active' : '' ?>">
-                <span class="menu-icon">📜</span> Berita Acara & Dokumen
+                <span class="menu-icon">📝</span> Berita Acara Pelaksanaan Ujian
             </a>
             <a href="<?= url('/reports/final') ?>" class="menu-item <?= str_contains($currentUrl, '/reports/final') ? 'active' : '' ?>">
-                <span class="menu-icon">🏆</span> Laporan Akhir 18 Bab
+                <span class="menu-icon">🏆</span> LPJ Kegiatan Ujian
             </a>
 
-            <?php if (has_role(['super_admin', 'admin'])): ?>
-            <div class="menu-category">Sistem & Pengguna</div>
-            <a href="<?= url('/users') ?>" class="menu-item <?= str_contains($currentUrl, '/users') ? 'active' : '' ?>">
-                <span class="menu-icon">👤</span> Manajemen Pengguna
-            </a>
+            <!-- Sistem -->
+            <div class="menu-category">Sistem</div>
             <a href="<?= url('/backup') ?>" class="menu-item <?= str_contains($currentUrl, '/backup') ? 'active' : '' ?>">
-                <span class="menu-icon">💾</span> Backup & Restore SQLite
+                <span class="menu-icon">💾</span> Backup &amp; Restore
             </a>
-            <?php endif; ?>
+            <a href="<?= url('/logout') ?>" class="menu-item text-danger" style="color: #dc2626 !important;">
+                <span class="menu-icon">🚪</span> Logout
+            </a>
 
             <div style="height: 20px;"></div>
         </nav>

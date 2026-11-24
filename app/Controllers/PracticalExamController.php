@@ -170,6 +170,9 @@ class PracticalExamController
         ]);
 
         flash('success', 'Penguji praktik berhasil ditugaskan.');
+        if (str_contains($request->server('HTTP_REFERER') ?? '', 'master/examiners')) {
+            Response::redirect(url('/master/examiners'));
+        }
         Response::redirect(url('/practical-exam'));
     }
 
@@ -346,11 +349,52 @@ class PracticalExamController
         $this->uploadDocument($request);
     }
 
+    public function examiners(Request $request): void
+    {
+        $event = active_event();
+        if (!$event) {
+            flash('warning', 'Pilih kegiatan ujian aktif terlebih dahulu.');
+            Response::redirect(url('/events'));
+        }
+
+        $examiners = Database::fetchAll("
+            SELECT pa.*, t.name as teacher_name, t.nip as teacher_nip, t.phone as teacher_phone,
+                   ps.exam_date, ps.start_time, ps.end_time, ps.location, ps.station, ps.grade,
+                   s.name as subject_name, s.code as subject_code
+            FROM practical_exam_assignments pa
+            JOIN teachers t ON pa.examiner_id = t.id
+            JOIN practical_exam_schedules ps ON pa.practical_schedule_id = ps.id
+            JOIN subjects s ON ps.subject_id = s.id
+            WHERE ps.exam_event_id = ?
+            ORDER BY ps.exam_date ASC, s.name ASC, pa.examiner_role ASC
+        ", [$event['id']]);
+
+        $teachers = Database::fetchAll("SELECT * FROM teachers WHERE status = 'Aktif' ORDER BY name ASC");
+        $schedules = Database::fetchAll("
+            SELECT ps.*, s.name as subject_name, s.code as subject_code
+            FROM practical_exam_schedules ps
+            JOIN subjects s ON ps.subject_id = s.id
+            WHERE ps.exam_event_id = ?
+            ORDER BY ps.exam_date ASC, ps.start_time ASC
+        ", [$event['id']]);
+
+        View::render('master/examiners', [
+            'title' => 'Master Data Penguji Praktik',
+            'event' => $event,
+            'examiners' => $examiners,
+            'teachers' => $teachers,
+            'schedules' => $schedules
+        ]);
+    }
+
     public function deleteAssignment(Request $request): void
     {
         $id = (int)$request->input('id');
         Database::delete('practical_exam_assignments', 'id = ?', [$id]);
         flash('success', 'Penugasan penguji berhasil dihapus.');
+        if (str_contains($request->server('HTTP_REFERER') ?? '', 'master/examiners')) {
+            Response::redirect(url('/master/examiners'));
+        }
         Response::redirect(url('/practical-exam'));
     }
 }

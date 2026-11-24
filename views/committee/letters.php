@@ -95,11 +95,13 @@
                         <div class="form-group">
                             <label class="form-label required">Jenis Surat</label>
                             <select name="letter_type" id="letterTypeSelect" class="form-control" onchange="applyLetterTemplate(this)" required>
-                                <option value="undangan_rapat">Undangan Rapat Panitia</option>
+                                <option value="undangan_rapat">Surat Undangan Rapat</option>
+                                <option value="tugas_soal_kisi_tulis">Surat Tugas Pembuat Soal &amp; Kisi-Kisi Ujian Tulis</option>
+                                <option value="tugas_soal_kisi_praktik">Surat Tugas Pembuat Soal &amp; Kisi-Kisi Ujian Praktik</option>
+                                <option value="tugas_pengawas">Surat Tugas Pengawas Ruang</option>
+                                <option value="tugas_penguji">Surat Tugas Penguji Praktik</option>
                                 <option value="tugas_kisi_kisi">Surat Tugas Penyusun Kisi-kisi</option>
                                 <option value="tugas_soal">Surat Tugas Penyusun Naskah Soal</option>
-                                <option value="tugas_pengawas">Surat Tugas Pengawas Ruang</option>
-                                <option value="tugas_penguji">Surat Tugas Penguji Ujian Praktik</option>
                                 <option value="tugas_panitia">Surat Tugas Kepanitiaan Lainnya</option>
                             </select>
                         </div>
@@ -210,11 +212,13 @@ Mengingat pentingnya agenda tersebut, kami mengharapkan kehadiran Bapak/Ibu tepa
                         <div class="form-group">
                             <label class="form-label required">Jenis Surat</label>
                             <select name="letter_type" id="editLetterType" class="form-control" onchange="toggleEditMeetingBox(this.value)" required>
-                                <option value="undangan_rapat">Undangan Rapat Panitia</option>
+                                <option value="undangan_rapat">Surat Undangan Rapat</option>
+                                <option value="tugas_soal_kisi_tulis">Surat Tugas Pembuat Soal &amp; Kisi-Kisi Ujian Tulis</option>
+                                <option value="tugas_soal_kisi_praktik">Surat Tugas Pembuat Soal &amp; Kisi-Kisi Ujian Praktik</option>
+                                <option value="tugas_pengawas">Surat Tugas Pengawas Ruang</option>
+                                <option value="tugas_penguji">Surat Tugas Penguji Praktik</option>
                                 <option value="tugas_kisi_kisi">Surat Tugas Penyusun Kisi-kisi</option>
                                 <option value="tugas_soal">Surat Tugas Penyusun Naskah Soal</option>
-                                <option value="tugas_pengawas">Surat Tugas Pengawas Ruang</option>
-                                <option value="tugas_penguji">Surat Tugas Penguji Ujian Praktik</option>
                                 <option value="tugas_panitia">Surat Tugas Kepanitiaan Lainnya</option>
                             </select>
                         </div>

@@ -14,6 +14,7 @@ class MasterSubjectController
     public function index(Request $request): void
     {
         $search = trim((string)$request->input('q', ''));
+        $type = (string)$request->input('type', 'all');
         $sql = "SELECT * FROM subjects WHERE 1=1";
         $params = [];
 
@@ -24,13 +25,27 @@ class MasterSubjectController
             $params[] = "%{$search}%";
         }
 
+        if ($type === 'written') {
+            $sql .= " AND exam_type IN ('written', 'both', '')";
+        } elseif ($type === 'practical') {
+            $sql .= " AND exam_type IN ('practical', 'both', 'lisan')";
+        }
+
         $sql .= " ORDER BY grade ASC, code ASC";
         $subjects = Database::fetchAll($sql, $params);
+
+        $totalAll = (int)Database::fetchColumn("SELECT COUNT(*) FROM subjects");
+        $totalWritten = (int)Database::fetchColumn("SELECT COUNT(*) FROM subjects WHERE exam_type IN ('written', 'both', '')");
+        $totalPractical = (int)Database::fetchColumn("SELECT COUNT(*) FROM subjects WHERE exam_type IN ('practical', 'both', 'lisan')");
 
         View::render('master/subjects', [
             'title' => 'Master Data Mata Pelajaran',
             'subjects' => $subjects,
-            'search' => $search
+            'search' => $search,
+            'type' => $type,
+            'totalAll' => $totalAll,
+            'totalWritten' => $totalWritten,
+            'totalPractical' => $totalPractical
         ]);
     }
 

@@ -294,6 +294,8 @@ Router::post('/master/subjects/import', [MasterSubjectController::class, 'import
 Router::get('/master/subjects/export', [MasterSubjectController::class, 'export'], ['auth']);
 Router::get('/master/subjects/template', [MasterSubjectController::class, 'template'], ['auth']);
 Router::get('/master/rooms', [WrittenExamController::class, 'rooms'], ['auth']);
+Router::get('/master/supervisors', [WrittenExamController::class, 'supervisors'], ['auth']);
+Router::get('/master/examiners', [PracticalExamController::class, 'examiners'], ['auth']);
 
 // 7. Exam Events
 Router::get('/events', [ExamEventController::class, 'index'], ['auth']);
@@ -463,7 +465,12 @@ Router::get('/answer-sheets/handover', [AnswerSheetController::class, 'handoverR
 Router::get('/print', [PrintController::class, 'index'], ['auth']);
 Router::get('/print/participant-cards', [PrintController::class, 'participantCards'], ['auth']);
 Router::get('/print/name-tags', [PrintController::class, 'nameTags'], ['auth']);
+Router::get('/print/schedules', [PrintController::class, 'schedules'], ['auth']);
 Router::get('/print/room-signs', [PrintController::class, 'roomSigns'], ['auth']);
+Router::get('/print/participants', [PrintController::class, 'participants'], ['auth']);
+Router::get('/print/seating', [WrittenExamController::class, 'printSeating'], ['auth']);
+Router::get('/print/attendance', [PrintController::class, 'attendance'], ['auth']);
+Router::get('/print/student-attendance', [PrintController::class, 'studentAttendance'], ['auth']);
 Router::get('/print/question-labels', [PrintController::class, 'questionEnvelopeLabels'], ['auth']);
 Router::get('/print/answer-sheet-labels', [PrintController::class, 'answerSheetEnvelopeLabels'], ['auth']);
 
