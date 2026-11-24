@@ -238,94 +238,92 @@
         <div class="card-title" style="display: flex; align-items: center; gap: 8px;">
             <span>📈</span> <span>Progres Tahapan Penyelenggaraan Ujian</span>
         </div>
-        <span class="badge badge-info" style="border-radius: 9999px; font-weight: 700; padding: 4px 10px;">Pemantauan Terpadu</span>
+        <span class="badge badge-info" style="border-radius: 9999px; font-weight: 700; padding: 4px 10px;">Pemantauan 5 Kategori</span>
     </div>
     <div class="card-body">
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px;">
             <div>
                 <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 600; margin-bottom: 8px;">
-                    <span style="color: #1e293b;">1. Dokumen Soal & Kisi-kisi</span>
-                    <span class="badge" style="background: rgba(79, 70, 229, 0.1); color: #4338ca; font-weight: 800; border-radius: 9999px; padding: 2px 8px;"><?= $docProgress ?>%</span>
+                    <span style="color: #1e293b;">1. Master Data Lengkap</span>
+                    <span class="badge" style="background: rgba(79, 70, 229, 0.1); color: #4338ca; font-weight: 800; border-radius: 9999px; padding: 2px 8px;"><?= $masterProgress ?>%</span>
                 </div>
                 <div class="progress-bar">
-                    <div class="progress-fill" style="width: <?= $docProgress ?>%;"></div>
+                    <div class="progress-fill" style="width: <?= $masterProgress ?>%;"></div>
                 </div>
-                <div style="font-size: 11.5px; color: #64748b; margin-top: 6px;">Penerimaan kisi-kisi, naskah soal, dan dokumen guru.</div>
+                <div style="font-size: 11.5px; color: #64748b; margin-top: 6px;">Kelas, mapel, siswa, panitia, pengawas, penguji & ruangan.</div>
             </div>
 
             <div>
                 <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 600; margin-bottom: 8px;">
-                    <span style="color: #1e293b;">2. Penggandaan Naskah Soal</span>
+                    <span style="color: #1e293b;">2. Persiapan Kegiatan</span>
                     <span class="badge" style="background: rgba(16, 185, 129, 0.1); color: #065f46; font-weight: 800; border-radius: 9999px; padding: 2px 8px;"><?= $prepProgress ?>%</span>
                 </div>
                 <div class="progress-bar">
                     <div class="progress-fill" style="width: <?= $prepProgress ?>%; background: linear-gradient(90deg, #059669 0%, #10b981 100%);"></div>
                 </div>
-                <div style="font-size: 11.5px; color: #64748b; margin-top: 6px;">Pencetakan naskah utama dan cadangan per mapel.</div>
+                <div style="font-size: 11.5px; color: #64748b; margin-top: 6px;">Program kerja, jadwal tulis & praktik, persuratan & tata tertib.</div>
             </div>
 
             <div>
                 <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 600; margin-bottom: 8px;">
-                    <span style="color: #1e293b;">3. Pelaksanaan (Berita Acara & Hadir)</span>
+                    <span style="color: #1e293b;">3. Berita Acara Ujian</span>
                     <span class="badge" style="background: rgba(37, 99, 235, 0.1); color: #1d4ed8; font-weight: 800; border-radius: 9999px; padding: 2px 8px;"><?= $examProgress ?>%</span>
                 </div>
                 <div class="progress-bar">
                     <div class="progress-fill" style="width: <?= $examProgress ?>%; background: linear-gradient(90deg, #1d4ed8 0%, #3b82f6 100%);"></div>
                 </div>
-                <div style="font-size: 11.5px; color: #64748b; margin-top: 6px;">Pengisian berita acara dan presensi per ruang/sesi.</div>
+                <div style="font-size: 11.5px; color: #64748b; margin-top: 6px;">Pengisian berita acara pelaksanaan ujian per sesi & ruang.</div>
             </div>
 
             <div>
                 <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 600; margin-bottom: 8px;">
-                    <span style="color: #1e293b;">4. Packing Lembar Jawaban (3 Mode)</span>
-                    <span class="badge" style="background: rgba(124, 58, 237, 0.1); color: #6d28d9; font-weight: 800; border-radius: 9999px; padding: 2px 8px;"><?= $answerSheetProgress ?>%</span>
-                </div>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: <?= $answerSheetProgress ?>%; background: linear-gradient(90deg, #6d28d9 0%, #8b5cf6 100%);"></div>
-                </div>
-                <div style="font-size: 11.5px; color: #64748b; margin-top: 6px;">Verifikasi fisik, pencocokan presensi, dan packing 3 mode.</div>
-            </div>
-
-            <div>
-                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 600; margin-bottom: 8px;">
-                    <span style="color: #1e293b;">5. Laporan Akhir Kegiatan Panitia</span>
+                    <span style="color: #1e293b;">4. LPJ Kegiatan Ujian</span>
                     <span class="badge" style="background: rgba(217, 119, 6, 0.1); color: #92400e; font-weight: 800; border-radius: 9999px; padding: 2px 8px;"><?= $reportProgress ?>%</span>
                 </div>
                 <div class="progress-bar">
                     <div class="progress-fill" style="width: <?= $reportProgress ?>%; background: linear-gradient(90deg, #d97706 0%, #f59e0b 100%);"></div>
                 </div>
-                <div style="font-size: 11.5px; color: #64748b; margin-top: 6px;">Penyusunan dan pengesahan laporan 18 bab terpadu.</div>
+                <div style="font-size: 11.5px; color: #64748b; margin-top: 6px;">Penyusunan & pengesahan laporan pertanggungjawaban kegiatan.</div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Quick Action Shortcuts -->
+<!-- Quick Action Shortcuts (9 Modul Cetak Terpadu) -->
 <div class="card" style="box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.9);">
     <div class="card-header" style="background: linear-gradient(180deg, #ffffff 0%, #fbfcfe 100%);">
         <div class="card-title" style="display: flex; align-items: center; gap: 8px;">
-            <span>⚡</span> <span>Akses Cepat Modul Utama</span>
+            <span>⚡</span> <span>Akses Cepat Modul Cetak & Administrasi</span>
         </div>
     </div>
     <div class="card-body">
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px;">
             <a href="<?= url('/print/participant-cards') ?>" class="btn btn-outline" style="justify-content: flex-start; padding: 12px 14px; border-radius: 12px; gap: 10px; font-weight: 600; border-color: #e2e8f0; background: #ffffff;">
-                <span style="font-size: 18px;">🪪</span> <span>Cetak Kartu Peserta</span>
+                <span style="font-size: 18px;">🪪</span> <span>1. Kartu Peserta</span>
             </a>
-            <a href="<?= url('/print/question-labels') ?>" class="btn btn-outline" style="justify-content: flex-start; padding: 12px 14px; border-radius: 12px; gap: 10px; font-weight: 600; border-color: #e2e8f0; background: #ffffff;">
-                <span style="font-size: 18px;">🏷️</span> <span>Label Naskah per Ruang</span>
+            <a href="<?= url('/print/name-tags?type=panitia') ?>" class="btn btn-outline" style="justify-content: flex-start; padding: 12px 14px; border-radius: 12px; gap: 10px; font-weight: 600; border-color: #e2e8f0; background: #ffffff;">
+                <span style="font-size: 18px;">🏷️</span> <span>2. Kartu Panitia</span>
             </a>
-            <a href="<?= url('/answer-sheets/packing') ?>" class="btn btn-outline" style="justify-content: flex-start; padding: 12px 14px; border-radius: 12px; gap: 10px; font-weight: 600; border-color: #e2e8f0; background: #ffffff;">
-                <span style="font-size: 18px;">✉️</span> <span>Packing Lembar Jawaban</span>
+            <a href="<?= url('/print/schedules') ?>" class="btn btn-outline" style="justify-content: flex-start; padding: 12px 14px; border-radius: 12px; gap: 10px; font-weight: 600; border-color: #e2e8f0; background: #ffffff;">
+                <span style="font-size: 18px;">📅</span> <span>3. Jadwal Tulis & Praktik</span>
             </a>
-            <a href="<?= url('/attendance/supervisors') ?>" class="btn btn-outline" style="justify-content: flex-start; padding: 12px 14px; border-radius: 12px; gap: 10px; font-weight: 600; border-color: #e2e8f0; background: #ffffff;">
-                <span style="font-size: 18px;">📋</span> <span>Presensi Pengawas Ruang</span>
+            <a href="<?= url('/print/room-signs') ?>" class="btn btn-outline" style="justify-content: flex-start; padding: 12px 14px; border-radius: 12px; gap: 10px; font-weight: 600; border-color: #e2e8f0; background: #ffffff;">
+                <span style="font-size: 18px;">🚪</span> <span>4. Nomor Ruangan Ujian</span>
             </a>
-            <a href="<?= url('/distribution/handover') ?>" class="btn btn-outline" style="justify-content: flex-start; padding: 12px 14px; border-radius: 12px; gap: 10px; font-weight: 600; border-color: #e2e8f0; background: #ffffff;">
-                <span style="font-size: 18px;">📦</span> <span>Distribusi Naskah Soal</span>
+            <a href="<?= url('/print/participants') ?>" class="btn btn-outline" style="justify-content: flex-start; padding: 12px 14px; border-radius: 12px; gap: 10px; font-weight: 600; border-color: #e2e8f0; background: #ffffff;">
+                <span style="font-size: 18px;">📑</span> <span>5. Daftar Peserta Ujian</span>
+            </a>
+            <a href="<?= url('/written-exam/seating/print') ?>" target="_blank" class="btn btn-outline" style="justify-content: flex-start; padding: 12px 14px; border-radius: 12px; gap: 10px; font-weight: 600; border-color: #e2e8f0; background: #ffffff;">
+                <span style="font-size: 18px;">🪑</span> <span>6. Denah Tempat Duduk</span>
+            </a>
+            <a href="<?= url('/print/attendance') ?>" class="btn btn-outline" style="justify-content: flex-start; padding: 12px 14px; border-radius: 12px; gap: 10px; font-weight: 600; border-color: #e2e8f0; background: #ffffff;">
+                <span style="font-size: 18px;">✅</span> <span>7. Daftar Hadir (4 Jenis)</span>
+            </a>
+            <a href="<?= url('/reports/minutes') ?>" class="btn btn-outline" style="justify-content: flex-start; padding: 12px 14px; border-radius: 12px; gap: 10px; font-weight: 600; border-color: #e2e8f0; background: #ffffff;">
+                <span style="font-size: 18px;">📝</span> <span>8. Berita Acara Ujian</span>
             </a>
             <a href="<?= url('/reports/final') ?>" class="btn btn-outline" style="justify-content: flex-start; padding: 12px 14px; border-radius: 12px; gap: 10px; font-weight: 600; border-color: #e2e8f0; background: #ffffff;">
-                <span style="font-size: 18px;">🏆</span> <span>Laporan Akhir 18 Bab</span>
+                <span style="font-size: 18px;">🏆</span> <span>9. LPJ Kegiatan Ujian</span>
             </a>
         </div>
     </div>

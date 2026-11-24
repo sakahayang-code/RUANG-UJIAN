@@ -238,24 +238,3 @@
     </div>
 </div>
 
-<!-- Perlengkapan Tambahan / Label Amplop -->
-<div style="margin-top: 35px; border-top: 1px solid #e2e8f0; padding-top: 20px;">
-    <h3 style="font-size: 16px; font-weight: 700; color: #334155; margin-bottom: 15px;">📦 Cetak Perlengkapan Tambahan (Label Amplop &amp; Format Rekap)</h3>
-    <div class="row" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
-        <div class="card p-3">
-            <h4 style="margin: 0 0 6px 0; font-size: 14px;">📄 Label Amplop Naskah Soal</h4>
-            <p style="font-size: 12px; color: #64748b; margin-bottom: 12px;">Ketentuan 1 Ruang = 1 Amplop utama terpadu berlabel resmi.</p>
-            <a href="<?= url('/print/question-labels') ?>" target="_blank" class="btn btn-outline btn-sm">🖨️ Cetak Label Soal</a>
-        </div>
-        <div class="card p-3">
-            <h4 style="margin: 0 0 6px 0; font-size: 14px;">✉️ Label Amplop Lembar Jawaban</h4>
-            <p style="font-size: 12px; color: #64748b; margin-bottom: 12px;">Stiker amplop hasil pengemasan 3 Mode (Kelas/Mapel/Gabungan).</p>
-            <a href="<?= url('/print/answer-sheet-labels') ?>" target="_blank" class="btn btn-outline btn-sm">🖨️ Cetak Label Jawaban</a>
-        </div>
-        <div class="card p-3">
-            <h4 style="margin: 0 0 6px 0; font-size: 14px;">📋 Format Ceklis Dokumen Soal</h4>
-            <p style="font-size: 12px; color: #64748b; margin-bottom: 12px;">Format rekapitulasi penerimaan soal &amp; kisi-kisi tulis dan lisan.</p>
-            <a href="<?= url('/preparation/submissions/print') ?>" target="_blank" class="btn btn-outline btn-sm">🖨️ Cetak Format Rekap</a>
-        </div>
-    </div>
-</div>

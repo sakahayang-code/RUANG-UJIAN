@@ -68,33 +68,40 @@ class DashboardController
             $scheduleCount = (int)Database::fetchColumn("SELECT COUNT(*) FROM written_exam_schedules WHERE exam_event_id = ?", [$eventId]);
             $practicalScheduleCount = (int)Database::fetchColumn("SELECT COUNT(*) FROM practical_exam_schedules WHERE exam_event_id = ?", [$eventId]);
 
-            // Document checklist progress
-            $totalDocSubmissions = (int)Database::fetchColumn("SELECT COUNT(*) FROM exam_document_submissions WHERE exam_event_id = ?", [$eventId]);
-            $completedDocSubmissions = (int)Database::fetchColumn("SELECT COUNT(*) FROM exam_document_submissions WHERE exam_event_id = ? AND status = 'selesai'", [$eventId]);
-            $docProgress = $totalDocSubmissions > 0 ? round(($completedDocSubmissions / $totalDocSubmissions) * 100) : 0;
+            // 1. Progres Master Data (Kelas, Mapel, Siswa, Panitia, Pengawas, Penguji, Ruangan)
+            $masterItems = [
+                $classCount > 0,
+                $subjectCount > 0,
+                $participantCount > 0,
+                $committeeCount > 0,
+                $supervisorCount > 0,
+                $examinerCount > 0,
+                $roomCount > 0
+            ];
+            $masterProgress = round((count(array_filter($masterItems)) / count($masterItems)) * 100);
 
-            // Printing progress
-            $totalPrintingRecords = (int)Database::fetchColumn("SELECT COUNT(*) FROM exam_printing_records WHERE exam_event_id = ?", [$eventId]);
-            $completedPrinting = (int)Database::fetchColumn("SELECT COUNT(*) FROM exam_printing_records WHERE exam_event_id = ? AND status IN ('Selesai Dicetak', 'Terverifikasi')", [$eventId]);
-            $prepProgress = $totalPrintingRecords > 0 ? round(($completedPrinting / $totalPrintingRecords) * 100) : 0;
+            // 2. Progres Persiapan Kegiatan (Program Kerja, Jadwal Tulis, Jadwal Praktik, Persuratan, Tata Tertib)
+            $workProgramCount = (int)Database::fetchColumn("SELECT COUNT(*) FROM committee_work_programs WHERE exam_event_id = ?", [$eventId]);
+            $lettersCount = (int)Database::fetchColumn("SELECT COUNT(*) FROM committee_letters WHERE exam_event_id = ?", [$eventId]);
+            $rulesCount = (int)Database::fetchColumn("SELECT COUNT(*) FROM exam_rules WHERE exam_event_id = ? OR exam_event_id IS NULL", [$eventId]);
 
-            // Written exam execution progress (schedules that have minutes / berita acara filled)
+            $prepItems = [
+                $workProgramCount > 0,
+                $scheduleCount > 0,
+                $practicalScheduleCount > 0,
+                $lettersCount > 0,
+                $rulesCount >= 3
+            ];
+            $prepProgress = round((count(array_filter($prepItems)) / count($prepItems)) * 100);
+
+            // 3. Progres Berita Acara Pelaksanaan Ujian
             $totalMinutes = (int)Database::fetchColumn("SELECT COUNT(*) FROM written_exam_minutes WHERE exam_event_id = ?", [$eventId]);
-            $totalRoomSchedules = (int)Database::fetchColumn(
-                "SELECT COUNT(*) FROM written_exam_supervisors s
-                 JOIN written_exam_schedules ws ON s.schedule_id = ws.id
-                 WHERE ws.exam_event_id = ?",
-                [$eventId]
-            );
-            $examProgress = $totalRoomSchedules > 0 ? round(($totalMinutes / $totalRoomSchedules) * 100) : 0;
+            $examProgress = $scheduleCount > 0 ? round(($totalMinutes / max(1, $scheduleCount)) * 100) : 0;
+            if ($examProgress > 100) $examProgress = 100;
 
-            // Answer sheets reception progress
-            $totalReceipts = (int)Database::fetchColumn("SELECT COUNT(*) FROM answer_sheet_receipts WHERE exam_event_id = ?", [$eventId]);
-            $completeReceipts = (int)Database::fetchColumn("SELECT COUNT(*) FROM answer_sheet_receipts WHERE exam_event_id = ? AND status = 'diterima_lengkap'", [$eventId]);
-            $answerSheetProgress = $totalReceipts > 0 ? round(($completeReceipts / $totalReceipts) * 100) : 0;
-
-            // Final report progress
+            // 4. Progres LPJ Kegiatan Ujian
             $report = Database::fetch("SELECT * FROM exam_reports WHERE exam_event_id = ?", [$eventId]);
+            $reportProgress = 25;
             if ($report) {
                 $reportProgress = !empty($report['approval_date']) ? 100 : 75;
             }
@@ -116,86 +123,42 @@ class DashboardController
                 ];
             }
 
-            // 2. Ruang belum memiliki pengawas
-            $unassignedSupervisors = (int)Database::fetchColumn(
-                "SELECT COUNT(*) FROM written_exam_supervisors s
-                 JOIN written_exam_schedules ws ON s.schedule_id = ws.id
-                 WHERE ws.exam_event_id = ? AND (s.supervisor1_id IS NULL AND s.supervisor2_id IS NULL)",
-                [$eventId]
-            );
-            if ($unassignedSupervisors > 0) {
+            // 2. Data Pengawas Ruang belum diatur
+            if ($supervisorCount === 0) {
                 $notifications[] = [
                     'type' => 'danger',
-                    'title' => 'Ruang Belum Memiliki Pengawas',
-                    'message' => "Terdapat {$unassignedSupervisors} sesi/ruang ujian yang belum ditentukan pengawasnya.",
-                    'url' => url('/written-exam/supervisors')
+                    'title' => 'Data Pengawas Ruang Belum Diisi',
+                    'message' => 'Belum ada data pengawas ruang ujian yang ditambahkan ke sistem.',
+                    'url' => url('/master/supervisors')
                 ];
             }
 
-            // 3. Dokumen naskah/kisi-kisi belum dikumpulkan
-            $pendingDocs = (int)Database::fetchColumn(
-                "SELECT COUNT(*) FROM exam_document_submissions WHERE exam_event_id = ? AND status IN ('belum_diserahkan', 'perlu_revisi')",
-                [$eventId]
-            );
-            if ($pendingDocs > 0) {
+            // 3. Jadwal Ujian Tulis belum dibuat
+            if ($scheduleCount === 0) {
                 $notifications[] = [
                     'type' => 'warning',
-                    'title' => 'Dokumen Naskah Belum Selesai',
-                    'message' => "Ada {$pendingDocs} dokumen kisi-kisi/naskah soal yang belum diserahkan atau masih perlu revisi.",
-                    'url' => url('/preparation/submissions')
+                    'title' => 'Jadwal Ujian Tulis Belum Dibuat',
+                    'message' => 'Silakan susun jadwal ujian tulis mata pelajaran per tanggal dan sesi.',
+                    'url' => url('/written-exam/schedules')
                 ];
             }
 
-            // 4. Naskah belum digandakan
-            $unprintedCopies = (int)Database::fetchColumn(
-                "SELECT COUNT(*) FROM exam_printing_records WHERE exam_event_id = ? AND status = 'Belum Dicetak'",
-                [$eventId]
-            );
-            if ($unprintedCopies > 0) {
+            // 4. Data Penguji Praktik belum diisi
+            if ($examinerCount === 0) {
                 $notifications[] = [
                     'type' => 'info',
-                    'title' => 'Naskah Belum Digandakan',
-                    'message' => "Ada {$unprintedCopies} mata pelajaran dengan naskah soal yang belum dicetak/digandakan.",
-                    'url' => url('/preparation/printing')
+                    'title' => 'Data Penguji Praktik Belum Diisi',
+                    'message' => 'Belum ada guru penguji praktik yang didaftarkan untuk mata pelajaran praktik.',
+                    'url' => url('/master/examiners')
                 ];
             }
 
-            // 5. Naskah belum dikembalikan
-            $unreturnedPapers = (int)Database::fetchColumn(
-                "SELECT COUNT(*) FROM exam_paper_handover_records WHERE exam_event_id = ? AND handover_type = 'pengambilan' AND taken_or_returned_count > 0 AND id NOT IN (
-                    SELECT id FROM exam_paper_handover_records WHERE exam_event_id = ? AND handover_type = 'pengembalian'
-                )",
-                [$eventId, $eventId]
-            );
-            if ($unreturnedPapers > 0) {
-                $notifications[] = [
-                    'type' => 'danger',
-                    'title' => 'Naskah Soal Belum Dikembalikan',
-                    'message' => "Terdapat naskah ujian yang telah diambil namun belum dicatat pengembaliannya ke panitia.",
-                    'url' => url('/distribution/handover')
-                ];
-            }
-
-            // 6. Lembar jawaban belum diterima / ada selisih
-            $discrepancyReceipts = (int)Database::fetchColumn(
-                "SELECT COUNT(*) FROM answer_sheet_receipts WHERE exam_event_id = ? AND (discrepancy != 0 OR status = 'ada_selisih')",
-                [$eventId]
-            );
-            if ($discrepancyReceipts > 0) {
-                $notifications[] = [
-                    'type' => 'danger',
-                    'title' => 'Selisih Jumlah Lembar Jawaban',
-                    'message' => "Perhatian: Terdapat {$discrepancyReceipts} pencatatan lembar jawaban yang memiliki selisih fisik!",
-                    'url' => url('/answer-sheets/receipts')
-                ];
-            }
-
-            // 7. Laporan akhir belum diselesaikan
+            // 5. LPJ Kegiatan Belum Disahkan
             if (!$report || empty($report['approval_date'])) {
                 $notifications[] = [
                     'type' => 'info',
-                    'title' => 'Laporan Akhir Belum Diselesaikan',
-                    'message' => 'Laporan akhir kegiatan panitia 18 bab belum difinalisasi atau belum disahkan.',
+                    'title' => 'LPJ Kegiatan Ujian Belum Disahkan',
+                    'message' => 'Laporan Pertanggungjawaban (LPJ) kegiatan ujian panitia belum disahkan.',
                     'url' => url('/reports/final')
                 ];
             }
@@ -215,11 +178,10 @@ class DashboardController
             'supervisorCount' => $supervisorCount,
             'examinerCount' => $examinerCount,
             'scheduleCount' => $scheduleCount,
-            'prepProgress' => $prepProgress,
-            'docProgress' => $docProgress,
-            'examProgress' => $examProgress,
-            'answerSheetProgress' => $answerSheetProgress,
-            'reportProgress' => $reportProgress,
+            'masterProgress' => $masterProgress ?? 100,
+            'prepProgress' => $prepProgress ?? 100,
+            'examProgress' => $examProgress ?? 0,
+            'reportProgress' => $reportProgress ?? 25,
             'notifications' => $notifications
         ]);
     }
