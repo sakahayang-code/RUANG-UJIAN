@@ -199,24 +199,44 @@ class PrintController
             }
         } else {
             // Pengawas Ruang
-            $supervisors = Database::fetchAll("
-                SELECT DISTINCT s.supervisor1_name_snapshot as supervisor_name, t.nip, t.position as teacher_pos
-                FROM written_exam_supervisors s
-                JOIN written_exam_schedules ws ON s.schedule_id = ws.id
-                LEFT JOIN teachers t ON s.supervisor1_id = t.id
-                WHERE ws.exam_event_id = ? AND s.supervisor1_name_snapshot IS NOT NULL
-                ORDER BY s.supervisor1_name_snapshot ASC
+            $manualSupervisors = Database::fetchAll("
+                SELECT name, nip, role, room_assignment, school_origin
+                FROM master_supervisors
+                WHERE exam_event_id = ? OR exam_event_id IS NULL
+                ORDER BY room_assignment ASC, name ASC
             ", [$event['id']]);
 
-            foreach ($supervisors as $s) {
-                $qrText = "PENGAWAS|EVENT:" . $event['name'] . "|NAMA:" . $s['supervisor_name'];
-                $tags[] = [
-                    'name' => $s['supervisor_name'],
-                    'nip' => $s['nip'] ?? '-',
-                    'role_label' => 'PENGAWAS RUANG',
-                    'position' => 'Pengawas Ruang Ujian',
-                    'qr_svg' => QrGenerator::svg($qrText, 70)
-                ];
+            if (!empty($manualSupervisors)) {
+                foreach ($manualSupervisors as $s) {
+                    $qrText = "PENGAWAS|EVENT:" . $event['name'] . "|NAMA:" . $s['name'] . "|RUANG:" . ($s['room_assignment'] ?? '-');
+                    $tags[] = [
+                        'name' => $s['name'],
+                        'nip' => $s['nip'] ?? '-',
+                        'role_label' => strtoupper($s['role'] ?? 'PENGAWAS RUANG'),
+                        'position' => !empty($s['room_assignment']) ? 'Pengawas ' . $s['room_assignment'] : 'Pengawas Ruang Ujian',
+                        'qr_svg' => QrGenerator::svg($qrText, 70)
+                    ];
+                }
+            } else {
+                $supervisors = Database::fetchAll("
+                    SELECT DISTINCT s.supervisor1_name_snapshot as supervisor_name, t.nip, t.position as teacher_pos
+                    FROM written_exam_supervisors s
+                    JOIN written_exam_schedules ws ON s.schedule_id = ws.id
+                    LEFT JOIN teachers t ON s.supervisor1_id = t.id
+                    WHERE ws.exam_event_id = ? AND s.supervisor1_name_snapshot IS NOT NULL
+                    ORDER BY s.supervisor1_name_snapshot ASC
+                ", [$event['id']]);
+
+                foreach ($supervisors as $s) {
+                    $qrText = "PENGAWAS|EVENT:" . $event['name'] . "|NAMA:" . $s['supervisor_name'];
+                    $tags[] = [
+                        'name' => $s['supervisor_name'],
+                        'nip' => $s['nip'] ?? '-',
+                        'role_label' => 'PENGAWAS RUANG',
+                        'position' => 'Pengawas Ruang Ujian',
+                        'qr_svg' => QrGenerator::svg($qrText, 70)
+                    ];
+                }
             }
         }
 

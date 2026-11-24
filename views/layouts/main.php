@@ -92,7 +92,7 @@ $allEvents = \App\Core\Database::fetchAll("SELECT * FROM exam_events ORDER BY id
             <a href="<?= url('/committee') ?>" class="menu-item <?= (str_contains($currentUrl, '/committee') && !str_contains($currentUrl, '/letters')) ? 'active' : '' ?>">
                 <span class="menu-icon">👥</span> Data Panitia
             </a>
-            <a href="<?= url('/written-exam/supervisors') ?>" class="menu-item <?= (str_contains($currentUrl, '/written-exam/supervisors') || str_contains($currentUrl, '/master/supervisors')) ? 'active' : '' ?>">
+            <a href="<?= url('/master/supervisors') ?>" class="menu-item <?= (str_contains($currentUrl, '/master/supervisors') || str_contains($currentUrl, '/written-exam/supervisors')) ? 'active' : '' ?>">
                 <span class="menu-icon">👀</span> Data Pengawas Ruang
             </a>
             <a href="<?= url('/master/examiners') ?>" class="menu-item <?= str_contains($currentUrl, '/master/examiners') ? 'active' : '' ?>">

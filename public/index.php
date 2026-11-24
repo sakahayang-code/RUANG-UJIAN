@@ -55,8 +55,10 @@ use App\Controllers\ExamEventController;
 use App\Controllers\FileController;
 use App\Controllers\InstallController;
 use App\Controllers\MasterClassController;
+use App\Controllers\MasterExaminerController;
 use App\Controllers\MasterStudentController;
 use App\Controllers\MasterSubjectController;
+use App\Controllers\MasterSupervisorController;
 use App\Controllers\MasterTeacherController;
 use App\Controllers\PracticalExamController;
 use App\Controllers\PreparationController;
@@ -294,8 +296,28 @@ Router::post('/master/subjects/import', [MasterSubjectController::class, 'import
 Router::get('/master/subjects/export', [MasterSubjectController::class, 'export'], ['auth']);
 Router::get('/master/subjects/template', [MasterSubjectController::class, 'template'], ['auth']);
 Router::get('/master/rooms', [WrittenExamController::class, 'rooms'], ['auth']);
-Router::get('/master/supervisors', [WrittenExamController::class, 'supervisors'], ['auth']);
-Router::get('/master/examiners', [PracticalExamController::class, 'examiners'], ['auth']);
+
+// Supervisors (Pengawas Ruang Manual)
+Router::get('/master/supervisors', [MasterSupervisorController::class, 'index'], ['auth']);
+Router::post('/master/supervisors', [MasterSupervisorController::class, 'store'], ['auth', 'csrf']);
+Router::post('/master/supervisors/store', [MasterSupervisorController::class, 'store'], ['auth', 'csrf']);
+Router::post('/master/supervisors/update', [MasterSupervisorController::class, 'update'], ['auth', 'csrf']);
+Router::post('/master/supervisors/delete', [MasterSupervisorController::class, 'delete'], ['auth', 'csrf']);
+Router::post('/master/supervisors/delete-all', [MasterSupervisorController::class, 'deleteAll'], ['auth', 'csrf']);
+Router::post('/master/supervisors/import', [MasterSupervisorController::class, 'import'], ['auth', 'csrf']);
+Router::get('/master/supervisors/export', [MasterSupervisorController::class, 'export'], ['auth']);
+Router::get('/master/supervisors/template', [MasterSupervisorController::class, 'template'], ['auth']);
+
+// Practical Examiners (Penguji Praktik Manual)
+Router::get('/master/examiners', [MasterExaminerController::class, 'index'], ['auth']);
+Router::post('/master/examiners', [MasterExaminerController::class, 'store'], ['auth', 'csrf']);
+Router::post('/master/examiners/store', [MasterExaminerController::class, 'store'], ['auth', 'csrf']);
+Router::post('/master/examiners/update', [MasterExaminerController::class, 'update'], ['auth', 'csrf']);
+Router::post('/master/examiners/delete', [MasterExaminerController::class, 'delete'], ['auth', 'csrf']);
+Router::post('/master/examiners/delete-all', [MasterExaminerController::class, 'deleteAll'], ['auth', 'csrf']);
+Router::post('/master/examiners/import', [MasterExaminerController::class, 'import'], ['auth', 'csrf']);
+Router::get('/master/examiners/export', [MasterExaminerController::class, 'export'], ['auth']);
+Router::get('/master/examiners/template', [MasterExaminerController::class, 'template'], ['auth']);
 
 // 7. Exam Events
 Router::get('/events', [ExamEventController::class, 'index'], ['auth']);

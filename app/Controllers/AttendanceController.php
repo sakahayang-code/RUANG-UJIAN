@@ -266,6 +266,24 @@ class AttendanceController
         $sql .= " ORDER BY ws.exam_date ASC, ws.session ASC, er.room_number ASC";
         $records = Database::fetchAll($sql, $params);
 
+        if (empty($records)) {
+            $manualSups = Database::fetchAll("SELECT * FROM master_supervisors WHERE exam_event_id = ? OR exam_event_id IS NULL ORDER BY room_assignment ASC, name ASC", [$event['id']]);
+            if (!empty($manualSups)) {
+                foreach ($manualSups as $ms) {
+                    $records[] = [
+                        'exam_date' => $dateFilter ?: date('Y-m-d'),
+                        'session' => '1',
+                        'room_number' => $ms['room_assignment'] ?: 'Ruang Ujian',
+                        'subject_name' => $ms['subject'] ?: 'Semua Mapel',
+                        'sup1_name' => $ms['name'] . ($ms['nip'] ? ' (NIP. ' . $ms['nip'] . ')' : ''),
+                        'sup2_name' => null,
+                        'check_in_time' => '07:15',
+                        'attendance_notes' => $ms['role'] ?: 'Pengawas Ruang',
+                    ];
+                }
+            }
+        }
+
         View::render('attendance/print_supervisors', [
             'title' => 'Daftar Hadir Pengawas Ruang',
             'event' => $event,
@@ -419,6 +437,28 @@ class AttendanceController
             WHERE ps.exam_event_id = ?
             ORDER BY ps.exam_date ASC, ps.start_time ASC
         ", [$event['id']]);
+
+        if (empty($records)) {
+            $manualEx = Database::fetchAll("SELECT * FROM master_examiners WHERE exam_event_id = ? OR exam_event_id IS NULL ORDER BY subject_name ASC, examiner_role ASC, name ASC", [$event['id']]);
+            if (!empty($manualEx)) {
+                foreach ($manualEx as $mex) {
+                    $records[] = [
+                        'exam_date' => date('Y-m-d'),
+                        'start_time' => '07:30',
+                        'end_time' => '12:00',
+                        'location' => $mex['location'] ?: 'Ruang Praktik',
+                        'station' => $mex['grade'] ?: 'Semua Kelas',
+                        'subject_name' => $mex['subject_name'],
+                        'examiner_name' => $mex['name'],
+                        'examiner_nip' => $mex['nip'] ?? '-',
+                        'examiner_role' => $mex['examiner_role'] ?: 'Penguji Utama',
+                        'attendance_status' => 'hadir',
+                        'check_in_time' => '07:30',
+                        'attendance_notes' => $mex['notes'] ?? '-'
+                    ];
+                }
+            }
+        }
 
         View::render('attendance/print_examiners', [
             'title' => 'Daftar Hadir Penguji Ujian Praktik',

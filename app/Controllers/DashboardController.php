@@ -48,14 +48,17 @@ class DashboardController
                  WHERE c.exam_event_id = ?",
                 [$eventId]
             );
-            $supervisorCount = (int)Database::fetchColumn(
+            $manualSupCount = (int)Database::fetchColumn("SELECT COUNT(*) FROM master_supervisors WHERE exam_event_id = ? OR exam_event_id IS NULL", [$eventId]);
+            $supervisorCount = $manualSupCount > 0 ? $manualSupCount : (int)Database::fetchColumn(
                 "SELECT COUNT(DISTINCT s.supervisor1_id) + COUNT(DISTINCT s.supervisor2_id)
                  FROM written_exam_supervisors s
                  JOIN written_exam_schedules ws ON s.schedule_id = ws.id
                  WHERE ws.exam_event_id = ?",
                 [$eventId]
             );
-            $examinerCount = (int)Database::fetchColumn(
+
+            $manualExCount = (int)Database::fetchColumn("SELECT COUNT(*) FROM master_examiners WHERE exam_event_id = ? OR exam_event_id IS NULL", [$eventId]);
+            $examinerCount = $manualExCount > 0 ? $manualExCount : (int)Database::fetchColumn(
                 "SELECT COUNT(DISTINCT pa.examiner_id)
                  FROM practical_exam_assignments pa
                  JOIN practical_exam_schedules ps ON pa.practical_schedule_id = ps.id

@@ -178,7 +178,7 @@
     </a>
 
     <!-- 6. Pengawas Ruang (Amber / Warning) -->
-    <a href="<?= url('/written-exam/supervisors') ?>" class="stat-card-link">
+    <a href="<?= url('/master/supervisors') ?>" class="stat-card-link">
         <div class="stat-card warning">
             <div class="stat-card-top">
                 <div class="stat-icon warning">
@@ -190,13 +190,13 @@
             <div class="stat-label">Pengawas Ruang</div>
             <div class="stat-footer">
                 <span class="stat-footer-icon">📝</span>
-                <span>Penugasan & Jadwal Ruang</span>
+                <span>Data & Penempatan Ruang</span>
             </div>
         </div>
     </a>
 
     <!-- 7. Penguji Praktik (Ruby / Crimson) -->
-    <a href="<?= url('/practical-exam') ?>" class="stat-card-link">
+    <a href="<?= url('/master/examiners') ?>" class="stat-card-link">
         <div class="stat-card rose">
             <div class="stat-card-top">
                 <div class="stat-icon rose">
@@ -208,7 +208,7 @@
             <div class="stat-label">Penguji Praktik</div>
             <div class="stat-footer">
                 <span class="stat-footer-icon">🔬</span>
-                <span>Stasiun & Penilaian Praktik</span>
+                <span>Data Guru & Pos Praktik</span>
             </div>
         </div>
     </a>
