@@ -1,0 +1,481 @@
+<?php
+$currentUser = user();
+$activeEvent = active_event();
+$school = school_setting();
+$currentUrl = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+$allEvents = \App\Core\Database::fetchAll("SELECT * FROM exam_events ORDER BY id DESC");
+?>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title><?= e($title ?? 'Aplikasi Administrasi Ujian Sekolah') ?> - RUANG UJIAN</title>
+    
+    <!-- PWA Android Configuration -->
+    <link rel="manifest" href="<?= url('/manifest.json') ?>">
+    <meta name="theme-color" content="#4f46e5">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="RUANG UJIAN">
+    <meta name="application-name" content="RUANG UJIAN">
+    <meta name="format-detection" content="telephone=no">
+    
+    <!-- App Icons & PWA Logos (Android & iOS) -->
+    <link rel="icon" type="image/svg+xml" href="<?= asset('images/icons/icon.svg') ?>">
+    <link rel="icon" type="image/png" sizes="192x192" href="<?= asset('images/icons/icon-192.png') ?>">
+    <link rel="icon" type="image/png" sizes="512x512" href="<?= asset('images/icons/icon-512.png') ?>">
+    <link rel="apple-touch-icon" sizes="180x180" href="<?= asset('images/icons/apple-touch-icon.png') ?>">
+    <link rel="apple-touch-icon-precomposed" sizes="180x180" href="<?= asset('images/icons/apple-touch-icon.png') ?>">
+    <link rel="shortcut icon" href="<?= asset('images/icons/icon-192.png') ?>">
+    
+    <!-- Google Fonts: Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="<?= asset('css/app.css') ?>">
+    <link rel="stylesheet" href="<?= asset('css/print.css') ?>" media="print">
+    <script>
+        window.APP_BASE_URL = '<?= app_base_url() ?>';
+    </script>
+</head>
+<body>
+<div class="app-wrapper">
+    <!-- Sidebar Overlay for mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Sidebar Navigation -->
+    <aside class="app-sidebar" id="appSidebar">
+        <div class="sidebar-header">
+            <div class="brand-icon">
+                <img src="<?= asset('images/icons/icon.svg') ?>" alt="Logo RUANG UJIAN" style="width: 38px; height: 38px; object-fit: contain; border-radius: 10px;">
+            </div>
+            <div style="flex-grow: 1;">
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
+                    <span class="brand-title">RUANG UJIAN</span>
+                    <span class="badge-saas-pro">PRO</span>
+                </div>
+                <div class="brand-sub">Sistem Administrasi</div>
+            </div>
+        </div>
+
+        <nav class="sidebar-menu">
+            <!-- Menu Utama -->
+            <div class="menu-category">Menu Utama</div>
+            <a href="<?= url('/dashboard') ?>" class="menu-item <?= str_contains($currentUrl, '/dashboard') ? 'active' : '' ?>">
+                <span class="menu-icon">📊</span> Dashboard
+            </a>
+
+            <?php if (has_role(['super_admin', 'admin'])): ?>
+            <a href="<?= url('/school') ?>" class="menu-item <?= str_contains($currentUrl, '/school') ? 'active' : '' ?>">
+                <span class="menu-icon">🏫</span> Identitas Sekolah
+            </a>
+            <?php endif; ?>
+
+            <a href="<?= url('/events') ?>" class="menu-item <?= str_contains($currentUrl, '/events') ? 'active' : '' ?>">
+                <span class="menu-icon">📅</span> Manajemen Ujian
+            </a>
+
+            <!-- Master Data -->
+            <div class="menu-category">Master Data</div>
+            <a href="<?= url('/master/classes') ?>" class="menu-item <?= str_contains($currentUrl, '/master/classes') ? 'active' : '' ?>">
+                <span class="menu-icon">🏛️</span> Data Kelas
+            </a>
+            <a href="<?= url('/master/subjects') ?>" class="menu-item <?= str_contains($currentUrl, '/master/subjects') ? 'active' : '' ?>">
+                <span class="menu-icon">📚</span> Data Mata Pelajaran
+            </a>
+            <a href="<?= url('/master/students') ?>" class="menu-item <?= str_contains($currentUrl, '/master/students') ? 'active' : '' ?>">
+                <span class="menu-icon">👨‍🎓</span> Data Peserta Ujian
+            </a>
+            <a href="<?= url('/committee') ?>" class="menu-item <?= (str_contains($currentUrl, '/committee') && !str_contains($currentUrl, '/letters')) ? 'active' : '' ?>">
+                <span class="menu-icon">👥</span> Data Panitia
+            </a>
+            <a href="<?= url('/master/supervisors') ?>" class="menu-item <?= (str_contains($currentUrl, '/master/supervisors') || str_contains($currentUrl, '/written-exam/supervisors')) ? 'active' : '' ?>">
+                <span class="menu-icon">👀</span> Data Pengawas Ruang
+            </a>
+            <a href="<?= url('/master/examiners') ?>" class="menu-item <?= str_contains($currentUrl, '/master/examiners') ? 'active' : '' ?>">
+                <span class="menu-icon">🩺</span> Data Penguji Praktik
+            </a>
+            <a href="<?= url('/written-exam/rooms') ?>" class="menu-item <?= (str_contains($currentUrl, '/written-exam/rooms') || str_contains($currentUrl, '/master/rooms')) ? 'active' : '' ?>">
+                <span class="menu-icon">🚪</span> Atur Ruangan
+            </a>
+
+            <!-- Persiapan Kegiatan -->
+            <div class="menu-category">Persiapan Kegiatan</div>
+            <a href="<?= url('/work-program') ?>" class="menu-item <?= str_contains($currentUrl, '/work-program') ? 'active' : '' ?>">
+                <span class="menu-icon">📋</span> Program Kerja Panitia
+            </a>
+            <a href="<?= url('/written-exam/schedules') ?>" class="menu-item <?= str_contains($currentUrl, '/written-exam/schedules') ? 'active' : '' ?>">
+                <span class="menu-icon">🗓️</span> Jadwal Ujian Tulis
+            </a>
+            <a href="<?= url('/practical-exam') ?>" class="menu-item <?= (str_contains($currentUrl, '/practical-exam') && !str_contains($currentUrl, '/execution')) ? 'active' : '' ?>">
+                <span class="menu-icon">🧪</span> Jadwal Ujian Praktik
+            </a>
+            <a href="<?= url('/committee/letters') ?>" class="menu-item <?= str_contains($currentUrl, '/committee/letters') ? 'active' : '' ?>">
+                <span class="menu-icon">✉️</span> Persuratan
+            </a>
+            <a href="<?= url('/preparation/rules') ?>" class="menu-item <?= str_contains($currentUrl, '/preparation/rules') ? 'active' : '' ?>">
+                <span class="menu-icon">📜</span> Tata Tertib
+            </a>
+
+            <!-- Cetak -->
+            <div class="menu-category">Cetak</div>
+            <a href="<?= url('/print/participant-cards') ?>" class="menu-item <?= str_contains($currentUrl, '/print/participant-cards') ? 'active' : '' ?>">
+                <span class="menu-icon">🪪</span> Kartu Peserta
+            </a>
+            <a href="<?= url('/print/name-tags?type=panitia') ?>" class="menu-item <?= (str_contains($currentUrl, '/print/name-tags') && str_contains($_SERVER['REQUEST_URI'] ?? '', 'panitia')) ? 'active' : '' ?>">
+                <span class="menu-icon">🏷️</span> Kartu Panitia
+            </a>
+            <a href="<?= url('/print/schedules') ?>" class="menu-item <?= str_contains($currentUrl, '/print/schedules') ? 'active' : '' ?>">
+                <span class="menu-icon">📅</span> Jadwal (Tulis &amp; Praktik)
+            </a>
+            <a href="<?= url('/print/room-signs') ?>" class="menu-item <?= str_contains($currentUrl, '/print/room-signs') ? 'active' : '' ?>">
+                <span class="menu-icon">🚪</span> Nomor Ruangan Ujian
+            </a>
+            <a href="<?= url('/print/participants') ?>" class="menu-item <?= str_contains($currentUrl, '/print/participants') ? 'active' : '' ?>">
+                <span class="menu-icon">📑</span> Daftar Peserta Ujian
+            </a>
+            <a href="<?= url('/written-exam/seating/print') ?>" target="_blank" class="menu-item">
+                <span class="menu-icon">🪑</span> Denah Tempat Duduk
+            </a>
+            <a href="<?= url('/print/attendance') ?>" class="menu-item <?= (str_contains($currentUrl, '/print/attendance') || str_contains($currentUrl, '/attendance/')) ? 'active' : '' ?>">
+                <span class="menu-icon">✅</span> Daftar Hadir
+            </a>
+            <a href="<?= url('/reports/minutes') ?>" class="menu-item <?= str_contains($currentUrl, '/reports/minutes') ? 'active' : '' ?>">
+                <span class="menu-icon">📝</span> Berita Acara Pelaksanaan Ujian
+            </a>
+            <a href="<?= url('/reports/final') ?>" class="menu-item <?= str_contains($currentUrl, '/reports/final') ? 'active' : '' ?>">
+                <span class="menu-icon">🏆</span> LPJ Kegiatan Ujian
+            </a>
+
+            <!-- Sistem -->
+            <div class="menu-category">Sistem</div>
+            <a href="<?= url('/backup') ?>" class="menu-item <?= str_contains($currentUrl, '/backup') ? 'active' : '' ?>">
+                <span class="menu-icon">💾</span> Backup &amp; Restore
+            </a>
+            <a href="<?= url('/logout') ?>" class="menu-item text-danger" style="color: #dc2626 !important;">
+                <span class="menu-icon">🚪</span> Logout
+            </a>
+
+            <div style="height: 20px;"></div>
+        </nav>
+
+        <!-- Sidebar User Profile Footer Card -->
+        <div class="sidebar-user-footer">
+            <div class="sidebar-user-card">
+                <div class="sidebar-user-avatar">
+                    <?= strtoupper(substr($currentUser['full_name'] ?? 'U', 0, 1)) ?>
+                    <span class="user-status-dot" title="Online"></span>
+                </div>
+                <div class="sidebar-user-details">
+                    <div class="sidebar-user-name" title="<?= e($currentUser['full_name'] ?? 'Pengguna') ?>"><?= e($currentUser['full_name'] ?? 'Pengguna') ?></div>
+                    <div class="sidebar-user-role"><?= e($currentUser['role_display'] ?? $currentUser['role'] ?? 'User') ?></div>
+                </div>
+                <a href="<?= url('/logout') ?>" class="sidebar-user-logout" title="Keluar / Logout">
+                    🚪
+                </a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Container -->
+    <div class="app-main">
+        <!-- Topbar -->
+        <header class="app-topbar">
+            <div class="topbar-left">
+                <button class="sidebar-toggle-btn" id="sidebarToggleBtn" title="Buka/Tutup Menu">
+                    ☰
+                </button>
+                <div class="event-switcher">
+                    <span>📌 Kegiatan Aktif:</span>
+                    <select id="activeEventSelector" title="Pilih Kegiatan Ujian">
+                        <?php if (empty($allEvents)): ?>
+                            <option value="">(Belum ada kegiatan)</option>
+                        <?php else: ?>
+                            <?php foreach ($allEvents as $ev): ?>
+                                <option value="<?= $ev['id'] ?>" <?= ($activeEvent && $activeEvent['id'] == $ev['id']) ? 'selected' : '' ?>>
+                                    <?= e($ev['name']) ?> (TP <?= e($ev['academic_year']) ?> - <?= e($ev['semester']) ?>)
+                                </option>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </select>
+                </div>
+                <div class="topbar-status-chip">
+                    <span class="pulse-indicator"></span>
+                    <span>Sistem Siap</span>
+                </div>
+            </div>
+
+            <div class="topbar-right">
+                <div class="topbar-date-pill">
+                    <span>🗓️</span>
+                    <span><?= format_date_id(date('Y-m-d')) ?></span>
+                </div>
+
+                <div class="user-badge">
+                    <div class="user-avatar"><?= strtoupper(substr($currentUser['full_name'] ?? 'U', 0, 1)) ?></div>
+                    <div class="user-info">
+                        <div class="user-name"><?= e($currentUser['full_name'] ?? 'Pengguna') ?></div>
+                        <div class="user-role"><?= e($currentUser['role_display'] ?? $currentUser['role'] ?? 'User') ?></div>
+                    </div>
+                </div>
+
+                <a href="<?= url('/logout') ?>" class="btn btn-outline btn-sm" title="Keluar">
+                    🚪 Keluar
+                </a>
+            </div>
+        </header>
+
+        <!-- Page Body -->
+        <main class="page-container">
+            <!-- Android PWA Install Banner -->
+            <div class="android-install-banner" id="androidInstallBanner" style="display: none;">
+                <div class="install-banner-left">
+                    <img src="<?= asset('images/icons/icon-192.png') ?>" alt="Icon RUANG UJIAN" class="install-banner-icon">
+                    <div class="install-banner-text">
+                        <div class="install-banner-title">Pasang Aplikasi RUANG UJIAN</div>
+                        <div class="install-banner-desc">Akses cepat & tampilan native APK di layar HP</div>
+                    </div>
+                </div>
+                <div class="install-banner-right">
+                    <button type="button" class="btn-pwa-install" id="btnInstallPwa">Pasang</button>
+                    <button type="button" class="btn-pwa-dismiss" id="btnDismissPwa" title="Tutup">✕</button>
+                </div>
+            </div>
+
+            <!-- Flash Messages -->
+            <?php if ($msg = get_flash('success')): ?>
+                <div class="alert alert-success">
+                    <span class="alert-icon">✓</span>
+                    <div><?= e($msg) ?></div>
+                </div>
+            <?php endif; ?>
+
+            <?php if ($msg = get_flash('error')): ?>
+                <div class="alert alert-error">
+                    <span class="alert-icon">✕</span>
+                    <div><?= e($msg) ?></div>
+                </div>
+            <?php endif; ?>
+
+            <?php if ($msg = get_flash('warning')): ?>
+                <div class="alert alert-warning">
+                    <span class="alert-icon">⚠</span>
+                    <div><?= e($msg) ?></div>
+                </div>
+            <?php endif; ?>
+
+            <?php if ($msg = get_flash('info')): ?>
+                <div class="alert alert-info">
+                    <span class="alert-icon">ℹ</span>
+                    <div><?= e($msg) ?></div>
+                </div>
+            <?php endif; ?>
+
+            <!-- View Content Injection -->
+            <?= $content ?? '' ?>
+        </main>
+    </div>
+</div>
+
+<!-- Android Native Bottom Navigation Bar (Material 3 Style) -->
+<nav class="android-bottom-nav" id="androidBottomNav" aria-label="Navigasi Bawah Android">
+    <a href="<?= url('/dashboard') ?>" class="android-nav-item <?= (str_contains($currentUrl, '/dashboard') || $currentUrl === '/') ? 'active' : '' ?>">
+        <div class="nav-indicator">
+            <span class="nav-icon">📊</span>
+        </div>
+        <span class="nav-label">Dashboard</span>
+    </a>
+
+    <a href="<?= url('/master/classes') ?>" class="android-nav-item <?= str_contains($currentUrl, '/master/') ? 'active' : '' ?>">
+        <div class="nav-indicator">
+            <span class="nav-icon">🏛️</span>
+        </div>
+        <span class="nav-label">Master Data</span>
+    </a>
+
+    <a href="<?= url('/work-program') ?>" class="android-nav-item <?= (str_contains($currentUrl, '/work-program') || str_contains($currentUrl, '/schedules') || str_contains($currentUrl, '/practical-exam') || str_contains($currentUrl, '/committee/letters') || str_contains($currentUrl, '/preparation/rules')) ? 'active' : '' ?>">
+        <div class="nav-indicator">
+            <span class="nav-icon">📋</span>
+        </div>
+        <span class="nav-label">Persiapan</span>
+    </a>
+
+    <a href="<?= url('/print') ?>" class="android-nav-item <?= (str_contains($currentUrl, '/print') || str_contains($currentUrl, '/reports/')) ? 'active' : '' ?>">
+        <div class="nav-indicator">
+            <span class="nav-icon">🖨️</span>
+        </div>
+        <span class="nav-label">Cetak</span>
+    </a>
+
+    <button type="button" class="android-nav-item nav-btn-more" id="androidMenuToggle" aria-label="Buka Semua Menu">
+        <div class="nav-indicator">
+            <span class="nav-icon">☰</span>
+        </div>
+        <span class="nav-label">Menu</span>
+    </button>
+</nav>
+
+<!-- Android Native Modal Bottom Sheet Drawer for All Modules -->
+<div class="android-sheet-backdrop" id="androidSheetBackdrop">
+    <div class="android-bottom-sheet" id="androidBottomSheet">
+        <div class="sheet-drag-handle"></div>
+        
+        <div class="sheet-header">
+            <div class="sheet-user-card">
+                <div class="user-avatar-sheet"><?= strtoupper(substr($currentUser['full_name'] ?? 'U', 0, 1)) ?></div>
+                <div class="sheet-user-meta">
+                    <div class="sheet-user-name"><?= e($currentUser['full_name'] ?? 'Pengguna') ?></div>
+                    <div class="sheet-user-role"><?= e($currentUser['role_display'] ?? $currentUser['role'] ?? 'User') ?></div>
+                </div>
+            </div>
+            <button type="button" class="sheet-close-btn" id="androidSheetClose">✕</button>
+        </div>
+
+        <div class="sheet-active-event-pill">
+            <span class="event-pill-icon">📌</span>
+            <span class="event-pill-text"><?= e($activeEvent['name'] ?? 'Tidak ada kegiatan aktif') ?> (TP <?= e($activeEvent['academic_year'] ?? '-') ?>)</span>
+        </div>
+
+        <div class="sheet-body">
+            <!-- 1. Menu Utama -->
+            <div class="sheet-category-title">1. Menu Utama</div>
+            <div class="sheet-grid" style="margin-bottom: 20px;">
+                <a href="<?= url('/dashboard') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-blue">📊</div>
+                    <span class="tile-text">Dashboard</span>
+                </a>
+                <?php if (has_role(['super_admin', 'admin'])): ?>
+                <a href="<?= url('/school') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-indigo">🏫</div>
+                    <span class="tile-text">Identitas Sekolah</span>
+                </a>
+                <?php endif; ?>
+                <a href="<?= url('/events') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-purple">📅</div>
+                    <span class="tile-text">Manajemen Ujian</span>
+                </a>
+            </div>
+
+            <!-- 2. Master Data -->
+            <div class="sheet-category-title">2. Master Data</div>
+            <div class="sheet-grid" style="margin-bottom: 20px;">
+                <a href="<?= url('/master/classes') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-cyan">🏛️</div>
+                    <span class="tile-text">Data Kelas</span>
+                </a>
+                <a href="<?= url('/master/subjects') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-amber">📚</div>
+                    <span class="tile-text">Data Mapel</span>
+                </a>
+                <a href="<?= url('/master/students') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-teal">👨‍🎓</div>
+                    <span class="tile-text">Data Peserta</span>
+                </a>
+                <a href="<?= url('/committee') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-indigo">👥</div>
+                    <span class="tile-text">Data Panitia</span>
+                </a>
+                <a href="<?= url('/master/supervisors') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-amber">👀</div>
+                    <span class="tile-text">Data Pengawas</span>
+                </a>
+                <a href="<?= url('/master/examiners') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-purple">🩺</div>
+                    <span class="tile-text">Penguji Praktik</span>
+                </a>
+                <a href="<?= url('/written-exam/rooms') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-rose">🚪</div>
+                    <span class="tile-text">Atur Ruangan</span>
+                </a>
+            </div>
+
+            <!-- 3. Persiapan Kegiatan -->
+            <div class="sheet-category-title">3. Persiapan Kegiatan</div>
+            <div class="sheet-grid" style="margin-bottom: 20px;">
+                <a href="<?= url('/work-program') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-rose">📋</div>
+                    <span class="tile-text">Program Kerja</span>
+                </a>
+                <a href="<?= url('/written-exam/schedules') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-blue">🗓️</div>
+                    <span class="tile-text">Jadwal Tulis</span>
+                </a>
+                <a href="<?= url('/practical-exam') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-teal">🧪</div>
+                    <span class="tile-text">Jadwal Praktik</span>
+                </a>
+                <a href="<?= url('/committee/letters') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-emerald">✉️</div>
+                    <span class="tile-text">Persuratan (5 Surat)</span>
+                </a>
+                <a href="<?= url('/preparation/rules') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-amber">📜</div>
+                    <span class="tile-text">Tata Tertib (3 Dokumen)</span>
+                </a>
+            </div>
+
+            <!-- 4. Cetak (9 Modul Resmi) -->
+            <div class="sheet-category-title">4. Cetak (9 Modul Cetak Terpadu)</div>
+            <div class="sheet-grid" style="margin-bottom: 20px;">
+                <a href="<?= url('/print/participant-cards') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-blue">🪪</div>
+                    <span class="tile-text">1. Kartu Peserta</span>
+                </a>
+                <a href="<?= url('/print/name-tags?type=panitia') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-emerald">🏷️</div>
+                    <span class="tile-text">2. Kartu Panitia</span>
+                </a>
+                <a href="<?= url('/print/schedules') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-purple">📅</div>
+                    <span class="tile-text">3. Jadwal Tulis & Praktik</span>
+                </a>
+                <a href="<?= url('/print/room-signs') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-amber">🚪</div>
+                    <span class="tile-text">4. Nomor Ruangan</span>
+                </a>
+                <a href="<?= url('/print/participants') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-sky">📑</div>
+                    <span class="tile-text">5. Daftar Peserta</span>
+                </a>
+                <a href="<?= url('/written-exam/seating/print') ?>" target="_blank" class="sheet-tile">
+                    <div class="tile-icon-bg bg-indigo">🪑</div>
+                    <span class="tile-text">6. Denah Duduk</span>
+                </a>
+                <a href="<?= url('/print/attendance') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-teal">✅</div>
+                    <span class="tile-text">7. Daftar Hadir</span>
+                </a>
+                <a href="<?= url('/reports/minutes') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-cyan">📝</div>
+                    <span class="tile-text">8. Berita Acara</span>
+                </a>
+                <a href="<?= url('/reports/final') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-rose">🏆</div>
+                    <span class="tile-text">9. LPJ Kegiatan</span>
+                </a>
+            </div>
+
+            <!-- 5. Sistem -->
+            <div class="sheet-category-title">5. Sistem</div>
+            <div class="sheet-grid">
+                <?php if (has_role(['super_admin', 'admin'])): ?>
+                <a href="<?= url('/backup') ?>" class="sheet-tile">
+                    <div class="tile-icon-bg bg-teal">💾</div>
+                    <span class="tile-text">Backup & Restore</span>
+                </a>
+                <?php endif; ?>
+                <a href="<?= url('/logout') ?>" class="sheet-tile text-danger">
+                    <div class="tile-icon-bg bg-danger">🚪</div>
+                    <span class="tile-text">Logout</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="<?= asset('js/app.js') ?>"></script>
+</body>
+</html>

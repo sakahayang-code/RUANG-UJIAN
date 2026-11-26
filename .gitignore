@@ -1,11 +1,33 @@
-node_modules
-client/node_modules
-client/dist
-server/uploads/*
-!server/uploads/.gitkeep
-server/data/*.bak*
-server/data/*-shm
-server/data/*-wal
-server/data/temp
-.DS_Store
+# Berkas Temporary & Jurnal SQLite
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite-journal
+
+# Salinan Pengaman / Backup Otomatis
+/storage/backups/*.sqlite
+!/storage/backups/.gitkeep
+
+# Berkas Unggahan Pengguna
+/storage/uploads/documentation/*
+!/storage/uploads/documentation/.gitkeep
+/storage/uploads/documents/*
+!/storage/uploads/documents/.gitkeep
+/storage/uploads/logos/*
+!/storage/uploads/logos/.gitkeep
+/storage/uploads/sk_panitia/*
+!/storage/uploads/sk_panitia/.gitkeep
+/storage/uploads/students/*
+!/storage/uploads/students/.gitkeep
+/storage/uploads/signatures/*
+!/storage/uploads/signatures/.gitkeep
+
+# Environment & Konfigurasi Server Lokal
+/storage/sessions/*
+!/storage/sessions/.gitkeep
 .env
+*.log
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+node_modules/
